@@ -4,6 +4,7 @@ INC_DIR := inc
 OBJ_DIR := obj
 BIN_DIR := bin
 DEP_DIR := dep
+TEMP_DIRS := $(OBJ_DIR) $(BIN_DIR) $(DEP_DIR)
 
 CC := g++
 CCFLAGS := -g -Wall
@@ -13,7 +14,10 @@ INCLUDES := $(INC_DIR)
 OBJECTS  := $(SRCFILES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEPENDS  := $(OBJECTS:$(OBJ_DIR)/%=$(DEP_DIR)/%.d)
 
-all : $(BIN_DIR)/$(APP_NAME)
+all : $(TEMP_DIRS) $(BIN_DIR)/$(APP_NAME)
+
+$(TEMP_DIRS) :
+	mkdir -p $@
 
 $(BIN_DIR)/$(APP_NAME) : $(OBJECTS)
 	$(CC) $(CCFLAGS) -o $@ $(OBJECTS)
@@ -25,16 +29,8 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 
 .PHONY : clean
 clean :
-	rm -f $(BIN_DIR)/$(APP_NAME) $(OBJECTS) $(DEPENDS)
-# objects = main.o p4e_assembler.o parser_operation.o
+	rm -rf $(BIN_DIR)/$(APP_NAME) $(OBJECTS) $(DEPENDS)
 
-# p4easm : $(objects)
-# 	g++ -o p4easm $(objects)
-
-# main.o : p4e_assembler.h
-# p4e_assembler.o : p4e_assembler.h
-# parser_operation.o : global_def.h parser_def.h parser_operation.h
-
-# .PHONY : clean
-# clean :
-# 	rm p4easm $(objects)
+.PHONY : dist-clean
+dist-clean :
+	rm -rf $(TEMP_DIRS)
