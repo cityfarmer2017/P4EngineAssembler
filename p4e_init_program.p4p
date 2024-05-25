@@ -1,0 +1,9 @@
+// Parser default action
+NXTHL >>32, ->0;
+
+// Parser instructions
+
+SHFT 64;
+MOV  0x0000, META{51 : 4};
+MOV  0x54, META { 48: 4 };
+NXTDL ;
