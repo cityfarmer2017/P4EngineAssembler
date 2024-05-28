@@ -14,7 +14,7 @@ int assembler::execute(const string &in_fname, const string &out_fname)
     }
 
     while (getline(src_fstrm, line)) {
-        const regex r(R"(^\s*)" + get_name_pattern() + R"(\s+.*;[\n\r]?$)");
+        const regex r(R"(^\s*)" + get_name_pattern() + R"(\s+.*;\s*(\/\/.*)?[\n\r]?$)");
         smatch m;
         if (!regex_match(line, m, r)) {
             const regex r(comment_empty_line_p);
@@ -76,4 +76,4 @@ int assembler::open_output_file(const string &out_fname)
 
 const string assembler::comment_empty_line_p = R"(^\s*\/\/.*[\n\r]?$|^\s*$)";
 const string assembler::normal_line_prefix_p = R"(^\s*[A-Z\d+-]+\s+)";
-const string assembler::normal_line_posfix_p = R"(\s*;\s*$)";
+const string assembler::normal_line_posfix_p = R"(\s*;\s*(\/\/.*)?$)";

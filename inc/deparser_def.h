@@ -150,7 +150,7 @@ const string P_00101 = assembler::normal_line_prefix_p +
     + assembler::normal_line_posfix_p;
 
 const string P_00110_00111 = assembler::normal_line_prefix_p +
-    R"((TMP|COND|POFF|PLEN|POLY|INIT|CTRL\s*,\s+0b000([01]{5})|XOROT)\s*,\s+(0[xX][\dA-F]{1,4}))"
+    R"((TMP|COND|POFF|PLEN|POLY|INIT|CTRL\s*,\s+0b000([01]{5})|XOROT)\s*,\s+(\d{1,5}|0[xX][\dA-F]{1,4}))"
     + assembler::normal_line_posfix_p;
 
 const string P_01000_01001 = assembler::normal_line_prefix_p +

@@ -61,7 +61,11 @@ int parser_assembler::line_process(const string &line, const string &name, const
             return -1;
         }
 
-        mcode.op_00001.imm32 = stoul(m.str(1), nullptr, 0); // heximal
+        if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<u32>::max()) {
+            cout << "imm32 value exceeds limit.\n\t" << line << endl;
+            return -1;
+        }
+        mcode.op_00001.imm32 = stoul(m.str(1), nullptr, 0); // heximal or decimal
 
         mcode.op_00001.src_len = 0x1f;
         if (!m.str(2).empty()) {
@@ -142,6 +146,10 @@ int parser_assembler::line_process(const string &line, const string &name, const
         if (m.str(4) == "TMP") {
             mcode.op_10101.src1_slct = 1;
         } else {
+            if (stoul(m.str(4), nullptr, 0) > std::numeric_limits<unsigned short>::max()) {
+                cout << "imm16 value exceeds limit.\n\t" << line << endl;
+                return -1;
+            }
             mcode.op_10101.imm16 = stoul(m.str(4), nullptr, 0);
         }
         if (m.str(5) == "TMP") {

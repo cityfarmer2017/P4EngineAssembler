@@ -25,7 +25,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     if (!out_path.empty()) {
         std::filesystem::path dst_dir(out_path);
         if (!std::filesystem::exists(dst_dir)) {
-            if (!std::filesystem::create_directory(dst_dir)) {
+            if (!std::filesystem::create_directories(dst_dir)) {
                 std::cout << "failed to create directory: " << dst_dir << std::endl;
             }
         }
@@ -45,13 +45,15 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
 
 inline void print_help_information()
 {
-    std::cout << "Usage: P4eAsm \"path to source (file / directory)\" [\"path to destination (directory)\"]\n";
-    std::cout << "       P4eAsm \"-h\" or \"--help\" for help.\n";
+    std::cout << "Usage:\n\t";
+    std::cout << "P4eAsm \"path to source (file / directory)\" [\"path to destination (directory)\"]\n\t";
+    std::cout << "P4eAsm \"-h\" or \"--help\" for help.\n";
     std::cout << "Examples:\n\t";
     std::cout << "P4eAsm ./parser_sample.p4p ./dst\n\t";
     std::cout << "P4eAsm ./\n";
-    std::cout << "Info: source file posfix - .p4p for parser, .p4d for deparser, .p4m for mat\n";
-    std::cout << "      destination file posfix - .dat for binary format, .txt for plain text\n";
+    std::cout << "Info:\n\t";
+    std::cout << "source file posfix - .p4p for parser, .p4d for deparser, .p4m for mat\n\t";
+    std::cout << "destination file posfix - .dat for binary format, .txt for plain text\n";
     std::cout << std::flush;
 }
 

@@ -112,16 +112,11 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             mcode.op_00110.dst_slct = 6;
             mcode.op_00110.ctrl_mode = stoul(m.str(2), nullptr, 2);
         }
-        // if (m.str(4).empty()) {
-        //     auto val = stoul(m.str(3));
-        //     if (val > std::numeric_limits<unsigned short>::max()) {
-        //         return -1;
-        //     }
-        //     mcode.op_00110.value = val; // decimal
-        // } else {
-        //     mcode.op_00110.value = stoul(m.str(3), nullptr, 0); // heximal
-        // }
-        mcode.op_00110.value = stoul(m.str(3), nullptr, 0); // heximal
+        if (stoul(m.str(3), nullptr, 0) > std::numeric_limits<unsigned short>::max()) {
+            cout << "imm16 value exceeds limit.\n\t" << line << endl;
+            return -1;
+        }
+        mcode.op_00110.value = stoul(m.str(3), nullptr, 0); // heximal or decimal
         break;
 
     case 0b01000: // ADDU
