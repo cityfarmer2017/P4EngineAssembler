@@ -398,7 +398,7 @@ int parser_assembler::write_mcode_to_destinations(const string &out_fname)
 }
 
 const string parser_assembler::cmd_name_pattern = \
-    R"((MOV|MDF|XCT|RMV|ADDU|SUBU|CPYM|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
+    R"((MOV|MDF|XCT|RMV|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
     R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
 
 const int parser_assembler::l_idx = 6;
@@ -412,7 +412,7 @@ const str_u64_map parser_assembler::cmd_opcode_map = {
     {"RMV",    0b00010},
     {"ADDU",   0b10101},
     {"SUBU",   0b10101},
-    {"CPYM",   0b10100},
+    {"COPY",   0b10100},
     {"RSM16",  0b00111},
     {"RSM32",  0b00111},
     {"LOCK",   0b00101},

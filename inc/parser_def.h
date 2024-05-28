@@ -158,7 +158,7 @@ const string P_10101 = assembler::normal_line_prefix_p +
     + assembler::normal_line_posfix_p;
 
 const string P_10100 = assembler::normal_line_prefix_p +
-    R"((CALC_RSLT|SM_DATA([0-7]))\s*,\s+)"
+    R"(META\s*\[\s*(CALC_RSLT|SM_DATA([0-7]))\s*]\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
     R"((PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
     + assembler::normal_line_posfix_p;
