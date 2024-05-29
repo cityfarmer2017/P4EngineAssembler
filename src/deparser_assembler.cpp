@@ -281,7 +281,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             mcode.op_10110.direction = 1;
         }
         mcode.op_10110.src_off = stoul(m.str(2));
-        mcode.op_10110.length = stoul(m.str(3));
+        mcode.op_10110.length = stoul(m.str(3)) - 1;
         mcode.op_10110.dst_off = stoul(m.str(5));
         break;
 

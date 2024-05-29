@@ -73,10 +73,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
                 mcode.op_00001.src_slct = 1;
             }
             mcode.op_00001.src_off = stoul(m.str(4));
-            mcode.op_00001.src_len = stoul(m.str(5));
-            if (mcode.op_00001.src_len) {
-                mcode.op_00001.src_len--;
-            }
+            mcode.op_00001.src_len = stoul(m.str(5)) - 1;
         }
 
         if (m.str(6) == "TMP") {
@@ -92,10 +89,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
                 dst_len_idx = 12;
             }
             mcode.op_00001.dst_off = stoul(m.str(dst_off_idx));
-            mcode.op_00001.dst_len = stoul(m.str(dst_len_idx));
-            if (mcode.op_00001.dst_len) {
-                mcode.op_00001.dst_len--;
-            }
+            mcode.op_00001.dst_len = stoul(m.str(dst_len_idx)) - 1;
         }
         break;
 
@@ -106,10 +100,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
             mcode.op_00011.src_slct = 1;
         }
         mcode.op_00011.src_off = stoul(m.str(2));
-        mcode.op_00011.src_len = stoul(m.str(3));
-        if (mcode.op_00011.src_len) {
-            mcode.op_00011.src_len--;
-        }
+        mcode.op_00011.src_len = stoul(m.str(3)) - 1;
 
         if (m.str(4) == "TMP") {
             mcode.op_00011.dst_slct = 2;
@@ -124,10 +115,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
                 dst_len_idx = 10;
             }
             mcode.op_00011.dst_off = stoul(m.str(dst_off_idx));
-            mcode.op_00011.dst_len = stoul(m.str(dst_len_idx));
-            if (mcode.op_00011.dst_len) {
-                mcode.op_00011.dst_len--;
-            }
+            mcode.op_00011.dst_len = stoul(m.str(dst_len_idx)) - 1;
         }
         break;
 
@@ -136,10 +124,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
             mcode.op_10101.src0_slct = 1;
         }
         mcode.op_10101.src0_off = stoul(m.str(2));
-        mcode.op_10101.src0_len = stoul(m.str(3));
-        if (mcode.op_10101.src0_len) {
-            mcode.op_10101.src0_len--;
-        }
+        mcode.op_10101.src0_len = stoul(m.str(3)) - 1;
         if (name == "SUBU") {
             mcode.op_10101.alu_mode = 1;
         }
@@ -165,14 +150,11 @@ int parser_assembler::line_process(const string &line, const string &name, const
                 dst_len_idx = 11;
             }
             mcode.op_10101.dst_off = stoul(m.str(dst_off_idx));
-            mcode.op_10101.dst_len = stoul(m.str(dst_len_idx));
-            if (mcode.op_10101.dst_len) {
-                mcode.op_10101.dst_len--;
-            }
+            mcode.op_10101.dst_len = stoul(m.str(dst_len_idx)) - 1;
         }
         break;
 
-    case 0b10100: // CPYM
+    case 0b10100: // COPY
         if (m.str(1) != "CALC_RSLT") {
             unsigned int idx = stoul(m.str(2));
             if (idx <= 3) {
@@ -194,10 +176,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
                 dst_len_idx = 9;
             }
             mcode.op_10100.dst_off = stoul(m.str(dst_off_idx));
-            mcode.op_10100.dst_len = stoul(m.str(dst_len_idx));
-            if (mcode.op_10100.dst_len) {
-                mcode.op_10100.dst_len--;
-            }
+            mcode.op_10100.dst_len = stoul(m.str(dst_len_idx)) - 1;
         }
         break;
 

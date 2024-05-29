@@ -6,7 +6,7 @@ SETH POFF, 0;
 SETL POFF, 0;
 
 // send header from original packet header
-COPY META{48:4}, META[170]; // set length_r with META{header_len}
+COPY META{48:2}, META[170]; // set length_r with META{header_len}
 VLDALL ;
 SNDH HDR;
 

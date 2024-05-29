@@ -7,6 +7,6 @@ SHFT 64; // shift 64 bits again, 96 bits totally to the end of src mac
 
 XCT  ISR{0:16}, META{51 : 4}; // extract 'length' of 802.3 frame payload from ISR, to meta{payload_len}
 
-MOV  34, META { 48: 4 }; // move header length (14) + meta length (20), to meta{header_len}
+MOV  34, META { 48: 3 }; // move header length (14) + meta length (20), to meta{header_len}
 
 NXTDL ; // go to next default with last flag
