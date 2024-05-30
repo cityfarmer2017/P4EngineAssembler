@@ -15,7 +15,8 @@ protected:
     inline string get_name_pattern(void) const override;
     string get_name_matched(const smatch&, vector<bool>&) const override;
     int line_process(const string&, const string&, const vector<bool>&) override;
-    int write_mcode_to_destinations(const string&) override;
+    void write_machine_code(void) override;
+    void print_machine_code(void) override;
 
 private:
     parser_assembler(const parser_assembler&) = delete;

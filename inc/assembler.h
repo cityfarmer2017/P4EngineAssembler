@@ -34,7 +34,8 @@ protected:
     virtual string get_name_pattern(void) const = 0;
     virtual string get_name_matched(const smatch&, vector<bool>&) const = 0;
     virtual int line_process(const string&, const string&, const vector<bool>&) = 0;
-    virtual int write_mcode_to_destinations(const string&) = 0;
+    virtual void write_machine_code(void) = 0;
+    virtual void print_machine_code(void) = 0;
 
 private:
     assembler(const assembler&) = delete;
@@ -43,6 +44,10 @@ private:
     assembler& operator=(assembler&&) = delete;
 
     int open_output_file(const string &out_fname);
+    void close_output_file(void)
+    {
+        dst_fstrm.close();
+    }
 
     std::ifstream src_fstrm;
     std::ofstream dst_fstrm;

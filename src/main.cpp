@@ -24,7 +24,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         dst_fname = src_dir;
     }
 
-    if (dst_fname[dst_fname.size()-1] != '/') {
+    if (dst_fname.back() != '/') {
         dst_fname += "/";
     }
 

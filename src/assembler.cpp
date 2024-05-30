@@ -38,9 +38,7 @@ int assembler::execute(const string &in_fname, const string &out_fname)
         vector<bool> flags;
         string name = get_name_matched(m, flags);
 
-        int rc = 0;
-        rc = line_process(line, name, flags);
-        if (rc) {
+        if (auto rc = line_process(line, name, flags)) {
             return rc;
         }
 
@@ -51,7 +49,26 @@ int assembler::execute(const string &in_fname, const string &out_fname)
         return -1;
     }
 
-    return write_mcode_to_destinations(out_fname);
+    if (auto rc = open_output_file(out_fname + ".dat"))
+    {
+        return rc;
+    }
+
+    write_machine_code();
+
+    close_output_file();
+
+    #ifdef DEBUG
+    if (auto rc = open_output_file(out_fname + ".txt")) {
+        return rc;
+    }
+
+    print_machine_code();
+
+    close_output_file();
+    #endif
+
+    return 0;
 }
 
 int assembler::open_output_file(const string &out_fname)
