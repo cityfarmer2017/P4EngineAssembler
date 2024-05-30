@@ -344,7 +344,9 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
 int parser_assembler::write_mcode_to_destinations(const string &out_fname)
 {
+    #ifdef DEBUG
     print_mcode_line_by_line(std::cout, mcode_vec);
+    #endif
 
     if (out_fname.empty()) {
         return 0;
@@ -357,14 +359,14 @@ int parser_assembler::write_mcode_to_destinations(const string &out_fname)
 
     dst_fstrm.write(reinterpret_cast<const char*>(mcode_vec.data()), sizeof(mcode_vec[0]) * mcode_vec.size());
     dst_fstrm.close();
-#if 0
+    #if 0
     std::ifstream ifs(out_fname + ".dat");
     std::vector<u64> data(mcode_vec.size());
     ifs.read(reinterpret_cast<char*>(data.data()), sizeof(data[0]) * data.size());
     for (const auto&d : data) {
         cout << d << endl;
     }
-#endif
+    #endif
 
     if (auto rc = open_output_file(out_fname + ".txt")) {
         return rc;

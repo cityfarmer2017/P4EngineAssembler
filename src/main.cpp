@@ -43,7 +43,10 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     }
 
     dst_fname += src_fstem;
+
+    #ifdef DEBUG
     std::cout << dst_fname << "\n";
+    #endif
 
     return p_asm->execute(src_fname, dst_fname);
 }
