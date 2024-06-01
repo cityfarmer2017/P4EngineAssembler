@@ -10,7 +10,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     string src_fstem(entry.path().stem());
     string src_fext(entry.path().extension());
 
-    string dst_fname;
+    string dst_fname(out_path);
     if (!out_path.empty()) {
         std::filesystem::path dst_dir(out_path);
         if (!std::filesystem::exists(dst_dir)) {
@@ -19,7 +19,6 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
                 return -1;
             }
         }
-        dst_fname = dst_dir.c_str();
     } else {
         dst_fname = src_dir;
     }
