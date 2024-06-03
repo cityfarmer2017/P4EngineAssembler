@@ -11,7 +11,7 @@ VLDALL ;
 SNDH HDR;
 
 // send payload from original pakcet payload, with CRC32 result
-COPY META{51:4}, META[170]; // set length_r with META{payload_len}
+COPY META{52:4}, META[170]; // set length_r with META{payload_len}
 VLDALL ;
 SNDPC PLD, CRC32;
 
