@@ -5,15 +5,10 @@
 
 int process_one_entry(const std::filesystem::directory_entry &entry, const string &out_path)
 {
-    string src_fext(entry.path().extension());
-
-    if ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4d")) {
-        return 0;
-    }
-
     string src_dir(entry.path().parent_path());
     string src_fname(entry.path().filename());
     string src_fstem(entry.path().stem());
+    string src_fext(entry.path().extension());
 
     string dst_fname(out_path);
     if (!out_path.empty()) {
@@ -94,11 +89,18 @@ int main(int argc, char* argv[])
     string out_path(argc == 3 ? argv[2] : "");
 
     if (std::filesystem::is_regular_file(argv[1])) {
-        return process_one_entry(std::filesystem::directory_entry(argv[1]), out_path);
+        auto entry = std::filesystem::directory_entry(argv[1]);
+        string src_fext(entry.path().extension());
+        if ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4d")) {
+            print_help_information();
+            return -1;
+        }
+        return process_one_entry(entry, out_path);
     }
 
     for (const auto &entry: std::filesystem::directory_iterator(argv[1])) {
-        if (!entry.is_regular_file()) {
+        string src_fext(entry.path().extension());
+        if (!entry.is_regular_file() || ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4d"))) {
             continue;
         }
 
