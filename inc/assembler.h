@@ -7,14 +7,15 @@
 #include <unordered_map>
 #include <regex>
 #include <bitset>
+#include <cstdint>
 
 using std::string;
 using std::vector;
 using std::regex;
 using std::smatch;
 
-using u32 = unsigned int;
-using u64 = unsigned long long;
+using u32 = std::uint32_t;
+using u64 = std::uint64_t;
 
 class assembler {
     friend class parser_assembler;
