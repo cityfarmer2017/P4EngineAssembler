@@ -12,6 +12,11 @@ public:
     deparser_assembler() = default;
     virtual ~deparser_assembler() = default;
 
+    deparser_assembler(const deparser_assembler&) = delete;
+    deparser_assembler(deparser_assembler&&) = delete;
+    deparser_assembler& operator=(const deparser_assembler&) = delete;
+    deparser_assembler& operator=(deparser_assembler&&) = delete;
+
 protected:
     inline string get_name_pattern(void) const override;
     string get_name_matched(const smatch&, vector<bool>&) const override;
@@ -20,11 +25,6 @@ protected:
     void print_machine_code(void) override;
 
 private:
-    deparser_assembler(const deparser_assembler&) = delete;
-    deparser_assembler(deparser_assembler&&) = delete;
-    deparser_assembler& operator=(const deparser_assembler&) = delete;
-    deparser_assembler& operator=(deparser_assembler&&) = delete;
-
     std::vector<u32> mcode_vec;
 
     static const string cmd_name_pattern;

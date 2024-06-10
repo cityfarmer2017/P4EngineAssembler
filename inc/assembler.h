@@ -25,6 +25,11 @@ public:
     assembler() = default;
     virtual ~assembler() = default;
 
+    assembler(const assembler&) = delete;
+    assembler(assembler&&) = delete;
+    assembler& operator=(const assembler&) = delete;
+    assembler& operator=(assembler&&) = delete;
+
     int execute(const string&, const string&);
 
     static const string comment_empty_line_p;
@@ -39,11 +44,6 @@ protected:
     virtual void print_machine_code(void) = 0;
 
 private:
-    assembler(const assembler&) = delete;
-    assembler(assembler&&) = delete;
-    assembler& operator=(const assembler&) = delete;
-    assembler& operator=(assembler&&) = delete;
-
     int open_output_file(const string &out_fname);
     void close_output_file(void)
     {

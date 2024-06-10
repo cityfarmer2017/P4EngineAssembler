@@ -11,6 +11,11 @@ public:
     parser_assembler() = default;
     virtual ~parser_assembler() = default;
 
+    parser_assembler(const parser_assembler&) = delete;
+    parser_assembler(parser_assembler&&) = delete;
+    parser_assembler& operator=(const parser_assembler&) = delete;
+    parser_assembler& operator=(parser_assembler&&) = delete;
+
 protected:
     inline string get_name_pattern(void) const override;
     string get_name_matched(const smatch&, vector<bool>&) const override;
@@ -19,11 +24,6 @@ protected:
     void print_machine_code(void) override;
 
 private:
-    parser_assembler(const parser_assembler&) = delete;
-    parser_assembler(parser_assembler&&) = delete;
-    parser_assembler& operator=(const parser_assembler&) = delete;
-    parser_assembler& operator=(parser_assembler&&) = delete;
-
     vector<u64> mcode_vec;
 
     static const string cmd_name_pattern;
