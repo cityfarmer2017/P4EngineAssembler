@@ -304,6 +304,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         if (!m.str(4).empty()) {
             mcode.op_10001.meta_off = stoul(m.str(5));
             mcode.op_10001.meta_len = stoul(m.str(6));
+            mcode.op_10001.meta_intrinsic = 1;
         }
         if (mcode.op_10001.meta_len + mcode.op_10001.isr_len > 40) {
             print_cmd_param_unmatch_message(name, line);
