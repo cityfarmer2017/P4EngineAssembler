@@ -46,18 +46,18 @@ typedef union {
         u32 src_off: 9;
         u32 src_len: 9;
         u32 dst_off: 9;
-    } op_01010, op_01100;
+    } op_01010, op_01100, op_11100;
     struct {
         u32 opcode: 5;
         u32 rsvd: 17;
         u32 dst_slct: 1;
         u32 dst_off: 9;
-    } op_01011, op_01101;
+    } op_01011, op_01101, op_11101;
     struct {
         u32 opcode: 5;
         u32 offset: 9;
         u32 length: 12;
-        u32 rsvd: 1;
+        u32 mask_flg: 1;
         u32 mask_en: 1;
         u32 off_ctrl: 1;
         u32 len_ctrl: 1;
@@ -158,13 +158,13 @@ const string P_01000_01001 = assembler::normal_line_prefix_p +
     R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([2-9])\s*\}|COND|POFF|PLEN))"
     + assembler::normal_line_posfix_p;
 
-const string P_01010_01100 = assembler::normal_line_prefix_p +
+const string P_01010_01100_11100 = assembler::normal_line_prefix_p +
     R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*)"
     R"(([1-9][0-9]?|[1-4][0-9]{2}|50[0-9]|51[01])\s*\}\s*,\s+)"
     R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_01011_01101 = assembler::normal_line_prefix_p +
+const string P_01011_01101_11101 = assembler::normal_line_prefix_p +
     R"((PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])?)"
     + assembler::normal_line_posfix_p;
 

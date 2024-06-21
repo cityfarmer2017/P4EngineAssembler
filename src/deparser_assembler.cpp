@@ -24,18 +24,19 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         return -1;
     }
 
-    if (flags.size() != 7) {
+    if (flags.size() != 8) {
         return -1;
     }
 
     auto sndm_m = flags[0];
     auto sndm_p = flags[1];
-    auto calc_m = flags[2];
+    auto calc_ma = flags[2];
+    auto calc_mo = flags[3];
     // auto xor_4 = flags[3];
-    auto xor_8 = flags[3];
-    auto xor_16 = flags[4];
-    auto xor_32 = flags[5];
-    auto r_flg = flags[6];
+    auto xor_8 = flags[4];
+    auto xor_16 = flags[5];
+    auto xor_32 = flags[6];
+    auto r_flg = flags[7];
 
     switch (mcode.val32)
     {
@@ -140,7 +141,8 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         break;
 
     case 0b01010: // CMPCT
-    case 0b01100: // XCT
+    case 0b01100: // AND
+    case 0b11100: // OR
         if (auto rc = check_previous(line)) {
             print_cmd_bit_vld_unmatch_message(line);
             return rc;
@@ -152,7 +154,8 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         break;
 
     case 0b01011: // CMPCTR
-    case 0b01101: // XCTR
+    case 0b01101: // ANDR
+    case 0b11101: // ORR
         if (auto rc = check_previous(line)) {
             print_cmd_bit_vld_unmatch_message(line);
             return rc;
@@ -192,8 +195,11 @@ int deparser_assembler::line_process(const string &line, const string &name, con
                 mcode.op_01110.length = stoul(m.str(4));
             }
         }
-        if (calc_m) {
+        if (calc_ma || calc_mo) {
             mcode.op_01110.mask_en = 1;
+            if (calc_mo) {
+                mcode.op_01110.mask_flg = 1;
+            }
         }
         break;
 
@@ -285,7 +291,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         mcode.op_10110.dst_off = stoul(m.str(5));
         break;
 
-    case 0b10111: // VLDALL / VLDADDR
+    case 0b10111: // MSKALL / MSKADDR
         if (name == "VLDALL" && !m.str(1).empty()) {
             print_cmd_param_unmatch_message(name, line);
             return -1;
@@ -388,8 +394,16 @@ string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags
     flags.emplace_back(sndm_m_flg);
     flags.emplace_back(sndm_p_flg);
 
-    auto calc_m_flg = !m.str(calc_flg_idx).empty();
-    flags.emplace_back(calc_m_flg);
+    auto calc_ma_flg = false;
+    auto calc_mo_flg = false;
+    if (!m.str(calc_flg_idx).empty()) {
+        calc_ma_flg = m.str(calc_flg_idx) == "MA";
+        calc_mo_flg = m.str(calc_flg_idx) == "MO";
+        name.pop_back();
+        name.pop_back();
+    }
+    flags.emplace_back(calc_ma_flg);
+    flags.emplace_back(calc_mo_flg);
 
     // auto xor_4_flg = false;
     auto xor_8_flg = false;
@@ -410,7 +424,7 @@ string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags
     auto j_r_flg = !m.str(j_flg_idx).empty();
     flags.emplace_back(j_r_flg);
 
-    if (sndm_m_flg || sndm_p_flg || calc_m_flg || j_r_flg || xor_16_flg || xor_32_flg) {
+    if (sndm_m_flg || sndm_p_flg || j_r_flg || xor_16_flg || xor_32_flg) {
         name.pop_back();
     }
 
@@ -418,8 +432,8 @@ string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags
 }
 
 const string deparser_assembler::cmd_name_pattern = \
-    R"((SNDM([PM])?|SND[HP]C?|MOVE|SET[HL]|ADDU?|CMPCTR?|XCTR?|(CRC16|CRC32|CSUM)([M])?|)"
-    R"(XORR?(4|8|16|32)?|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|VLDALL|VLDADDR|NOP|(J|BG[TE]0)(R)?|RET|END))";
+    R"((SNDM([PM])?|SND[HP]C?|MOVE|SET[HL]|ADDU?|CMPCTR?|ANDR?|ORR?|(CRC16|CRC32|CSUM)(M[AO])?|)"
+    R"(XORR?(4|8|16|32)?|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|MSKALL|MSKADDR|NOP|(J|BG[TE]0)(R)?|RET|END))";
 
 const int deparser_assembler::sndm_flg_idx = 2;
 const int deparser_assembler::calc_flg_idx = 4;
@@ -438,8 +452,8 @@ const str_u32_map deparser_assembler::cmd_opcode_map = {
     {"ADD",      0b01001},
     {"CMPCT",    0b01010},
     {"CMPCTR",   0b01011},
-    {"XCT",      0b01100},
-    {"XCTR",     0b01101},
+    {"AND",      0b01100},
+    {"ANDR",     0b01101},
     {"CRC16",    0b01110},
     {"CRC32",    0b01111},
     {"CSUM",     0b10000},
@@ -453,14 +467,16 @@ const str_u32_map deparser_assembler::cmd_opcode_map = {
     {"GET--",    0b10101},
     {"LDC",      0b10101},
     {"COPY",     0b10110},
-    {"VLDALL",   0b10111},
-    {"VLDADDR",  0b10111},
+    {"MSKALL",   0b10111},
+    {"MSKADDR",  0b10111},
     {"NOP",      0b11000},
     {"J",        0b11001},
     {"BGT0",     0b11001},
     {"BGE0",     0b11001},
     {"RET",      0b11010},
-    {"END",      0b11011}
+    {"END",      0b11011},
+    {"OR",       0b11100},
+    {"ORR",      0b11101}
 };
 
 const u32_regex_map deparser_assembler::opcode_regex_map = {
@@ -473,10 +489,10 @@ const u32_regex_map deparser_assembler::opcode_regex_map = {
     {0b00111, regex(P_00110_00111)},
     {0b01000, regex(P_01000_01001)},
     {0b01001, regex(P_01000_01001)},
-    {0b01010, regex(P_01010_01100)},
-    {0b01011, regex(P_01011_01101)},
-    {0b01100, regex(P_01010_01100)},
-    {0b01101, regex(P_01011_01101)},
+    {0b01010, regex(P_01010_01100_11100)},
+    {0b01011, regex(P_01011_01101_11101)},
+    {0b01100, regex(P_01010_01100_11100)},
+    {0b01101, regex(P_01011_01101_11101)},
     {0b01110, regex(P_01110_01111_10000)},
     {0b01111, regex(P_01110_01111_10000)},
     {0b10000, regex(P_01110_01111_10000)},
@@ -490,5 +506,7 @@ const u32_regex_map deparser_assembler::opcode_regex_map = {
     {0b11000, regex(P_11000_11010_11011)},
     {0b11001, regex(P_11001)},
     {0b11010, regex(P_11000_11010_11011)},
-    {0b11011, regex(P_11000_11010_11011)}
+    {0b11011, regex(P_11000_11010_11011)},
+    {0b11100, regex(P_01010_01100_11100)},
+    {0b11101, regex(P_01011_01101_11101)}
 };
