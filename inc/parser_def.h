@@ -182,7 +182,7 @@ const string P_01001 = assembler::normal_line_prefix_p +
     + assembler::normal_line_posfix_p;
 
 const string P_01010_01011_01100 = assembler::normal_line_prefix_p +
-    R"((TMP|META)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,8}))"
+    R"((TMP|ISR)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,8}))"
     + assembler::normal_line_posfix_p;
 
 const string P_10000 = assembler::normal_line_prefix_p +

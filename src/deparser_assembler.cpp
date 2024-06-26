@@ -433,7 +433,7 @@ string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags
 
 const string deparser_assembler::cmd_name_pattern = \
     R"((SNDM([PM])?|SND[HP]C?|MOVE|SET[HL]|ADDU?|CMPCTR?|ANDR?|ORR?|(CRC16|CRC32|CSUM)(M[AO])?|)"
-    R"(XORR?(4|8|16|32)?|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|MSKALL|MSKADDR|NOP|(J|BG[TE]0)(R)?|RET|END))";
+    R"(XORR?(4|8|16|32)|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|MSKALL|MSKADDR|NOP|(J|BG[TE]0)(R)?|RET|END))";
 
 const int deparser_assembler::sndm_flg_idx = 2;
 const int deparser_assembler::calc_flg_idx = 4;
