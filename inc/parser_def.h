@@ -68,12 +68,13 @@ typedef union {
     } op_01001;
     struct {
         u64 opcode: 5;
-        u64 offset: 9;
+        u64 rsvd1: 2;
+        u64 offset: 7;
         u64 length: 5;
         u64 src_slct: 2;
         u64 mask: 32;
         u64 mask_flg: 1;
-        u64 rsvd: 9;
+        u64 rsvd2: 9;
         u64 last_flg: 1;
     } op_01010, op_01011, op_01100;
     struct {
@@ -182,7 +183,7 @@ const string P_01001 = assembler::normal_line_prefix_p +
     + assembler::normal_line_posfix_p;
 
 const string P_01010_01011_01100 = assembler::normal_line_prefix_p +
-    R"((TMP|ISR)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,8}))"
+    R"((TMP|ISR|PHV)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,8}))"
     + assembler::normal_line_posfix_p;
 
 const string P_10000 = assembler::normal_line_prefix_p +

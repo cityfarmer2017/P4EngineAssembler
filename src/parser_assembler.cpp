@@ -260,8 +260,13 @@ int parser_assembler::line_process(const string &line, const string &name, const
         }
         if (m.str(1) == "TMP") {
             mcode.op_01100.src_slct = 1;
+        } else if (m.str(1) == "PHV") {
+            mcode.op_01100.src_slct = 2;
         }
-        mcode.op_01100.offset = stoul(m.str(2));
+        // for PHV logic will always get data from byte offset 384 and on, totally 128 bytes
+        // but the assembler will only open the 32 bytes (480 ~ 511 at the tail to software programmer
+        // so here I need to add the offset by extra 96 bytes (480 = 384 + 96)
+        mcode.op_01100.offset = stoul(m.str(2)) + (m.str(1) == "PHV" ? 96 : 0);
         mcode.op_01100.length = stoul(m.str(3));
         mcode.op_01100.mask = stoul(m.str(4), nullptr, 0);
         break;
