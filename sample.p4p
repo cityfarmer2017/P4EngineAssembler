@@ -1,5 +1,5 @@
 // Parser default action
-NXTHL >>32, ->0;
+NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
 
 // Parser instructions
 
@@ -33,9 +33,9 @@ SHFT 32;
 COPY META[CALC_RSLT], PHV{10: 4};
 COPYL META[SM_DATA3], META{2: 8};
 
-RSM16   0x100010001, 1, 4;
+RSM16   0x100010001, 4, 1;
 RSM32 0x100010001, 3;
-RSM32L 0x100010008, 0, 7;
+RSM32L 0x100010008, 7, 0;
 
 LOCK 0X101010;
 ULCK ;

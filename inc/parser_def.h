@@ -165,7 +165,7 @@ const string P_10100 = assembler::normal_line_prefix_p +
     + assembler::normal_line_posfix_p;
 
 const string P_00111 = assembler::normal_line_prefix_p +
-    R"((0[xX][\dA-Fa-f]{1,9})\s*,\s+([0-3])(\s*,\s+([0-7]))?)" + assembler::normal_line_posfix_p;
+    R"((0[xX][\dA-Fa-f]{1,9})\s*,\s+(([0-7])\s*,\s+)?([0-3]))" + assembler::normal_line_posfix_p;
 
 const string P_00101_00110 = assembler::normal_line_prefix_p +
     R"((0[xX][\dA-Fa-f]{1,6})?)" + assembler::normal_line_posfix_p;

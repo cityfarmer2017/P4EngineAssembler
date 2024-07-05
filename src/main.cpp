@@ -2,6 +2,7 @@
 #include <filesystem>
 #include "parser_assembler.h"
 #include "deparser_assembler.h"
+#include "mat_assembler.h"
 
 int process_one_entry(const std::filesystem::directory_entry &entry, const string &out_path)
 {
@@ -36,7 +37,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         p_asm = std::make_unique<parser_assembler>();
         dst_fname += "parser_";
     } else if (src_fext == ".p4m") {
-        std::cout << "MAT operation" << std::endl;
+        p_asm = std::make_unique<mat_assembler>();
         dst_fname += "mat_";
     } else { // (src_fext == ".p4d")
         p_asm = std::make_unique<deparser_assembler>();

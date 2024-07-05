@@ -20,6 +20,7 @@ using u64 = std::uint64_t;
 class assembler {
     friend class parser_assembler;
     friend class deparser_assembler;
+    friend class mat_assembler;
 
 public:
     assembler() = default;

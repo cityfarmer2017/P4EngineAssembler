@@ -49,9 +49,9 @@ int parser_assembler::line_process(const string &line, const string &name, const
         return -1;
     }
 
-    bool last = flags[0];
-    bool usign = flags[1];
-    bool mask0 = flags[2];
+    auto last = flags[0];
+    auto usign = flags[1];
+    auto mask0 = flags[2];
 
     switch (mcode.val64)
     {
@@ -184,13 +184,13 @@ int parser_assembler::line_process(const string &line, const string &name, const
         if (name == "RSM32") {
             mcode.op_00111.len_flg = 1;
         }
-        if (m.str(3).empty()) {
+        if (m.str(2).empty()) {
             mcode.op_00111.inline_flg = 1;
         } else {
-            mcode.op_00111.meta_left_shift = stoul(m.str(4));
+            mcode.op_00111.meta_left_shift = stoul(m.str(3));
         }
         mcode.op_00111.addr = stoull(m.str(1), nullptr, 0);
-        mcode.op_00111.line_off = stoul(m.str(2));
+        mcode.op_00111.line_off = stoul(m.str(4));
         break;
 
     case 0b00101: // LOCK
@@ -315,14 +315,14 @@ int parser_assembler::line_process(const string &line, const string &name, const
             print_cmd_param_unmatch_message(name, line);
             return -1;
         }
-        if (mcode.op_10001.isr_len == 40 && !m.str(4).empty()) {
-            print_cmd_param_unmatch_message(name, line);
-            return -1;
-        }
-        if (mcode.op_10001.meta_len == 40 && !m.str(1).empty()) {
-            print_cmd_param_unmatch_message(name, line);
-            return -1;
-        }
+        // if (mcode.op_10001.isr_len == 40 && !m.str(4).empty()) {
+        //     print_cmd_param_unmatch_message(name, line);
+        //     return -1;
+        // }
+        // if (mcode.op_10001.meta_len == 40 && !m.str(1).empty()) {
+        //     print_cmd_param_unmatch_message(name, line);
+        //     return -1;
+        // }
         if (!m.str(7).empty()) {
             mcode.op_10001.shift_val = stoul(m.str(8));
         }
