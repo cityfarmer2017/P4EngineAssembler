@@ -17,6 +17,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     machine_code mcode;
     mcode.val64 = 0;
     mcode.val32 = cmd_opcode_map.at(name);
+    auto opcode = mcode.val32;
 
     smatch m;
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val32))) {
@@ -38,7 +39,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     auto xor_32 = flags[6];
     auto r_flg = flags[7];
 
-    switch (mcode.val32)
+    switch (opcode)
     {
     case 0b00001: // SNDM[PM]
         if (sndm_m) {
@@ -359,7 +360,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
 
     mcode_vec.emplace_back(mcode.val32);
     u32 high32 = mcode.val64 >> 32;
-    if (high32) {
+    if (opcode == 0b11001 || opcode == 0b10101) {
         mcode_vec.emplace_back(high32);
     }
 
