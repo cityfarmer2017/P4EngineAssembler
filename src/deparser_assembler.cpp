@@ -341,14 +341,10 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             }
             mcode.op_11001.src_off = src_off;
         }
-        if (name == "J" && r_flg) {
-            mcode.op_11001.jump_mode = 1;
-        }
-        if (name == "BGT0") {
+        if (name == "J") {
+            mcode.op_11001.jump_mode = r_flg ? 1 : 0;
+        } else if (name == "BEZ") {
             mcode.op_11001.jump_mode = r_flg ? 0b11 : 0b10;
-        }
-        if (name == "BGE0") {
-            mcode.op_11001.jump_mode = r_flg ? 0b101 : 0b100;
         }
         break;
 
@@ -433,7 +429,7 @@ string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags
 
 const string deparser_assembler::cmd_name_pattern = \
     R"((SNDM([PM])?|SND[HP]C?|MOVE|SET[HL]|ADDU?|CMPCTR?|ANDR?|ORR?|(CRC16|CRC32|CSUM)(M[AO])?|)"
-    R"(XORR?(4|8|16|32)|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|MSKALL|MSKADDR|NOP|(J|BG[TE]0)(R)?|RET|END))";
+    R"(XORR?(4|8|16|32)|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|MSKALL|MSKADDR|NOP|(J|BEZ)(R)?|RET|END))";
 
 const int deparser_assembler::sndm_flg_idx = 2;
 const int deparser_assembler::calc_flg_idx = 4;
@@ -471,8 +467,7 @@ const str_u32_map deparser_assembler::cmd_opcode_map = {
     {"MSKADDR",  0b10111},
     {"NOP",      0b11000},
     {"J",        0b11001},
-    {"BGT0",     0b11001},
-    {"BGE0",     0b11001},
+    {"BEZ",      0b11001},
     {"RET",      0b11010},
     {"END",      0b11011},
     {"OR",       0b11100},
