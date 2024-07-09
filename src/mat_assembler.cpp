@@ -62,6 +62,14 @@ string mat_assembler::get_name_matched(const smatch &m, vector<bool> &flags) con
     return name;
 }
 
+constexpr auto long_flg_idx = 0;
+constexpr auto crc_poly1_flg_idx = 1;
+constexpr auto xor8_flg_idx = 2;
+constexpr auto xor16_flg_idx = 3;
+constexpr auto xor32_flg_idx = 4;
+constexpr auto stm32_flg_idx = 5;
+constexpr auto flags_size = 6;
+
 int mat_assembler::line_process(const string &line, const string &name, const vector<bool> &flags)
 {
     machine_code mcode;
@@ -75,12 +83,12 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         return -1;
     }
 
-    if (flags.size() != 6) {
+    if (flags.size() != flags_size) {
         return -1;
     }
 
-    static bool long_flg = flags[0];
-    if (long_flg != flags[0]) {
+    static bool long_flg = flags[long_flg_idx];
+    if (long_flg != flags[long_flg_idx]) {
         cout << "normal and long instructions shall not be mixed." << endl;
         return -1;
     }
@@ -195,13 +203,6 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         break;
 
     case 0b10101: // HASH / CRC16P[12] / XOR(4|8|16|32)
-    {
-        auto crc_p1_flg = flags[1];
-        // auto crc_p2_flg = flags[2];
-        // auto xor_4_flg = flags[3];
-        auto xor_8_flg = flags[2];
-        auto xor_16_flg = flags[3];
-        auto xor_32_flg = flags[4];
         if (!m.str(2).empty()) {
             mcode.op_10101.src1_off = stoul(m.str(2));
             mcode.op_10101.calc_len = stoul(m.str(3)) - 1;
@@ -216,19 +217,15 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         }
         mcode.op_10101.dst_off = stoul(m.str(8));
         if (name == "CRC") {
-            mcode.op_10101.calc_mode = crc_p1_flg ? 1 : 2;
+            mcode.op_10101.calc_mode = flags[crc_poly1_flg_idx] ? 1 : 2;
         } else if (name == "XOR") {
             mcode.op_10101.calc_mode = 3;
-            mcode.op_10101.xor_unit = xor_8_flg ? 1 : xor_16_flg ? 2 : xor_32_flg ? 3 : 0;
+            mcode.op_10101.xor_unit = get_xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
         }
-    }
         break;
 
     case 0b10111: // RSM(16|32)
     case 0b11000: // WSM(16|32)
-    {
-        // auto sm_16_flg = flags[5];
-        // auto sm_32_flg = flags[6];
         mcode.op_10111.offset = stoul(m.str(1));
         mcode.op_10111.line_shift = stoul(m.str(5));
         if (!m.str(3).empty()) {
@@ -238,10 +235,9 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         } else {
             mcode.op_10111.addr_h36 = stoull(m.str(2), nullptr, 0);
         }
-        if (flags[5]/*32-bit flag*/) {
+        if (flags[stm32_flg_idx]) {
             mcode.op_10111.len = 1;
         }
-    }
         break;
 
     default:

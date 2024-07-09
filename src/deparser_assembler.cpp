@@ -12,6 +12,66 @@ inline string deparser_assembler::get_name_pattern(void) const
     return cmd_name_pattern;
 }
 
+string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const
+{
+    auto name = m.str(1);
+
+    auto sndm_m_flg = false;
+    auto sndm_p_flg = false;
+    if (!m.str(sndm_flg_idx).empty()) {
+        sndm_m_flg = m.str(sndm_flg_idx) == "M";
+        sndm_p_flg = m.str(sndm_flg_idx) == "P";
+    }
+    flags.emplace_back(sndm_m_flg);
+    flags.emplace_back(sndm_p_flg);
+
+    auto calc_ma_flg = false;
+    auto calc_mo_flg = false;
+    if (!m.str(calc_flg_idx).empty()) {
+        calc_ma_flg = m.str(calc_flg_idx) == "MA";
+        calc_mo_flg = m.str(calc_flg_idx) == "MO";
+        name.pop_back();
+        name.pop_back();
+    }
+    flags.emplace_back(calc_ma_flg);
+    flags.emplace_back(calc_mo_flg);
+
+    // auto xor_4_flg = false;
+    auto xor_8_flg = false;
+    auto xor_16_flg = false;
+    auto xor_32_flg = false;
+    if (!m.str(xor_flg_idx).empty()) {
+        // xor_4_flg = m.str(xor_flg_idx) == "4";
+        xor_8_flg = m.str(xor_flg_idx) == "8";
+        xor_16_flg = m.str(xor_flg_idx) == "16";
+        xor_32_flg = m.str(xor_flg_idx) == "32";
+        name.pop_back();
+    }
+    // flags.emplace_back(xor_4_flg);
+    flags.emplace_back(xor_8_flg);
+    flags.emplace_back(xor_16_flg);
+    flags.emplace_back(xor_32_flg);
+
+    auto j_r_flg = !m.str(j_flg_idx).empty();
+    flags.emplace_back(j_r_flg);
+
+    if (sndm_m_flg || sndm_p_flg || j_r_flg || xor_16_flg || xor_32_flg) {
+        name.pop_back();
+    }
+
+    return name;
+}
+
+constexpr auto sendm_mask_flg_idx = 0;
+constexpr auto sendm_pipeline_flg_idx = 1;
+constexpr auto calc_mask_and_flg_idx = 2;
+constexpr auto calc_mask_or_flg_idx = 3;
+constexpr auto xor8_flg_idx = 4;
+constexpr auto xor16_flg_idx = 5;
+constexpr auto xor32_flg_idx = 6;
+constexpr auto jump_relative_flg_idx = 7;
+constexpr auto flags_size = 8;
+
 int deparser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags)
 {
     machine_code mcode;
@@ -25,31 +85,21 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         return -1;
     }
 
-    if (flags.size() != 8) {
+    if (flags.size() != flags_size) {
         return -1;
     }
-
-    auto sndm_m = flags[0];
-    auto sndm_p = flags[1];
-    auto calc_ma = flags[2];
-    auto calc_mo = flags[3];
-    // auto xor_4 = flags[3];
-    auto xor_8 = flags[4];
-    auto xor_16 = flags[5];
-    auto xor_32 = flags[6];
-    auto r_flg = flags[7];
 
     switch (opcode)
     {
     case 0b00001: // SNDM[PM]
-        if (sndm_m) {
+        if (flags[sendm_mask_flg_idx]) {
             if (auto rc = check_previous(line)) {
                 print_cmd_bit_vld_unmatch_message(line);
                 return rc;
             }
             mcode.op_00001.src_slct = 2;
             swap_previous(mcode);
-        } else if (!sndm_p) {
+        } else if (!flags[sendm_pipeline_flg_idx]) {
             mcode.op_00001.src_slct = 1;
         }
         break;
@@ -196,9 +246,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
                 mcode.op_01110.length = stoul(m.str(4));
             }
         }
-        if (calc_ma || calc_mo) {
+        if (flags[calc_mask_and_flg_idx] || flags[calc_mask_or_flg_idx]) {
             mcode.op_01110.mask_en = 1;
-            if (calc_mo) {
+            if (flags[calc_mask_or_flg_idx]) {
                 mcode.op_01110.mask_flg = 1;
             }
         }
@@ -207,13 +257,13 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     case 0b10001: // XOR
         mcode.op_10001.src_off = stoul(m.str(1));
         mcode.op_10001.src_len = stoul(m.str(2));
-        mcode.op_10001.calc_unit = xor_8 ? 1 : xor_16 ? 2 : xor_32 ? 3 : 0;
+        mcode.op_10001.calc_unit = get_xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
         mcode.op_10001.dst_slct = m.str(3) == "PHV";
         mcode.op_10001.dst_off = stoul(m.str(4));
         break;
 
     case 0b10010: // XORR
-        mcode.op_10010.calc_unit = xor_8 ? 1 : xor_16 ? 2 : xor_32 ? 3 : 0;
+        mcode.op_10010.calc_unit = get_xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
         mcode.op_10010.dst_slct = m.str(1) == "PHV";
         mcode.op_10010.dst_off = stoul(m.str(2));
         break;
@@ -310,13 +360,15 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             print_cmd_param_unmatch_message(name, line);
             return -1;
         }
-        if (!r_flg && (m.str(2) == "-" || m.str(5) == "-")) {
+        if (!flags[jump_relative_flg_idx] && (m.str(2) == "-" || m.str(5) == "-")) {
             print_cmd_param_unmatch_message(name, line);
             return -1;
         }
-        mcode.op_11001.target_1 = r_flg ? std::stol(m.str(1), nullptr, 0) : stoul(m.str(1), nullptr, 0);
+        mcode.op_11001.target_1 =
+            flags[jump_relative_flg_idx] ? std::stol(m.str(1), nullptr, 0) : stoul(m.str(1), nullptr, 0);
         if (!m.str(4).empty()) {
-            mcode.op_11001.target_2 = r_flg ? std::stol(m.str(4), nullptr, 0) : stoul(m.str(4), nullptr, 0);
+            mcode.op_11001.target_2 =
+                flags[jump_relative_flg_idx] ? std::stol(m.str(4), nullptr, 0) : stoul(m.str(4), nullptr, 0);
         }
         if (!m.str(6).empty() && m.str(6) != "CONDR") {
             mcode.op_11001.src_slct = 1;
@@ -343,9 +395,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             mcode.op_11001.src_off = src_off;
         }
         if (name == "J") {
-            mcode.op_11001.jump_mode = r_flg ? 1 : 0;
+            mcode.op_11001.jump_mode = flags[jump_relative_flg_idx] ? 1 : 0;
         } else if (name == "BEZ") {
-            mcode.op_11001.jump_mode = r_flg ? 0b11 : 0b10;
+            mcode.op_11001.jump_mode = flags[jump_relative_flg_idx] ? 0b11 : 0b10;
         }
         break;
 
@@ -376,56 +428,6 @@ void deparser_assembler::print_machine_code(void)
 {
     print_mcode_line_by_line(std::cout, mcode_vec);
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
-}
-
-string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const
-{
-    auto name = m.str(1);
-
-    auto sndm_m_flg = false;
-    auto sndm_p_flg = false;
-    if (!m.str(sndm_flg_idx).empty()) {
-        sndm_m_flg = m.str(sndm_flg_idx) == "M";
-        sndm_p_flg = m.str(sndm_flg_idx) == "P";
-    }
-    flags.emplace_back(sndm_m_flg);
-    flags.emplace_back(sndm_p_flg);
-
-    auto calc_ma_flg = false;
-    auto calc_mo_flg = false;
-    if (!m.str(calc_flg_idx).empty()) {
-        calc_ma_flg = m.str(calc_flg_idx) == "MA";
-        calc_mo_flg = m.str(calc_flg_idx) == "MO";
-        name.pop_back();
-        name.pop_back();
-    }
-    flags.emplace_back(calc_ma_flg);
-    flags.emplace_back(calc_mo_flg);
-
-    // auto xor_4_flg = false;
-    auto xor_8_flg = false;
-    auto xor_16_flg = false;
-    auto xor_32_flg = false;
-    if (!m.str(xor_flg_idx).empty()) {
-        // xor_4_flg = m.str(xor_flg_idx) == "4";
-        xor_8_flg = m.str(xor_flg_idx) == "8";
-        xor_16_flg = m.str(xor_flg_idx) == "16";
-        xor_32_flg = m.str(xor_flg_idx) == "32";
-        name.pop_back();
-    }
-    // flags.emplace_back(xor_4_flg);
-    flags.emplace_back(xor_8_flg);
-    flags.emplace_back(xor_16_flg);
-    flags.emplace_back(xor_32_flg);
-
-    auto j_r_flg = !m.str(j_flg_idx).empty();
-    flags.emplace_back(j_r_flg);
-
-    if (sndm_m_flg || sndm_p_flg || j_r_flg || xor_16_flg || xor_32_flg) {
-        name.pop_back();
-    }
-
-    return name;
 }
 
 const string deparser_assembler::cmd_name_pattern = \

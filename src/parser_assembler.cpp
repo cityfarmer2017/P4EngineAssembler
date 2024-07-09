@@ -34,6 +34,11 @@ string parser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) 
     return name;
 }
 
+constexpr auto last_flg_idx = 0;
+constexpr auto unsigned_flg_idx = 1;
+constexpr auto mask0_flg_idx = 2;
+constexpr auto flags_size = 3;
+
 int parser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags)
 {
     machine_code mcode;
@@ -45,13 +50,9 @@ int parser_assembler::line_process(const string &line, const string &name, const
         return -1;
     }
 
-    if (flags.size() != 3) {
+    if (flags.size() != flags_size) {
         return -1;
     }
-
-    auto last = flags[0];
-    auto usign = flags[1];
-    auto mask0 = flags[2];
 
     switch (mcode.val64)
     {
@@ -255,7 +256,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
     case 0b01011: // HCRC16
     // intended fall through
     case 0b01010: // HCRC32
-        if (!mask0) {
+        if (!flags[mask0_flg_idx]) {
             mcode.op_01100.mask_flg = 1;
         }
         if (m.str(1) == "TMP") {
@@ -282,7 +283,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         break;
 
     case 0b10000: // SNE(U) / SGT(U) / SLT(U) / SGE(U) / SLE(U)
-        if (!usign) {
+        if (!flags[unsigned_flg_idx]) {
             mcode.op_10000.sign_flg = 1;
         }
         if (name == "SGT") {
@@ -341,7 +342,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         break;
     }
 
-    mcode.universe.last_flg = last;
+    mcode.universe.last_flg = flags[last_flg_idx];
 
     mcode_vec.emplace_back(mcode.val64);
 
