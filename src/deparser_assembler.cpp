@@ -144,6 +144,13 @@ int deparser_assembler::line_process(const string &line, const string &name, con
                 }
             }
         }
+        if (name == "SNDH" && mcode.op_00010.src_slct == 0) {
+            if (auto rc = check_previous(line)) {
+                print_cmd_bit_vld_unmatch_message(line);
+                return rc;
+            }
+            swap_previous(mcode);
+        }
         break;
 
     case 0b00110: // SETH
@@ -251,6 +258,10 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             if (flags[calc_mask_or_flg_idx]) {
                 mcode.op_01110.mask_flg = 1;
             }
+            if (auto rc = check_previous(line)) {
+                print_cmd_bit_vld_unmatch_message(line);
+                return rc;
+            }
         }
         break;
 
@@ -329,7 +340,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         }
         break;
 
-    case 0b10110:
+    case 0b10110: // COPY
         if (m.str(1) == "META" && m.str(4) == "META") {
             mcode.op_10110.direction = 3;
         } else if (m.str(1) == "META" && m.str(4) == "PHV") {
@@ -343,7 +354,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         break;
 
     case 0b10111: // MSKALL / MSKADDR
-        if (name == "VLDALL" && !m.str(1).empty()) {
+        if (name == "MSKALL" && !m.str(1).empty()) {
             print_cmd_param_unmatch_message(name, line);
             return -1;
         }
@@ -415,6 +426,8 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     if (opcode == 0b11001 || opcode == 0b10101) {
         mcode_vec.emplace_back(high32);
     }
+
+    prev_line_name = name;
 
     return 0;
 }

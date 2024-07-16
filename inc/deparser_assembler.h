@@ -26,6 +26,7 @@ protected:
 
 private:
     std::vector<u32> mcode_vec;
+    std::string prev_line_name;
 
     static const string cmd_name_pattern;
     static const int sndm_flg_idx;
@@ -37,10 +38,7 @@ private:
 
     int check_previous(const string &line) const
     {
-        machine_code mcode;
-        mcode.val32 = mcode_vec.back();
-        if (mcode.universe.opcode != 0b10111) {
-            std::cout << "this line must be following a <BIT VALID> instruction:\n\t" << line << std::endl;
+        if (prev_line_name != "MSKALL" && prev_line_name != "MSKADDR") {
             return -1;
         }
         return 0;
@@ -56,7 +54,7 @@ private:
 
     static void print_cmd_bit_vld_unmatch_message(const string &line)
     {
-        std::cout << line + "\n\tshall be following an OP<BIT VALID> line." << std::endl;
+        std::cout << line + "\n\tshall be following a <MSKALL / MSKADDR> line." << std::endl;
     }
 };
 
