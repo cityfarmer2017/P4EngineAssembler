@@ -15,6 +15,7 @@ using u64_regex_map = std::unordered_map<u64, regex>;
 class mat_assembler : public assembler {
  public:
     mat_assembler() = default;
+    explicit mat_assembler(bool flag) : long_flag(flag) {}
     virtual ~mat_assembler() = default;
 
     mat_assembler(const mat_assembler&) = delete;
@@ -31,6 +32,7 @@ class mat_assembler : public assembler {
 
  private:
     std::vector<u64> mcode_vec;
+    bool long_flag{false};
 
     static const string cmd_name_pattern;
     static const int l_flg_idx;

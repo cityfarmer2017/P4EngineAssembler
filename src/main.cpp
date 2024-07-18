@@ -8,14 +8,10 @@
 #include "mat_assembler.h"       // NOLINT [build/include_subdir]
 
 int process_one_entry(const std::filesystem::directory_entry &entry, const string &out_path) {
-    string src_dir(entry.path().parent_path());
+    string src_dir(entry.path().has_parent_path() ? entry.path().parent_path() : std::filesystem::current_path());
     string src_fname(entry.path().filename());
     string src_fstem(entry.path().stem());
     string src_fext(entry.path().extension());
-
-    if (src_dir.empty()) {
-        src_dir = std::filesystem::current_path();
-    }
 
     string dst_fname(out_path);
     if (!out_path.empty()) {
@@ -41,6 +37,9 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     } else if (src_fext == ".p4m") {
         p_asm = std::make_unique<mat_assembler>();
         dst_fname += "mat_";
+    } else if (src_fext == ".p4ml") {
+        p_asm = std::make_unique<mat_assembler>(true);
+        dst_fname += "mat_long_";
     } else {  // (src_fext == ".p4d")
         p_asm = std::make_unique<deparser_assembler>();
         dst_fname += "deparser_";
@@ -52,7 +51,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     std::cout << dst_fname << "\n";
     #endif
 
-    return p_asm->execute(src_fname, dst_fname);
+    return p_asm->execute(src_dir + "/" + src_fname, dst_fname);
 }
 
 inline void print_help_information() {
@@ -105,7 +104,8 @@ int main(int argc, char* argv[]) {
 
     for (const auto &entry : std::filesystem::directory_iterator(argv[1])) {
         string src_fext(entry.path().extension());
-        if (!entry.is_regular_file() || ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4d"))) {
+        if (!entry.is_regular_file() ||
+            ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4ml") && (src_fext != ".p4d"))) {
             continue;
         }
 

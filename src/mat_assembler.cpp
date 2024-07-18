@@ -87,8 +87,7 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         return -1;
     }
 
-    static bool long_flg = flags[long_flg_idx];
-    if (long_flg != flags[long_flg_idx]) {
+    if (long_flag != flags[long_flg_idx]) {
         cout << "normal and long instructions shall not be mixed.\n\t" << line << endl;
         return -1;
     }
