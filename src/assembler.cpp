@@ -1,10 +1,12 @@
-#include "assembler.h"
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
+#include "assembler.h"  // NOLINT [build/include_subdir]
 
 using std::cout;
 using std::endl;
 
-int assembler::execute(const string &in_fname, const string &out_fname)
-{
+int assembler::execute(const string &in_fname, const string &out_fname) {
     string line;
 
     src_fstrm.open(in_fname);
@@ -49,8 +51,7 @@ int assembler::execute(const string &in_fname, const string &out_fname)
         return -1;
     }
 
-    if (auto rc = open_output_file(out_fname + ".dat"))
-    {
+    if (auto rc = open_output_file(out_fname + ".dat")) {
         return rc;
     }
 
@@ -71,8 +72,7 @@ int assembler::execute(const string &in_fname, const string &out_fname)
     return 0;
 }
 
-int assembler::open_output_file(const string &out_fname)
-{
+int assembler::open_output_file(const string &out_fname) {
     string posfix = out_fname.substr(out_fname.size() - 4);
     if (posfix == ".dat") {
         dst_fstrm.open(out_fname, std::ios::binary);
@@ -82,7 +82,7 @@ int assembler::open_output_file(const string &out_fname)
         std::cout << "wrong file posfix." << endl;
         return -1;
     }
-    
+
     if (!dst_fstrm) {
         std::cout << "cannot open out file: " << out_fname << std::endl;
         return -1;
@@ -91,6 +91,6 @@ int assembler::open_output_file(const string &out_fname)
     return 0;
 }
 
-const string assembler::comment_empty_line_p = R"(^\s*\/\/.*[\n\r]?$|^\s*$)";
-const string assembler::normal_line_prefix_p = R"(^\s*[A-Z\d+-]+\s+)";
-const string assembler::normal_line_posfix_p = R"(\s*;\s*(\/\/.*)?$)";
+const string assembler::comment_empty_line_p = R"(^\s*\/\/.*[\n\r]?$|^\s*$)";  // NOLINT [runtime/string]
+const string assembler::normal_line_prefix_p = R"(^\s*[A-Z\d+-]+\s+)";  // NOLINT [runtime/string]
+const string assembler::normal_line_posfix_p = R"(\s*;\s*(\/\/.*)?$)";  // NOLINT [runtime/string]

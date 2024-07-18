@@ -1,7 +1,10 @@
-#ifndef MAT_DEF_H
-#define MAT_DEF_H
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
+#ifndef INC_MAT_DEF_H_
+#define INC_MAT_DEF_H_
 
-#include "mat_assembler.h"
+#include "mat_assembler.h"  // NOLINT [build/include_subdir]
 
 typedef union {
     struct {
@@ -27,15 +30,6 @@ typedef union {
         u64 dst_slct: 1;
         u64 rsvd2: 1;
     } op_00010;
-    // struct {
-    //     u64 opcode: 5;
-    //     u64 src_off: 9;
-    //     u64 length: 3;
-    //     u64 rsvd1: 24;
-    //     u64 dst_off: 9;
-    //     u64 direction: 2;
-    //     u64 rsvd2: 12;
-    // } op_00011;
     struct {
         u64 opcode: 5;
         u64 counter_id: 24;
@@ -112,63 +106,58 @@ typedef union {
     u64 val64;
 } machine_code;
 
-// typedef struct _long_mcode {
-//     machine_code normal;
-//     char extension[];
-// } long_mcode;
-
-const string P_00001 = assembler::normal_line_prefix_p +
+const string P_00001 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((\d{1,10}|0[xX][\dA-Fa-f]{1,8}|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
     R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}))"
     + assembler::normal_line_posfix_p;
 
-const string P_00010 = assembler::normal_line_prefix_p +
+const string P_00010 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((\d{1,5}|0[xX][\dA-Fa-f]{1,4}|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])\s*,\s+)"
     R"((0[xX][\dA-Fa-f]{1,4})\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|)"
     R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([12])\s*\}))"
     + assembler::normal_line_posfix_p;
 
-const string P_00011 = assembler::normal_line_prefix_p +
+const string P_00011 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((META|PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}\s*,\s+)"
     R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_00100 = assembler::normal_line_prefix_p +
+const string P_00100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(((0[xX][\dA-Fa-f]{1,6})|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])?)"
     + assembler::normal_line_posfix_p;
 
-const string P_00101 = assembler::normal_line_prefix_p +
+const string P_00101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(((0[xX][\dA-Fa-f]{1,3})\s*,\s+|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*]\s*,\s+)?)"
     R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_00110_00111 = assembler::normal_line_prefix_p +
+const string P_00110_00111 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(((0[xX][\dA-Fa-f]{1,6})|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])?)"
     + assembler::normal_line_posfix_p;
 
-const string P_10100 = assembler::normal_line_prefix_p +
+const string P_10100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(((0[xX][\dA-Fa-f]{16})(\s*,\s+(0[xX][\dA-Fa-f]{1,16}))?|)"
     R"(AD\s*\{\s*([0-9]|[1-5][0-9]|6[0-3])\s*:\s*([1-4])\s*\})\s*,\s+)"
     R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_10101 = assembler::normal_line_prefix_p +
+const string P_10101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(PHV\s*(\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-9]|[1-3][0-9]|40)\s*\}|)"
     R"(\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*]\s*,\s+)"
     R"(META\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-9]|[1-3][0-9]|40)\s*\})\s*,\s+)"
     R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_10110 = assembler::normal_line_prefix_p +
+const string P_10110 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((META|PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-9]|1[0-6])\s*\}\s*,\s+)"
     R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_10111_11000 = assembler::normal_line_prefix_p +
+const string P_10111_11000 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*]\s*,\s+)"
     R"((0[xX][\dA-Fa-f]{1,9}|AD\s*\{\s*([0-9]|[1-5][0-9]|6[0-3])\s*:\s*([0-7])\s*\})\s*,\s+([0-3]))"
     + assembler::normal_line_posfix_p;
 
-#endif // MAT_DEF_H
+#endif  // INC_MAT_DEF_H_

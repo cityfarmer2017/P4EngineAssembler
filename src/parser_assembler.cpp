@@ -1,19 +1,20 @@
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
 #include <limits>
-#include "parser_def.h"
-#include "parser_assembler.h"
+#include "parser_def.h"  // NOLINT [build/include_subdir]
+#include "parser_assembler.h"  // NOLINT [build/include_subdir]
 
 using std::cout;
 using std::endl;
 using std::stoul;
 using std::stoull;
 
-inline string parser_assembler::get_name_pattern(void) const
-{
+inline string parser_assembler::get_name_pattern(void) const {
     return cmd_name_pattern;
 }
 
-string parser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const
-{
+string parser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
     auto l_flg = !m.str(l_idx).empty();
     auto u_flg = !m.str(u_idx).empty();
     auto m0_flg = !m.str(m0_idx).empty();
@@ -39,8 +40,7 @@ constexpr auto unsigned_flg_idx = 1;
 constexpr auto mask0_flg_idx = 2;
 constexpr auto flags_size = 3;
 
-int parser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags)
-{
+int parser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
     machine_code mcode;
     mcode.val64 = cmd_opcode_map.at(name);
     smatch m;
@@ -54,9 +54,8 @@ int parser_assembler::line_process(const string &line, const string &name, const
         return -1;
     }
 
-    switch (mcode.val64)
-    {
-    case 0b00001: // MOV, MDF
+    switch (mcode.val64) {
+    case 0b00001:  // MOV, MDF
         if (name == "MOV" && !m.str(2).empty()) {
             print_cmd_param_unmatch_message(name, line);
             return -1;
@@ -66,7 +65,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
             cout << "imm32 value exceeds limit.\n\t" << line << endl;
             return -1;
         }
-        mcode.op_00001.imm32 = stoul(m.str(1), nullptr, 0); // heximal or decimal
+        mcode.op_00001.imm32 = stoul(m.str(1), nullptr, 0);  // heximal or decimal
 
         mcode.op_00001.src_len = 0x1f;
         if (!m.str(2).empty()) {
@@ -94,9 +93,9 @@ int parser_assembler::line_process(const string &line, const string &name, const
         }
         break;
 
-    case 0b00010: // RMV
+    case 0b00010:  // RMV
     // intended fall through
-    case 0b00011: // XCT
+    case 0b00011:  // XCT
         if (m.str(1) == "TMP") {
             mcode.op_00011.src_slct = 1;
         }
@@ -120,7 +119,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         }
         break;
 
-    case 0b10101: // ADDU / SUBU
+    case 0b10101:  // ADDU / SUBU
         if (m.str(1) == "TMP") {
             mcode.op_10101.src0_slct = 1;
         }
@@ -132,7 +131,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         if (m.str(4) == "TMP") {
             mcode.op_10101.src1_slct = 1;
         } else {
-            if (stoul(m.str(4), nullptr, 0) > std::numeric_limits<unsigned short>::max()) {
+            if (stoul(m.str(4), nullptr, 0) > std::numeric_limits<std::uint16_t>::max()) {
                 cout << "imm16 value exceeds limit.\n\t" << line << endl;
                 return -1;
             }
@@ -155,7 +154,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         }
         break;
 
-    case 0b10100: // COPY
+    case 0b10100:  // COPY
         if (m.str(1) != "CALC_RSLT") {
             unsigned int idx = stoul(m.str(2));
             if (idx <= 3) {
@@ -181,7 +180,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         }
         break;
 
-    case 0b00111: // RSM16 / RSM32
+    case 0b00111:  // RSM16 / RSM32
         if (name == "RSM32") {
             mcode.op_00111.len_flg = 1;
         }
@@ -194,16 +193,16 @@ int parser_assembler::line_process(const string &line, const string &name, const
         mcode.op_00111.line_off = stoul(m.str(4));
         break;
 
-    case 0b00101: // LOCK
+    case 0b00101:  // LOCK
     // intended fall through
-    case 0b00110: // ULCK
+    case 0b00110:  // ULCK
         if (!m.str(1).empty()) {
             mcode.op_00101.flow_id = stoul(m.str(1), nullptr, 0);
             mcode.op_00101.inline_flg = 1;
         }
         break;
 
-    case 0b00100: // SHFT
+    case 0b00100:  // SHFT
         if (!m.str(1).empty()) {
             if (!m.str(2).empty()) {
                 mcode.op_00100.inline_flg = 1;
@@ -228,14 +227,14 @@ int parser_assembler::line_process(const string &line, const string &name, const
         }
         break;
 
-    case 0b01001: // CSET
+    case 0b01001:  // CSET
         if (m.str(1) == "POLY") {
             mcode.op_01001.calc_slct = 4;
         } else if (m.str(1) == "INIT") {
             mcode.op_01001.calc_slct = 5;
         } else if (m.str(1) == "XOROT") {
             mcode.op_01001.calc_slct = 7;
-        } else { // (m.str(1) == "CTRL")
+        } else {  // (m.str(1) == "CTRL")
             mcode.op_01001.calc_slct = 6;
             mcode.op_01001.ctrl_mode = stoul(m.str(2), nullptr, 2);
         }
@@ -247,15 +246,15 @@ int parser_assembler::line_process(const string &line, const string &name, const
             }
             mcode.op_01001.value = stoul(m.str(3));
         } else {
-            mcode.op_01001.value = stoul(m.str(3), nullptr, 0); // heximal
+            mcode.op_01001.value = stoul(m.str(3), nullptr, 0);  // heximal
         }
         break;
 
-    case 0b01100: // HCSUM
+    case 0b01100:  // HCSUM
     // intended fall through
-    case 0b01011: // HCRC16
+    case 0b01011:  // HCRC16
     // intended fall through
-    case 0b01010: // HCRC32
+    case 0b01010:  // HCRC32
         if (!flags[mask0_flg_idx]) {
             mcode.op_01100.mask_flg = 1;
         }
@@ -272,17 +271,17 @@ int parser_assembler::line_process(const string &line, const string &name, const
         mcode.op_01100.mask = stoul(m.str(4), nullptr, 0);
         break;
 
-    case 0b01000: // NOP
+    case 0b01000:  // NOP
     // intended fall through
-    case 0b01111: // PCSUM
+    case 0b01111:  // PCSUM
     // intended fall through
-    case 0b01110: // PCRC16
+    case 0b01110:  // PCRC16
     // intended fall through
-    case 0b01101: // PCRC32
+    case 0b01101:  // PCRC32
         /* code */
         break;
 
-    case 0b10000: // SNE(U) / SGT(U) / SLT(U) / SGE(U) / SLE(U)
+    case 0b10000:  // SNE(U) / SGT(U) / SLT(U) / SGE(U) / SLE(U)
         if (!flags[unsigned_flg_idx]) {
             mcode.op_10000.sign_flg = 1;
         }
@@ -302,7 +301,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         mcode.op_10000.length = stoul(m.str(2));
         break;
 
-    case 0b10001: // NXTH
+    case 0b10001:  // NXTH
         if (!m.str(1).empty()) {
             mcode.op_10001.isr_off = stoul(m.str(2));
             mcode.op_10001.isr_len = stoul(m.str(3));
@@ -330,14 +329,14 @@ int parser_assembler::line_process(const string &line, const string &name, const
         mcode.op_10001.sub_state = stoul(m.str(9));
         break;
 
-    case 0b10010: // NXTD
+    case 0b10010:  // NXTD
     // intended fall through
-    case 0b10011: // NXTP
+    case 0b10011:  // NXTP
         if (!m.str(1).empty()) {
             mcode.op_10010.shift_val = stoul(m.str(2));
         }
         break;
-    
+
     default:
         break;
     }
@@ -347,20 +346,18 @@ int parser_assembler::line_process(const string &line, const string &name, const
     mcode_vec.emplace_back(mcode.val64);
 
     return 0;
-}
+} // NOLINT [readability/fn_size]
 
-void parser_assembler::write_machine_code(void)
-{
+void parser_assembler::write_machine_code(void) {
     dst_fstrm.write(reinterpret_cast<const char*>(mcode_vec.data()), sizeof(mcode_vec[0]) * mcode_vec.size());
 }
 
-void parser_assembler::print_machine_code(void)
-{
+void parser_assembler::print_machine_code(void) {
     print_mcode_line_by_line(std::cout, mcode_vec);
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
 }
 
-const string parser_assembler::cmd_name_pattern = \
+const string parser_assembler::cmd_name_pattern =  // NOLINT [runtime/string]
     R"((MOV|MDF|XCT|RMV|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
     R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
 

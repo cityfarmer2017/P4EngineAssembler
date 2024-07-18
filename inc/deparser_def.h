@@ -1,7 +1,10 @@
-#ifndef DEPARSER_DEF_H
-#define DEPARSER_DEF_H
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
+#ifndef INC_DEPARSER_DEF_H_
+#define INC_DEPARSER_DEF_H_
 
-#include "deparser_assembler.h"
+#include "deparser_assembler.h"  // NOLINT [build/include_subdir]
 
 typedef union {
     struct {
@@ -137,70 +140,70 @@ typedef union {
     u64 val64;
 } machine_code;
 
-const string P_00001 = assembler::normal_line_prefix_p +
+const string P_00001 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"()" + assembler::normal_line_posfix_p;
 
-const string P_00010_00011_00100 = assembler::normal_line_prefix_p +
+const string P_00010_00011_00100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(((PHV|HDR|PLD)\s*(\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])?\s*:\s*)"
     R"(([1-9][0-9]{0,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])?\s*\})?(\s*,\s+(CSUM|CRC16|CRC32))?)?)"
     + assembler::normal_line_posfix_p;
 
-const string P_00101 = assembler::normal_line_prefix_p +
+const string P_00101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\}\s*,\s+TMP)"
     + assembler::normal_line_posfix_p;
 
-const string P_00110_00111 = assembler::normal_line_prefix_p +
+const string P_00110_00111 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((TMP|COND|POFF|PLEN|POLY|INIT|CTRL\s*,\s+0b000([01]{5})|XOROT)\s*,\s+(\d{1,5}|0[xX][\dA-F]{1,4}))"
     + assembler::normal_line_posfix_p;
 
-const string P_01000_01001 = assembler::normal_line_prefix_p +
+const string P_01000_01001 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(TMP\s*,\s+(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}\s*,\s+)"
     R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([2-9])\s*\}|COND|POFF|PLEN))"
     + assembler::normal_line_posfix_p;
 
-const string P_01010_01100_11100 = assembler::normal_line_prefix_p +
+const string P_01010_01100_11100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*)"
     R"(([1-9][0-9]?|[1-4][0-9]{2}|50[0-9]|51[01])\s*\}\s*,\s+)"
     R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_01011_01101_11101 = assembler::normal_line_prefix_p +
+const string P_01011_01101_11101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])?)"
     + assembler::normal_line_posfix_p;
 
-const string P_01110_01111_10000 = assembler::normal_line_prefix_p +
+const string P_01110_01111_10000 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((PHV|HDR|PLD)\s*(\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])?\s*:\s*)"
     R"(([1-9][0-9]{0,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])?\s*\})?)"
     + assembler::normal_line_posfix_p;
 
-const string P_10001_10011 = assembler::normal_line_prefix_p +
+const string P_10001_10011 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-5][0-9]?|6[0-3])\s*\}\s*,\s+)"
     R"((PHV|META)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_10010_10100 = assembler::normal_line_prefix_p +
+const string P_10010_10100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((PHV|META)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
     + assembler::normal_line_posfix_p;
 
-const string P_10101 = assembler::normal_line_prefix_p +
+const string P_10101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((CNTR\s*\[\s*([0-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])\s*]\s*,\s+)?)"
     R"((([1-9][0-9]{1,2}|2[0-4][0-9]|25[0-5])\s*,\s+)?)"
     R"(((PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*(32|64)\s*\})|(TMP))\s*,\s+(LCK|ULK))"
     + assembler::normal_line_posfix_p;
 
-const string P_10110 = assembler::normal_line_prefix_p +
+const string P_10110 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((PHV|META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\}\s*,\s+)"
     R"((PHV|META)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])])"
     + assembler::normal_line_posfix_p;
 
-const string P_10111 = assembler::normal_line_prefix_p +
+const string P_10111 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((0[xX][\dA-Fa-f]{1,4})?)" + assembler::normal_line_posfix_p;
 
-const string P_11001 = assembler::normal_line_prefix_p +
+const string P_11001 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((([-])?\d{1,5}|0[xX][\dA-Fa-f]{1,4})(\s*,\s+(([-])?\d{1,5}|0[xX][\dA-Fa-f]{1,4})\s*,\s+)"
     R"((CONDR|PHV(1|8|16|32)\s*\[\s*([0-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])\s*]))?)"
     + assembler::normal_line_posfix_p;
 
-const string P_11000_11010_11011 = P_00001;
+const string P_11000_11010_11011 = P_00001;  // NOLINT [runtime/string]
 
-#endif // DEPARSER_DEF_H
+#endif  // INC_DEPARSER_DEF_H_

@@ -1,19 +1,20 @@
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
 #include <limits>
-#include "deparser_assembler.h"
-#include "deparser_def.h"
+#include "deparser_assembler.h"  // NOLINT [build/include_subdir]
+#include "deparser_def.h"  // NOLINT [build/include_subdir]
 
 using std::cout;
 using std::endl;
 using std::stoul;
 using std::stoull;
 
-inline string deparser_assembler::get_name_pattern(void) const
-{
+inline string deparser_assembler::get_name_pattern(void) const {
     return cmd_name_pattern;
 }
 
-string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const
-{
+string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
     auto name = m.str(1);
 
     auto sndm_m_flg = false;
@@ -72,8 +73,7 @@ constexpr auto xor32_flg_idx = 6;
 constexpr auto jump_relative_flg_idx = 7;
 constexpr auto flags_size = 8;
 
-int deparser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags)
-{
+int deparser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
     machine_code mcode;
     mcode.val64 = 0;
     mcode.val32 = cmd_opcode_map.at(name);
@@ -89,9 +89,8 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         return -1;
     }
 
-    switch (opcode)
-    {
-    case 0b00001: // SNDM[PM]
+    switch (opcode) {
+    case 0b00001:  // SNDM[PM]
         if (flags[sendm_mask_flg_idx]) {
             if (auto rc = check_previous(line)) {
                 print_cmd_bit_vld_unmatch_message(line);
@@ -104,9 +103,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         }
         break;
 
-    case 0b00010: // SNDH
-    case 0b00011: // SNDP
-    case 0b00100: // SNDPC
+    case 0b00010:  // SNDH
+    case 0b00011:  // SNDP
+    case 0b00100:  // SNDPC
         if (m.str(1).empty()) {
             mcode.op_00010.src_slct = 3;
         } else {
@@ -139,7 +138,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
                     mcode.op_00011.calc_mode = 1;
                 } else if (m.str(7) == "CRC16") {
                     mcode.op_00011.calc_mode = 2;
-                } else { // m.str(7) == "CRC32"
+                } else {  // m.str(7) == "CRC32"
                     mcode.op_00011.calc_mode = 3;
                 }
             }
@@ -153,8 +152,8 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         }
         break;
 
-    case 0b00110: // SETH
-    case 0b00111: // SETL
+    case 0b00110:  // SETH
+    case 0b00111:  // SETL
         if (m.str(1) == "COND") {
             mcode.op_00110.dst_slct = 1;
         } else if (m.str(1) == "POFF") {
@@ -167,19 +166,19 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             mcode.op_00110.dst_slct = 5;
         } else if (m.str(1) == "XOROT") {
             mcode.op_00110.dst_slct = 7;
-        } else if (m.str(1) != "TMP") { // "CTRL"
+        } else if (m.str(1) != "TMP") {  // "CTRL"
             mcode.op_00110.dst_slct = 6;
             mcode.op_00110.ctrl_mode = stoul(m.str(2), nullptr, 2);
         }
-        if (stoul(m.str(3), nullptr, 0) > std::numeric_limits<unsigned short>::max()) {
+        if (stoul(m.str(3), nullptr, 0) > std::numeric_limits<std::uint16_t>::max()) {
             cout << "imm16 value exceeds limit.\n\t" << line << endl;
             return -1;
         }
-        mcode.op_00110.value = stoul(m.str(3), nullptr, 0); // heximal or decimal
+        mcode.op_00110.value = stoul(m.str(3), nullptr, 0);  // heximal or decimal
         break;
 
-    case 0b01000: // ADDU
-    case 0b01001: // ADD
+    case 0b01000:  // ADDU
+    case 0b01001:  // ADD
         if (m.str(1) == "COND") {
             mcode.op_01000.src_slct = 1;
         } else if (m.str(1) == "POFF") {
@@ -198,9 +197,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         }
         break;
 
-    case 0b01010: // CMPCT
-    case 0b01100: // AND
-    case 0b11100: // OR
+    case 0b01010:  // CMPCT
+    case 0b01100:  // AND
+    case 0b11100:  // OR
         if (auto rc = check_previous(line)) {
             print_cmd_bit_vld_unmatch_message(line);
             return rc;
@@ -211,9 +210,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         swap_previous(mcode);
         break;
 
-    case 0b01011: // CMPCTR
-    case 0b01101: // ANDR
-    case 0b11101: // ORR
+    case 0b01011:  // CMPCTR
+    case 0b01101:  // ANDR
+    case 0b11101:  // ORR
         if (auto rc = check_previous(line)) {
             print_cmd_bit_vld_unmatch_message(line);
             return rc;
@@ -226,9 +225,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         swap_previous(mcode);
         break;
 
-    case 0b01110: // CRC16
-    case 0b01111: // CRC32
-    case 0b10000: // CSUM
+    case 0b01110:  // CRC16
+    case 0b01111:  // CRC32
+    case 0b10000:  // CSUM
         if (m.str(1) == "PLD") {
             mcode.op_01110.src_slct = 2;
         } else if (m.str(1) == "HDR") {
@@ -262,10 +261,11 @@ int deparser_assembler::line_process(const string &line, const string &name, con
                 print_cmd_bit_vld_unmatch_message(line);
                 return rc;
             }
+            swap_previous(mcode);
         }
         break;
 
-    case 0b10001: // XOR
+    case 0b10001:  // XOR
         mcode.op_10001.src_off = stoul(m.str(1));
         mcode.op_10001.src_len = stoul(m.str(2));
         mcode.op_10001.calc_unit = get_xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
@@ -273,13 +273,13 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         mcode.op_10001.dst_off = stoul(m.str(4));
         break;
 
-    case 0b10010: // XORR
+    case 0b10010:  // XORR
         mcode.op_10010.calc_unit = get_xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
         mcode.op_10010.dst_slct = m.str(1) == "PHV";
         mcode.op_10010.dst_off = stoul(m.str(2));
         break;
 
-    case 0b10011: // HASH
+    case 0b10011:  // HASH
         if (auto rc = check_previous(line)) {
             print_cmd_bit_vld_unmatch_message(line);
             return rc;
@@ -291,7 +291,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         swap_previous(mcode);
         break;
 
-    case 0b10100: // HASHR
+    case 0b10100:  // HASHR
         if (auto rc = check_previous(line)) {
             print_cmd_bit_vld_unmatch_message(line);
             return rc;
@@ -301,7 +301,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         swap_previous(mcode);
         break;
 
-    case 0b10101: // ++GET / GET++ / --GET / GET-- / LDPC / LDTC
+    case 0b10101:  // ++GET / GET++ / --GET / GET-- / LDPC / LDTC
         if (m.str(10) == "LCK") {
             mcode.op_10101.lck_flg = 1;
         } else if (m.str(10) == "ULK") {
@@ -312,9 +312,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
                 print_cmd_param_unmatch_message(name, line);
                 return -1;
             }
-            if(!m.str(9).empty()) { // from TMP
+            if (!m.str(9).empty()) {  // from TMP
                 mcode.op_10101.cmd_type = 5;
-            } else { // from PHV
+            } else {  // from PHV
                 mcode.op_10101.cmd_type = 4;
             }
         } else if (name == "GET--") {
@@ -340,7 +340,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         }
         break;
 
-    case 0b10110: // COPY
+    case 0b10110:  // COPY
         if (m.str(1) == "META" && m.str(4) == "META") {
             mcode.op_10110.direction = 3;
         } else if (m.str(1) == "META" && m.str(4) == "PHV") {
@@ -353,12 +353,13 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         mcode.op_10110.dst_off = stoul(m.str(5));
         break;
 
-    case 0b10111: // MSKALL / MSKADDR
-        if (name == "MSKALL" && !m.str(1).empty()) {
-            print_cmd_param_unmatch_message(name, line);
-            return -1;
-        }
-        if (!m.str(1).empty()) {
+    case 0b10111:  // MSKALL / MSKADDR
+        if (name == "MSKALL") {
+            if (!m.str(1).empty()) {
+                print_cmd_param_unmatch_message(name, line);
+                return -1;
+            }
+        } else if (!m.str(1).empty()) {
             mcode.op_10111.select = 1;
             mcode.op_10111.address = stoul(m.str(1), nullptr, 0);
         } else {
@@ -412,9 +413,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         }
         break;
 
-    case 0b11000: // NOP
-    case 0b11010: // RET
-    case 0b11011: // END
+    case 0b11000:  // NOP
+    case 0b11010:  // RET
+    case 0b11011:  // END
         break;
 
     default:
@@ -430,20 +431,18 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     prev_line_name = name;
 
     return 0;
-}
+} // NOLINT [readability/fn_size]
 
-void deparser_assembler::write_machine_code(void)
-{
+void deparser_assembler::write_machine_code(void) {
     dst_fstrm.write(reinterpret_cast<const char*>(mcode_vec.data()), sizeof(mcode_vec[0]) * mcode_vec.size());
 }
 
-void deparser_assembler::print_machine_code(void)
-{
+void deparser_assembler::print_machine_code(void) {
     print_mcode_line_by_line(std::cout, mcode_vec);
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
 }
 
-const string deparser_assembler::cmd_name_pattern = \
+const string deparser_assembler::cmd_name_pattern =  // NOLINT [runtime/string]
     R"((SNDM([PM])?|SND[HP]C?|MOVE|SET[HL]|ADDU?|CMPCTR?|ANDR?|ORR?|(CRC16|CRC32|CSUM)(M[AO])?|)"
     R"(XORR?(4|8|16|32)|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|MSKALL|MSKADDR|NOP|(J|BEZ)(R)?|RET|END))";
 

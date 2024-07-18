@@ -1,11 +1,13 @@
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
 #include <memory>
 #include <filesystem>
-#include "parser_assembler.h"
-#include "deparser_assembler.h"
-#include "mat_assembler.h"
+#include "parser_assembler.h"    // NOLINT [build/include_subdir]
+#include "deparser_assembler.h"  // NOLINT [build/include_subdir]
+#include "mat_assembler.h"       // NOLINT [build/include_subdir]
 
-int process_one_entry(const std::filesystem::directory_entry &entry, const string &out_path)
-{
+int process_one_entry(const std::filesystem::directory_entry &entry, const string &out_path) {
     string src_dir(entry.path().parent_path());
     string src_fname(entry.path().filename());
     string src_fstem(entry.path().stem());
@@ -39,7 +41,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     } else if (src_fext == ".p4m") {
         p_asm = std::make_unique<mat_assembler>();
         dst_fname += "mat_";
-    } else { // (src_fext == ".p4d")
+    } else {  // (src_fext == ".p4d")
         p_asm = std::make_unique<deparser_assembler>();
         dst_fname += "deparser_";
     }
@@ -53,8 +55,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     return p_asm->execute(src_fname, dst_fname);
 }
 
-inline void print_help_information()
-{
+inline void print_help_information() {
     std::cout << "Usage:\n\t";
     std::cout << "P4eAsm \"path to source (file / directory)\" [\"path to destination (directory)\"]\n\t";
     std::cout << "P4eAsm \"-h\" or \"--help\" for help.\n";
@@ -67,8 +68,7 @@ inline void print_help_information()
     std::cout << std::flush;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     if (argc == 2) {
         if (string(argv[1]) == "-h" || string(argv[1]) == "--help") {
             print_help_information();
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
         return process_one_entry(entry, out_path);
     }
 
-    for (const auto &entry: std::filesystem::directory_iterator(argv[1])) {
+    for (const auto &entry : std::filesystem::directory_iterator(argv[1])) {
         string src_fext(entry.path().extension());
         if (!entry.is_regular_file() || ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4d"))) {
             continue;

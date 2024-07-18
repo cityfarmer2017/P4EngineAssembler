@@ -1,19 +1,20 @@
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
 #include <limits>
-#include "mat_assembler.h"
-#include "mat_def.h"
+#include "mat_assembler.h"  // NOLINT [build/include_subdir]
+#include "mat_def.h"  // NOLINT [build/include_subdir]
 
 using std::cout;
 using std::endl;
 using std::stoul;
 using std::stoull;
 
-inline string mat_assembler::get_name_pattern(void) const
-{
+inline string mat_assembler::get_name_pattern(void) const {
     return cmd_name_pattern;
 }
 
-string mat_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const
-{
+string mat_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
     auto name = m.str(1);
 
     auto long_flg = !m.str(l_flg_idx).empty() || name == "HASH";
@@ -70,8 +71,7 @@ constexpr auto xor32_flg_idx = 4;
 constexpr auto stm32_flg_idx = 5;
 constexpr auto flags_size = 6;
 
-int mat_assembler::line_process(const string &line, const string &name, const vector<bool> &flags)
-{
+int mat_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
     machine_code mcode;
     mcode.val64 = cmd_opcode_map.at(name);
     mcode.universe.imm64_l = 0;
@@ -89,19 +89,18 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
 
     static bool long_flg = flags[long_flg_idx];
     if (long_flg != flags[long_flg_idx]) {
-        cout << "normal and long instructions shall not be mixed." << endl;
+        cout << "normal and long instructions shall not be mixed.\n\t" << line << endl;
         return -1;
     }
 
-    switch (mcode.val64)
-    {
-    case 0b00001: // MOV
+    switch (mcode.val64) {
+    case 0b00001:  // MOV
         if (m.str(2).empty()) {
             if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<u32>::max()) {
             cout << "imm32 value exceeds limit.\n\t" << line << endl;
                 return -1;
             }
-            mcode.op_00001.imm32 = stoul(m.str(1), nullptr, 0); // heximal or decimal
+            mcode.op_00001.imm32 = stoul(m.str(1), nullptr, 0);  // heximal or decimal
         } else {
             mcode.op_00001.mode = 1;
             mcode.op_00001.ad_idx = stoul(m.str(2));
@@ -116,13 +115,13 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         }
         break;
 
-    case 0b00010: // MDF
+    case 0b00010:  // MDF
         if (m.str(2).empty()) {
             if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<uint16_t>::max()) {
             cout << "imm16 value exceeds limit.\n\t" << line << endl;
                 return -1;
             }
-            mcode.op_00010.imm16 = stoul(m.str(1), nullptr, 0); // heximal or decimal
+            mcode.op_00010.imm16 = stoul(m.str(1), nullptr, 0);  // heximal or decimal
         } else {
             mcode.op_00010.mode = 1;
             mcode.op_00010.ad_idx = stoul(m.str(2));
@@ -138,8 +137,8 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         }
         break;
 
-    case 0b00011: // COPY
-    case 0b10110: // COPYL
+    case 0b00011:  // COPY
+    case 0b10110:  // COPYL
         if (m.str(1) == "PHV" && m.str(4) == "META") {
             mcode.op_00011.direction = 1;
         } else if (m.str(1) == "META" && m.str(4) == "PHV") {
@@ -152,42 +151,42 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         mcode.op_00011.dst_off = stoul(m.str(5));
         break;
 
-    case 0b00100: // COUNT
+    case 0b00100:  // COUNT
         if (m.str(1).empty()) {
             mcode.op_00100.mode = 1;
         } else if (!m.str(2).empty()) {
             mcode.op_00100.counter_id = stoul(m.str(2), nullptr, 0);
-        } else { // if (!m.str(3).empty()) {
+        } else {  // if (!m.str(3).empty()) {
             mcode.op_00100.ad_idx = stoul(m.str(3));
             mcode.op_00100.mode = 2;
         }
         break;
 
-    case 0b00101: // METER
+    case 0b00101:  // METER
         if (m.str(1).empty()) {
             mcode.op_00101.mode = 1;
         } else if (!m.str(2).empty()) {
             mcode.op_00101.meter_id = stoul(m.str(2), nullptr, 0);
-        } else { // if (!m.str(3).empty()) {
+        } else {  // if (!m.str(3).empty()) {
             mcode.op_00101.ad_idx = stoul(m.str(3));
             mcode.op_00101.mode = 2;
         }
         mcode.op_00101.dst_off = stoul(m.str(4));
         break;
 
-    case 0b00110: // LOCK
-    case 0b00111: // ULCK
+    case 0b00110:  // LOCK
+    case 0b00111:  // ULCK
         if (m.str(1).empty()) {
             mcode.op_00110.mode = 1;
         } else if (!m.str(2).empty()) {
             mcode.op_00110.flow_id = stoul(m.str(2), nullptr, 0);
-        } else { // if (!m.str(3).empty()) {
+        } else {  // if (!m.str(3).empty()) {
             mcode.op_00110.ad_idx = stoul(m.str(3));
             mcode.op_00110.mode = 2;
         }
         break;
 
-    case 0b10100: // MOVL
+    case 0b10100:  // MOVL
         if (!m.str(2).empty()) {
             mcode.universe.imm64_l = std::stoull(m.str(2), nullptr, 0);
             if (!m.str(3).empty()) {
@@ -202,7 +201,7 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         mcode.op_10100.offset = stoul(m.str(7));
         break;
 
-    case 0b10101: // HASH / CRC16P[12] / XOR(4|8|16|32)
+    case 0b10101:  // HASH / CRC16P[12] / XOR(4|8|16|32)
         if (!m.str(2).empty()) {
             mcode.op_10101.src1_off = stoul(m.str(2));
             mcode.op_10101.calc_len = stoul(m.str(3)) - 1;
@@ -224,8 +223,8 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         }
         break;
 
-    case 0b10111: // RSM(16|32)
-    case 0b11000: // WSM(16|32)
+    case 0b10111:  // RSM(16|32)
+    case 0b11000:  // WSM(16|32)
         mcode.op_10111.offset = stoul(m.str(1));
         mcode.op_10111.line_shift = stoul(m.str(5));
         if (!m.str(3).empty()) {
@@ -253,18 +252,16 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
     return 0;
 }
 
-void mat_assembler::write_machine_code(void)
-{
+void mat_assembler::write_machine_code(void) {
     dst_fstrm.write(reinterpret_cast<const char*>(mcode_vec.data()), sizeof(mcode_vec[0]) * mcode_vec.size());
 }
 
-void mat_assembler::print_machine_code(void)
-{
+void mat_assembler::print_machine_code(void) {
     print_mcode_line_by_line(std::cout, mcode_vec);
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
 }
 
-const string mat_assembler::cmd_name_pattern = \
+const string mat_assembler::cmd_name_pattern =  // NOLINT [runtime/string]
     R"(((MOV|COPY)(L)?|MDF|COUNT|METER|LOCK|ULCK|HASH|(CRC)16P([12])|(XOR)(4|8|16|32)|(RSM|WSM)(16|32)))";
 
 const int mat_assembler::l_flg_idx = 3;

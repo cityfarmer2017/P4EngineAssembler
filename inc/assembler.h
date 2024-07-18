@@ -1,13 +1,17 @@
-#ifndef ASSEMBLER_H
-#define ASSEMBLER_H
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
+#ifndef INC_ASSEMBLER_H_
+#define INC_ASSEMBLER_H_
 
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <unordered_map>
-#include <regex>
+#include <regex>  // NOLINT [build/c++11]
 #include <bitset>
 #include <cstdint>
+#include <string>
 
 using std::string;
 using std::vector;
@@ -22,7 +26,7 @@ class assembler {
     friend class deparser_assembler;
     friend class mat_assembler;
 
-public:
+ public:
     assembler() = default;
     virtual ~assembler() = default;
 
@@ -37,41 +41,37 @@ public:
     static const string normal_line_prefix_p;
     static const string normal_line_posfix_p;
 
-protected:
+ protected:
     virtual string get_name_pattern(void) const = 0;
     virtual string get_name_matched(const smatch&, vector<bool>&) const = 0;
     virtual int line_process(const string&, const string&, const vector<bool>&) = 0;
     virtual void write_machine_code(void) = 0;
     virtual void print_machine_code(void) = 0;
 
-private:
+ private:
     int open_output_file(const string &out_fname);
-    void close_output_file(void)
-    {
+    void close_output_file(void) {
         dst_fstrm.close();
     }
 
     std::ifstream src_fstrm;
     std::ofstream dst_fstrm;
 
-    static void print_mcode_line_by_line(std::ostream &os, const std::vector<u64> &vec)
-    {
-        for (const auto &mcode: vec) {
+    static void print_mcode_line_by_line(std::ostream &os, const std::vector<u64> &vec) {
+        for (const auto &mcode : vec) {
             os << std::bitset<64>(mcode) << "\n";
         }
         os << std::flush;
     }
 
-    static void print_mcode_line_by_line(std::ostream &os, const std::vector<u32> &vec)
-    {
-        for (const auto &mcode: vec) {
+    static void print_mcode_line_by_line(std::ostream &os, const std::vector<u32> &vec) {
+        for (const auto &mcode : vec) {
             os << std::bitset<32>(mcode) << "\n";
         }
         os << std::flush;
     }
 
-    static void print_cmd_param_unmatch_message(const string &name, const string &line)
-    {
+    static void print_cmd_param_unmatch_message(const string &name, const string &line) {
         std::cout << name + " doesn't match those parameters.\n\t" << line << std::endl;
     }
 
@@ -87,4 +87,4 @@ private:
     }
 };
 
-#endif // ASSEMBLER_H
+#endif  // INC_ASSEMBLER_H_

@@ -1,7 +1,10 @@
-#ifndef PARSER_DEF_H
-#define PARSER_DEF_H
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
+#ifndef INC_PARSER_DEF_H_
+#define INC_PARSER_DEF_H_
 
-#include "parser_assembler.h"
+#include "parser_assembler.h"  // NOLINT [build/include_subdir]
 
 typedef union {
     struct {
@@ -138,65 +141,65 @@ typedef union {
     u64 val64;
 } machine_code;
 
-const string P_00001 = assembler::normal_line_prefix_p +
+const string P_00001 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((\d{1,10}|0[xX][\dA-Fa-f]{1,8})\s*,\s+)"
     R"(((ISR|TMP)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+)?)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
     R"((PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
     + assembler::normal_line_posfix_p;
 
-const string P_00010_00011 = assembler::normal_line_prefix_p +
+const string P_00010_00011 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((ISR|TMP)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
     R"((PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
     + assembler::normal_line_posfix_p;
 
-const string P_10101 = assembler::normal_line_prefix_p +
+const string P_10101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((ISR|TMP)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+)"
     R"((\d{1,5}|0[xX][\dA-Fa-f]{1,4}|TMP)\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
     R"((PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
     + assembler::normal_line_posfix_p;
 
-const string P_10100 = assembler::normal_line_prefix_p +
+const string P_10100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(META\s*\[\s*(CALC_RSLT|SM_DATA([0-7]))\s*]\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
     R"((PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
     + assembler::normal_line_posfix_p;
 
-const string P_00111 = assembler::normal_line_prefix_p +
+const string P_00111 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((0[xX][\dA-Fa-f]{1,9})\s*,\s+(([0-7])\s*,\s+)?([0-3]))" + assembler::normal_line_posfix_p;
 
-const string P_00101_00110 = assembler::normal_line_prefix_p +
+const string P_00101_00110 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((0[xX][\dA-Fa-f]{1,6})?)" + assembler::normal_line_posfix_p;
 
-const string P_01000_01101_01110_01111 = assembler::normal_line_prefix_p +
+const string P_01000_01101_01110_01111 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"()" + assembler::normal_line_posfix_p;
 
-const string P_00100 = assembler::normal_line_prefix_p +
+const string P_00100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((([1-9][0-9]?|1[0-9]{2}|2[0-4][0-9]|25[0-6])|(CSUM|CRC16|CRC32)|)"
     R"((([1-9][0-9]?|1[0-9]{2}|2[0-4][0-9]|25[0-6])\s*,\s*(CSUM|CRC16|CRC32)))?)"
     + assembler::normal_line_posfix_p;
 
-const string P_01001 = assembler::normal_line_prefix_p +
+const string P_01001 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((POLY|INIT|CTRL\s*,\s+0b000([01]{5})|XOROT)\s*,\s+(\d{1,10}|(0[xX])[\dA-Fa-f]{1,8}))"
     + assembler::normal_line_posfix_p;
 
-const string P_01010_01011_01100 = assembler::normal_line_prefix_p +
+const string P_01010_01011_01100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((TMP|ISR|PHV)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,8}))"
     + assembler::normal_line_posfix_p;
 
-const string P_10000 = assembler::normal_line_prefix_p +
+const string P_10000 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(TCAM_KEY\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|10)\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,10}))"
     + assembler::normal_line_posfix_p;
 
-const string P_10001 = assembler::normal_line_prefix_p +
+const string P_10001 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((ISR\s*\{\s*([0-9]|[12][0-9]|3[0-2])\s*:\s*([1-9]|[123][0-9]|40)\s*\}\s*,\s+)?)"
     R"((META\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-9]|[123][0-9]|40)\s*\}\s*,\s+)?)"
     R"((>>([1-9]|[12][0-9]|3[0-2])\s*,\s+)?->([0-9]|[1-9][0-9]{1,2}|2[0-4][0-9]|25[0-5]))"
     + assembler::normal_line_posfix_p;
 
-const string P_10010_10011 = assembler::normal_line_prefix_p +
+const string P_10010_10011 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"((>>([1-9]|[12][0-9]|3[0-2]))?)" + assembler::normal_line_posfix_p;
 
-#endif // PARSER_DEF_H
+#endif  // INC_PARSER_DEF_H_
