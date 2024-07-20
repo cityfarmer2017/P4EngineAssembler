@@ -16,6 +16,7 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
     }
 
     while (getline(src_fstrm, line)) {
+        ++file_line_idx;
         const regex r(R"(^\s*)" + get_name_pattern() + R"(\s+.*;\s*(\/\/.*)?[\n\r]?$)");
         smatch m;
         if (!regex_match(line, m, r)) {
@@ -24,16 +25,16 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
                 continue;
             }
 
-            while (line.at(line.size() - 1) == '\n' || line.at(line.size() - 1) == '\r') {
+            while (line.back() == '\n' || line.back() == '\r') {
                 line.pop_back();
             }
 
-            cout << "ERROR:\tline - \" " + line + " \""<< endl;
+            cout << "ERROR:\tline #" << file_line_idx << " - \" " + line + " \""<< endl;
 
             return -1;
         }
 
-        while (line.at(line.size() - 1) == '\n' || line.at(line.size() - 1) == '\r') {
+        while (line.back() == '\n' || line.back() == '\r') {
             line.pop_back();
         }
 
@@ -48,31 +49,30 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
     }
 
     if (line.empty()) {
+        std::cout << "no empty line is allowed at the end of source file." << std::endl;
         return -1;
     }
 
     if (auto rc = open_output_file(out_fname + ".dat")) {
         return rc;
     }
-
     write_machine_code();
-
     close_output_file();
 
-    #ifdef DEBUG
     if (auto rc = open_output_file(out_fname + ".txt")) {
         return rc;
     }
-
     print_machine_code();
-
     close_output_file();
-    #endif
 
-    return 0;
+    return output_entry_code(out_fname);
 }
 
 int assembler::open_output_file(const string &out_fname) {
+    if (dst_fstrm.is_open()) {
+        std::cout << "output stream is in use." << std::endl;
+        return -1;
+    }
     string posfix = out_fname.substr(out_fname.size() - 4);
     if (posfix == ".dat") {
         dst_fstrm.open(out_fname, std::ios::binary);

@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <set>
 #include "assembler.h"  // NOLINT [build/include_subdir]
 
 using str_u64_map = std::unordered_map<string, std::uint64_t>;
@@ -28,9 +29,12 @@ class parser_assembler : public assembler {
     int line_process(const string&, const string&, const vector<bool>&) override;
     void write_machine_code(void) override;
     void print_machine_code(void) override;
+    int output_entry_code(const string &) override;
 
  private:
     vector<std::uint64_t> mcode_vec;
+    std::uint64_t entry_code{0};
+    std::set<std::uint16_t> states;
 
     static const char* cmd_name_pattern;
     static const int l_idx;   // index of L sub-pattern for Last flag

@@ -2,6 +2,7 @@
  * Copyright [2024] <wangdianchao@ehtcn.com>
  */
 #include <limits>
+#include <filesystem>
 #include "parser_def.h"  // NOLINT [build/include_subdir]
 #include "parser_assembler.h"  // NOLINT [build/include_subdir]
 
@@ -207,10 +208,10 @@ static inline int compose_cset(const smatch &m, const machine_code &code) {
     }
     if (m.str(4).empty()) {
         auto val = stoul(m.str(3));
-        if (val > std::numeric_limits<unsigned int>::max()) {
+        if (val > std::numeric_limits<std::uint32_t>::max()) {
             return -1;
         }
-        mcode.op_01001.value = stoul(m.str(3));
+        mcode.op_01001.value = val;
     } else {
         mcode.op_01001.value = stoul(m.str(3), nullptr, 0);  // heximal
     }
@@ -284,13 +285,22 @@ int parser_assembler::line_process(const string &line, const string &name, const
     smatch m;
 
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val64))) {
-        cout << "regex match failed with line:\n\t" << line << endl;
+        cout << "regex match failed with line #" << file_line_idx << ":\n\t" << line << endl;
         return -1;
     }
 
     if (flags.size() != flags_size) {
         return -1;
     }
+
+    if (cur_line_idx == 0 && (mcode.universe.opcode != 0b10001 || !flags[last_flg_idx])) {
+        cout << "the first line of source file must be NXTHL" << endl;
+        return -1;
+    }
+
+    // if (cur_line_idx - prev_last_idx == 1) {
+    //     start_line_idx_vec.emplace_back(cur_line_idx - 1);  // omit the default action line.
+    // }
 
     switch (mcode.val64) {
     case 0b00001:  // MOV, MDF
@@ -300,7 +310,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         }
 
         if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<std::uint32_t>::max()) {
-            cout << "imm32 value exceeds limit.\n\t" << line << endl;
+            cout << "imm32 value exceeds limit.\n\tline #" << file_line_idx << " : " << line << endl;
             return -1;
         }
 
@@ -316,7 +326,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
     case 0b10101:  // ADDU / SUBU
         if (auto rc = compose_addu_subu(name, m, mcode)) {
-            cout << "imm16 value exceeds limit.\n\t" << line << endl;
+            cout << "imm16 value exceeds limit.\n\tline #" << file_line_idx << " : " << line << endl;
             return rc;
         }
         break;
@@ -376,6 +386,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
             print_cmd_param_unmatch_message(name, line);
             return rc;
         }
+        states.emplace(static_cast<std::uint16_t>(mcode.op_10001.sub_state));
         break;
 
     case 0b10010:  // NXTD
@@ -392,18 +403,45 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
     mcode.universe.last_flg = flags[last_flg_idx];
 
-    mcode_vec.emplace_back(mcode.val64);
+    if (cur_line_idx++ == 0) {
+        entry_code = mcode.val64;
+    } else {
+        mcode_vec.emplace_back(mcode.val64);
+    }
 
     return 0;
 }
 
 void parser_assembler::write_machine_code(void) {
     dst_fstrm.write(reinterpret_cast<const char*>(mcode_vec.data()), sizeof(mcode_vec[0]) * mcode_vec.size());
+    dst_fstrm.close();
 }
 
 void parser_assembler::print_machine_code(void) {
-    print_mcode_line_by_line(std::cout, mcode_vec);
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
+    #ifdef DEBUG
+    print_mcode_line_by_line(std::cout, mcode_vec);
+    #endif
+}
+
+int parser_assembler::output_entry_code(const string &out_fname) {
+    if (dst_fstrm.is_open()) {
+        std::cout << "output stream is in use." << std::endl;
+        return -1;
+    }
+    auto path = std::filesystem::path(out_fname).parent_path();
+    dst_fstrm.open(path.string() + "/parser_default_action.dat", std::ios::binary);
+    if (!dst_fstrm.is_open()) {
+        std::cout << "cannot open file: " << path.string() << "/parser_default_action.dat" << std::endl;
+    }
+    dst_fstrm.write(reinterpret_cast<const char*>(&entry_code), sizeof(entry_code));
+    dst_fstrm.close();
+    dst_fstrm.open(path.string() + "/parser_default_action.txt");
+    if (!dst_fstrm.is_open()) {
+        std::cout << "cannot open file: " << path.string() << "/parser_default_action.txt" << std::endl;
+    }
+    dst_fstrm << std::bitset<64>(entry_code);
+    return 0;
 }
 
 const char* parser_assembler::cmd_name_pattern =

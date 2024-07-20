@@ -55,6 +55,9 @@ class assembler {
     virtual int line_process(const string&, const string&, const vector<bool>&) = 0;
     virtual void write_machine_code(void) = 0;
     virtual void print_machine_code(void) = 0;
+    virtual int output_entry_code(const string &) {
+        return 0;
+    }
 
  private:
     int open_output_file(const string &out_fname);
@@ -64,6 +67,8 @@ class assembler {
 
     std::ifstream src_fstrm;
     std::ofstream dst_fstrm;
+    std::uint16_t cur_line_idx{0};
+    std::uint16_t file_line_idx{0};
 
     static void print_mcode_line_by_line(std::ostream &os, const std::vector<std::uint64_t> &vec) {
         for (const auto &mcode : vec) {
@@ -79,8 +84,9 @@ class assembler {
         os << std::flush;
     }
 
-    static void print_cmd_param_unmatch_message(const string &name, const string &line) {
-        std::cout << name + " doesn't match those parameters.\n\t" << line << std::endl;
+    void print_cmd_param_unmatch_message(const string &name, const string &line) {
+        std::cout << name + " doesn't match those parameters.\n\t";
+        std::cout << "line #" << file_line_idx << ": " << line << std::endl;
     }
 };
 
