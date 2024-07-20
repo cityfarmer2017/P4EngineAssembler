@@ -4,7 +4,7 @@
 #ifndef INC_MAT_DEF_H_
 #define INC_MAT_DEF_H_
 
-#include "mat_assembler.h"  // NOLINT [build/include_subdir]
+#include "assembler.h"  // NOLINT [build/include_subdir]
 
 typedef union {
     struct {

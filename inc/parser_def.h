@@ -4,7 +4,7 @@
 #ifndef INC_PARSER_DEF_H_
 #define INC_PARSER_DEF_H_
 
-#include "parser_assembler.h"  // NOLINT [build/include_subdir]
+#include "assembler.h"  // NOLINT [build/include_subdir]
 
 typedef union {
     struct {
@@ -158,13 +158,13 @@ const string P_10101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/str
     R"((ISR|TMP)\s*\{\s*([0-9]|[12][0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+)"
     R"((\d{1,5}|0[xX][\dA-Fa-f]{1,4}|TMP)\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
-    R"((PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
+    R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
     + assembler::normal_line_posfix_p;
 
 const string P_10100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
     R"(META\s*\[\s*(CALC_RSLT|SM_DATA([0-7]))\s*]\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
-    R"((PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
+    R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|TMP))"
     + assembler::normal_line_posfix_p;
 
 const string P_00111 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]

@@ -22,7 +22,7 @@ class parser_assembler : public assembler {
     parser_assembler& operator=(const parser_assembler&) = delete;
     parser_assembler& operator=(parser_assembler&&) = delete;
 
- protected:
+ private:
     inline string get_name_pattern(void) const override;
     string get_name_matched(const smatch&, vector<bool>&) const override;
     int line_process(const string&, const string&, const vector<bool>&) override;

@@ -41,6 +41,17 @@ class assembler {
     static const string normal_line_prefix_p;
     static const string normal_line_posfix_p;
 
+    static u32 get_xor_unit(const bool xor8_flg, const bool xor16_flg, const bool xor32_flg) {
+        if (xor8_flg) {
+            return 1;
+        } else if (xor16_flg) {
+            return 2;
+        } else if (xor32_flg) {
+            return 3;
+        }
+        return 0;
+    }
+
  protected:
     virtual string get_name_pattern(void) const = 0;
     virtual string get_name_matched(const smatch&, vector<bool>&) const = 0;
@@ -73,17 +84,6 @@ class assembler {
 
     static void print_cmd_param_unmatch_message(const string &name, const string &line) {
         std::cout << name + " doesn't match those parameters.\n\t" << line << std::endl;
-    }
-
-    static u32 get_xor_unit(const bool xor8_flg, const bool xor16_flg, const bool xor32_flg) {
-        if (xor8_flg) {
-            return 1;
-        } else if (xor16_flg) {
-            return 2;
-        } else if (xor32_flg) {
-            return 3;
-        }
-        return 0;
     }
 };
 

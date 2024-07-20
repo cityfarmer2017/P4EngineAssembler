@@ -4,7 +4,7 @@
 #ifndef INC_DEPARSER_DEF_H_
 #define INC_DEPARSER_DEF_H_
 
-#include "deparser_assembler.h"  // NOLINT [build/include_subdir]
+// #include "deparser_assembler.h"  // NOLINT [build/include_subdir]
 
 typedef union {
     struct {

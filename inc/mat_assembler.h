@@ -23,7 +23,7 @@ class mat_assembler : public assembler {
     mat_assembler& operator=(const mat_assembler&) = delete;
     mat_assembler& operator=(mat_assembler&&) = delete;
 
- protected:
+ private:
     inline string get_name_pattern(void) const override;
     string get_name_matched(const smatch&, vector<bool>&) const override;
     int line_process(const string&, const string&, const vector<bool>&) override;
