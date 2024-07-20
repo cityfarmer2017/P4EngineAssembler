@@ -299,7 +299,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
             return -1;
         }
 
-        if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<u32>::max()) {
+        if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<std::uint32_t>::max()) {
             cout << "imm32 value exceeds limit.\n\t" << line << endl;
             return -1;
         }
@@ -406,7 +406,7 @@ void parser_assembler::print_machine_code(void) {
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
 }
 
-const string parser_assembler::cmd_name_pattern =  // NOLINT [runtime/string]
+const char* parser_assembler::cmd_name_pattern =
     R"((MOV|MDF|XCT|RMV|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
     R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
 
@@ -447,25 +447,25 @@ const str_u64_map parser_assembler::cmd_opcode_map = {
 };
 
 const u64_regex_map parser_assembler::opcode_regex_map = {
-    {0b00001, regex(P_00001)},
-    {0b00011, regex(P_00010_00011)},
-    {0b00010, regex(P_00010_00011)},
-    {0b10101, regex(P_10101)},
-    {0b10100, regex(P_10100)},
-    {0b00111, regex(P_00111)},
-    {0b00101, regex(P_00101_00110)},
-    {0b00110, regex(P_00101_00110)},
-    {0b01000, regex(P_01000_01101_01110_01111)},
-    {0b00100, regex(P_00100)},
-    {0b01001, regex(P_01001)},
-    {0b01100, regex(P_01010_01011_01100)},
-    {0b01011, regex(P_01010_01011_01100)},
-    {0b01010, regex(P_01010_01011_01100)},
-    {0b01111, regex(P_01000_01101_01110_01111)},
-    {0b01110, regex(P_01000_01101_01110_01111)},
-    {0b01101, regex(P_01000_01101_01110_01111)},
-    {0b10000, regex(P_10000)},
-    {0b10001, regex(P_10001)},
-    {0b10011, regex(P_10010_10011)},
-    {0b10010, regex(P_10010_10011)}
+    {0b00001, regex(string(g_normal_line_prefix_p) + P_00001 + g_normal_line_posfix_p)},
+    {0b00011, regex(string(g_normal_line_prefix_p) + P_00010_00011 + g_normal_line_posfix_p)},
+    {0b00010, regex(string(g_normal_line_prefix_p) + P_00010_00011 + g_normal_line_posfix_p)},
+    {0b10101, regex(string(g_normal_line_prefix_p) + P_10101 + g_normal_line_posfix_p)},
+    {0b10100, regex(string(g_normal_line_prefix_p) + P_10100 + g_normal_line_posfix_p)},
+    {0b00111, regex(string(g_normal_line_prefix_p) + P_00111 + g_normal_line_posfix_p)},
+    {0b00101, regex(string(g_normal_line_prefix_p) + P_00101_00110 + g_normal_line_posfix_p)},
+    {0b00110, regex(string(g_normal_line_prefix_p) + P_00101_00110 + g_normal_line_posfix_p)},
+    {0b01000, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
+    {0b00100, regex(string(g_normal_line_prefix_p) + P_00100 + g_normal_line_posfix_p)},
+    {0b01001, regex(string(g_normal_line_prefix_p) + P_01001 + g_normal_line_posfix_p)},
+    {0b01100, regex(string(g_normal_line_prefix_p) + P_01010_01011_01100 + g_normal_line_posfix_p)},
+    {0b01011, regex(string(g_normal_line_prefix_p) + P_01010_01011_01100 + g_normal_line_posfix_p)},
+    {0b01010, regex(string(g_normal_line_prefix_p) + P_01010_01011_01100 + g_normal_line_posfix_p)},
+    {0b01111, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
+    {0b01110, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
+    {0b01101, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
+    {0b10000, regex(string(g_normal_line_prefix_p) + P_10000 + g_normal_line_posfix_p)},
+    {0b10001, regex(string(g_normal_line_prefix_p) + P_10001 + g_normal_line_posfix_p)},
+    {0b10011, regex(string(g_normal_line_prefix_p) + P_10010_10011 + g_normal_line_posfix_p)},
+    {0b10010, regex(string(g_normal_line_prefix_p) + P_10010_10011 + g_normal_line_posfix_p)}
 };

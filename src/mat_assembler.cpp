@@ -95,7 +95,7 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
     switch (mcode.val64) {
     case 0b00001:  // MOV
         if (m.str(2).empty()) {
-            if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<u32>::max()) {
+            if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<std::uint32_t>::max()) {
             cout << "imm32 value exceeds limit.\n\t" << line << endl;
                 return -1;
             }
@@ -260,7 +260,7 @@ void mat_assembler::print_machine_code(void) {
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
 }
 
-const string mat_assembler::cmd_name_pattern =  // NOLINT [runtime/string]
+const char* mat_assembler::cmd_name_pattern =
     R"(((MOV|COPY)(L)?|MDF|COUNT|METER|LOCK|ULCK|HASH|(CRC)16P([12])|(XOR)(4|8|16|32)|(RSM|WSM)(16|32)))";
 
 const int mat_assembler::l_flg_idx = 3;
@@ -286,16 +286,16 @@ const str_u64_map mat_assembler::cmd_opcode_map = {
 };
 
 const u64_regex_map mat_assembler::opcode_regex_map = {
-    {0b00001, regex(P_00001)},
-    {0b00010, regex(P_00010)},
-    {0b00011, regex(P_00011)},
-    {0b00100, regex(P_00100)},
-    {0b00101, regex(P_00101)},
-    {0b00110, regex(P_00110_00111)},
-    {0b00111, regex(P_00110_00111)},
-    {0b10100, regex(P_10100)},
-    {0b10101, regex(P_10101)},
-    {0b10110, regex(P_10110)},
-    {0b10111, regex(P_10111_11000)},
-    {0b11000, regex(P_10111_11000)}
+    {0b00001, regex(string(g_normal_line_prefix_p) + P_00001 + g_normal_line_posfix_p)},
+    {0b00010, regex(string(g_normal_line_prefix_p) + P_00010 + g_normal_line_posfix_p)},
+    {0b00011, regex(string(g_normal_line_prefix_p) + P_00011 + g_normal_line_posfix_p)},
+    {0b00100, regex(string(g_normal_line_prefix_p) + P_00100 + g_normal_line_posfix_p)},
+    {0b00101, regex(string(g_normal_line_prefix_p) + P_00101 + g_normal_line_posfix_p)},
+    {0b00110, regex(string(g_normal_line_prefix_p) + P_00110_00111 + g_normal_line_posfix_p)},
+    {0b00111, regex(string(g_normal_line_prefix_p) + P_00110_00111 + g_normal_line_posfix_p)},
+    {0b10100, regex(string(g_normal_line_prefix_p) + P_10100 + g_normal_line_posfix_p)},
+    {0b10101, regex(string(g_normal_line_prefix_p) + P_10101 + g_normal_line_posfix_p)},
+    {0b10110, regex(string(g_normal_line_prefix_p) + P_10110 + g_normal_line_posfix_p)},
+    {0b10111, regex(string(g_normal_line_prefix_p) + P_10111_11000 + g_normal_line_posfix_p)},
+    {0b11000, regex(string(g_normal_line_prefix_p) + P_10111_11000 + g_normal_line_posfix_p)}
 };

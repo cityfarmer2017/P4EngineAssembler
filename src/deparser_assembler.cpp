@@ -525,7 +525,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     }
 
     mcode_vec.emplace_back(mcode.val32);
-    u32 high32 = mcode.val64 >> 32;
+    std::uint32_t high32 = mcode.val64 >> 32;
     if (opcode == 0b11001 || opcode == 0b10101) {
         mcode_vec.emplace_back(high32);
     }
@@ -551,14 +551,14 @@ inline int deparser_assembler::check_previous(const string &line) const {
     return 0;
 }
 
-inline void deparser_assembler::swap_previous(const u32 &mcode) {
+inline void deparser_assembler::swap_previous(const std::uint32_t &mcode) {
     auto val = mcode_vec.back();
     mcode_vec.pop_back();
     mcode_vec.emplace_back(mcode);
-    (const_cast<u32&>(mcode)) = val;
+    (const_cast<std::uint32_t&>(mcode)) = val;
 }
 
-const string deparser_assembler::cmd_name_pattern =  // NOLINT [runtime/string]
+const char* deparser_assembler::cmd_name_pattern =
     R"((SNDM([PM])?|SND[HP]C?|MOVE|SET[HL]|ADDU?|CMPCTR?|ANDR?|ORR?|(CRC16|CRC32|CSUM)(M[AO])?|)"
     R"(XORR?(4|8|16|32)|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|MSKALL|MSKADDR|NOP|(J|BEZ)(R)?|RET|END))";
 
@@ -606,33 +606,33 @@ const str_u32_map deparser_assembler::cmd_opcode_map = {
 };
 
 const u32_regex_map deparser_assembler::opcode_regex_map = {
-    {0b00001, regex(P_00001)},
-    {0b00010, regex(P_00010_00011_00100)},
-    {0b00011, regex(P_00010_00011_00100)},
-    {0b00100, regex(P_00010_00011_00100)},
-    {0b00101, regex(P_00101)},
-    {0b00110, regex(P_00110_00111)},
-    {0b00111, regex(P_00110_00111)},
-    {0b01000, regex(P_01000_01001)},
-    {0b01001, regex(P_01000_01001)},
-    {0b01010, regex(P_01010_01100_11100)},
-    {0b01011, regex(P_01011_01101_11101)},
-    {0b01100, regex(P_01010_01100_11100)},
-    {0b01101, regex(P_01011_01101_11101)},
-    {0b01110, regex(P_01110_01111_10000)},
-    {0b01111, regex(P_01110_01111_10000)},
-    {0b10000, regex(P_01110_01111_10000)},
-    {0b10001, regex(P_10001_10011)},
-    {0b10010, regex(P_10010_10100)},
-    {0b10011, regex(P_10001_10011)},
-    {0b10100, regex(P_10010_10100)},
-    {0b10101, regex(P_10101)},
-    {0b10110, regex(P_10110)},
-    {0b10111, regex(P_10111)},
-    {0b11000, regex(P_11000_11010_11011)},
-    {0b11001, regex(P_11001)},
-    {0b11010, regex(P_11000_11010_11011)},
-    {0b11011, regex(P_11000_11010_11011)},
-    {0b11100, regex(P_01010_01100_11100)},
-    {0b11101, regex(P_01011_01101_11101)}
+    {0b00001, regex(string(g_normal_line_prefix_p) + P_00001 + g_normal_line_posfix_p)},
+    {0b00010, regex(string(g_normal_line_prefix_p) + P_00010_00011_00100 + g_normal_line_posfix_p)},
+    {0b00011, regex(string(g_normal_line_prefix_p) + P_00010_00011_00100 + g_normal_line_posfix_p)},
+    {0b00100, regex(string(g_normal_line_prefix_p) + P_00010_00011_00100 + g_normal_line_posfix_p)},
+    {0b00101, regex(string(g_normal_line_prefix_p) + P_00101 + g_normal_line_posfix_p)},
+    {0b00110, regex(string(g_normal_line_prefix_p) + P_00110_00111 + g_normal_line_posfix_p)},
+    {0b00111, regex(string(g_normal_line_prefix_p) + P_00110_00111 + g_normal_line_posfix_p)},
+    {0b01000, regex(string(g_normal_line_prefix_p) + P_01000_01001 + g_normal_line_posfix_p)},
+    {0b01001, regex(string(g_normal_line_prefix_p) + P_01000_01001 + g_normal_line_posfix_p)},
+    {0b01010, regex(string(g_normal_line_prefix_p) + P_01010_01100_11100 + g_normal_line_posfix_p)},
+    {0b01011, regex(string(g_normal_line_prefix_p) + P_01011_01101_11101 + g_normal_line_posfix_p)},
+    {0b01100, regex(string(g_normal_line_prefix_p) + P_01010_01100_11100 + g_normal_line_posfix_p)},
+    {0b01101, regex(string(g_normal_line_prefix_p) + P_01011_01101_11101 + g_normal_line_posfix_p)},
+    {0b01110, regex(string(g_normal_line_prefix_p) + P_01110_01111_10000 + g_normal_line_posfix_p)},
+    {0b01111, regex(string(g_normal_line_prefix_p) + P_01110_01111_10000 + g_normal_line_posfix_p)},
+    {0b10000, regex(string(g_normal_line_prefix_p) + P_01110_01111_10000 + g_normal_line_posfix_p)},
+    {0b10001, regex(string(g_normal_line_prefix_p) + P_10001_10011 + g_normal_line_posfix_p)},
+    {0b10010, regex(string(g_normal_line_prefix_p) + P_10010_10100 + g_normal_line_posfix_p)},
+    {0b10011, regex(string(g_normal_line_prefix_p) + P_10001_10011 + g_normal_line_posfix_p)},
+    {0b10100, regex(string(g_normal_line_prefix_p) + P_10010_10100 + g_normal_line_posfix_p)},
+    {0b10101, regex(string(g_normal_line_prefix_p) + P_10101 + g_normal_line_posfix_p)},
+    {0b10110, regex(string(g_normal_line_prefix_p) + P_10110 + g_normal_line_posfix_p)},
+    {0b10111, regex(string(g_normal_line_prefix_p) + P_10111 + g_normal_line_posfix_p)},
+    {0b11000, regex(string(g_normal_line_prefix_p) + P_11000_11010_11011 + g_normal_line_posfix_p)},
+    {0b11001, regex(string(g_normal_line_prefix_p) + P_11001 + g_normal_line_posfix_p)},
+    {0b11010, regex(string(g_normal_line_prefix_p) + P_11000_11010_11011 + g_normal_line_posfix_p)},
+    {0b11011, regex(string(g_normal_line_prefix_p) + P_11000_11010_11011 + g_normal_line_posfix_p)},
+    {0b11100, regex(string(g_normal_line_prefix_p) + P_01010_01100_11100 + g_normal_line_posfix_p)},
+    {0b11101, regex(string(g_normal_line_prefix_p) + P_01011_01101_11101 + g_normal_line_posfix_p)}
 };

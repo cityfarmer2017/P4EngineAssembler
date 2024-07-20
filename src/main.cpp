@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
     if (std::filesystem::is_regular_file(argv[1])) {
         auto entry = std::filesystem::directory_entry(argv[1]);
         string src_fext(entry.path().extension());
-        if ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4d")) {
+        if ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4ml") && (src_fext != ".p4d")) {
             print_help_information();
             return -1;
         }

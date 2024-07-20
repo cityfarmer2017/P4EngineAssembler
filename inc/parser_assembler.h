@@ -9,8 +9,8 @@
 #include <string>
 #include "assembler.h"  // NOLINT [build/include_subdir]
 
-using str_u64_map = std::unordered_map<string, u64>;
-using u64_regex_map = std::unordered_map<u64, regex>;
+using str_u64_map = std::unordered_map<string, std::uint64_t>;
+using u64_regex_map = std::unordered_map<std::uint64_t, regex>;
 
 class parser_assembler : public assembler {
  public:
@@ -30,9 +30,9 @@ class parser_assembler : public assembler {
     void print_machine_code(void) override;
 
  private:
-    vector<u64> mcode_vec;
+    vector<std::uint64_t> mcode_vec;
 
-    static const string cmd_name_pattern;
+    static const char* cmd_name_pattern;
     static const int l_idx;   // index of L sub-pattern for Last flag
     static const int u_idx;   // index of U sub-pattern for Unsigned flag
     static const int m0_idx;  // index of M0 sub-pattern for Mask to 0 flag

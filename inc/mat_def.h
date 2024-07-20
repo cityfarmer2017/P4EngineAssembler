@@ -4,160 +4,150 @@
 #ifndef INC_MAT_DEF_H_
 #define INC_MAT_DEF_H_
 
-#include "assembler.h"  // NOLINT [build/include_subdir]
+#include <cstdint>
 
 typedef union {
     struct {
-        u64 opcode: 5;
-        u64 offset: 9;
-        u64 length: 3;
-        u64 rsvd1: 6;
-        u64 imm32: 32;
-        u64 ad_idx: 6;
-        u64 mode: 1;
-        u64 dst_slct: 1;
-        u64 rsvd2: 1;
+        std::uint64_t opcode: 5;
+        std::uint64_t offset: 9;
+        std::uint64_t length: 3;
+        std::uint64_t rsvd1: 6;
+        std::uint64_t imm32: 32;
+        std::uint64_t ad_idx: 6;
+        std::uint64_t mode: 1;
+        std::uint64_t dst_slct: 1;
+        std::uint64_t rsvd2: 1;
     } op_00001;
     struct {
-        u64 opcode: 5;
-        u64 offset: 9;
-        u64 length: 2;
-        u64 rsvd1: 7;
-        u64 imm16: 16;
-        u64 mask: 16;
-        u64 ad_idx: 6;
-        u64 mode: 1;
-        u64 dst_slct: 1;
-        u64 rsvd2: 1;
+        std::uint64_t opcode: 5;
+        std::uint64_t offset: 9;
+        std::uint64_t length: 2;
+        std::uint64_t rsvd1: 7;
+        std::uint64_t imm16: 16;
+        std::uint64_t mask: 16;
+        std::uint64_t ad_idx: 6;
+        std::uint64_t mode: 1;
+        std::uint64_t dst_slct: 1;
+        std::uint64_t rsvd2: 1;
     } op_00010;
     struct {
-        u64 opcode: 5;
-        u64 counter_id: 24;
-        u64 rsvd1: 26;
-        u64 ad_idx: 6;
-        u64 mode: 2;
-        u64 rsvd2: 1;
+        std::uint64_t opcode: 5;
+        std::uint64_t counter_id: 24;
+        std::uint64_t rsvd1: 26;
+        std::uint64_t ad_idx: 6;
+        std::uint64_t mode: 2;
+        std::uint64_t rsvd2: 1;
     } op_00100;
     struct {
-        u64 opcode: 5;
-        u64 meter_id: 12;
-        u64 rsvd1: 24;
-        u64 dst_off: 9;
-        u64 rsvd2: 5;
-        u64 ad_idx: 6;
-        u64 mode: 2;
-        u64 rsvd3: 1;
+        std::uint64_t opcode: 5;
+        std::uint64_t meter_id: 12;
+        std::uint64_t rsvd1: 24;
+        std::uint64_t dst_off: 9;
+        std::uint64_t rsvd2: 5;
+        std::uint64_t ad_idx: 6;
+        std::uint64_t mode: 2;
+        std::uint64_t rsvd3: 1;
     } op_00101;
     struct {
-        u64 opcode: 5;
-        u64 flow_id: 24;
-        u64 rsvd1: 26;
-        u64 ad_idx: 6;
-        u64 mode: 2;
-        u64 rsvd2: 1;
+        std::uint64_t opcode: 5;
+        std::uint64_t flow_id: 24;
+        std::uint64_t rsvd1: 26;
+        std::uint64_t ad_idx: 6;
+        std::uint64_t mode: 2;
+        std::uint64_t rsvd2: 1;
     } op_00110, op_00111;
     struct {
-        u64 opcode: 5;
-        u64 offset: 9;
-        u64 length: 4;
-        u64 rsvd1: 37;
-        u64 ad_idx: 6;
-        u64 mode: 1;
-        u64 rsvd2: 2;
+        std::uint64_t opcode: 5;
+        std::uint64_t offset: 9;
+        std::uint64_t length: 4;
+        std::uint64_t rsvd1: 37;
+        std::uint64_t ad_idx: 6;
+        std::uint64_t mode: 1;
+        std::uint64_t rsvd2: 2;
     } op_10100;
     struct {
-        u64 opcode: 5;
-        u64 src1_off: 9;
-        u64 src_mode: 1;
-        u64 rsvd1: 8;
-        u64 src2_off: 9;
-        u64 dst_off: 9;
-        u64 dst_slct: 1;
-        u64 calc_mode: 4;
-        u64 xor_unit: 2;
-        u64 calc_len: 6;
-        u64 rsvd2: 10;
+        std::uint64_t opcode: 5;
+        std::uint64_t src1_off: 9;
+        std::uint64_t src_mode: 1;
+        std::uint64_t rsvd1: 8;
+        std::uint64_t src2_off: 9;
+        std::uint64_t dst_off: 9;
+        std::uint64_t dst_slct: 1;
+        std::uint64_t calc_mode: 4;
+        std::uint64_t xor_unit: 2;
+        std::uint64_t calc_len: 6;
+        std::uint64_t rsvd2: 10;
     } op_10101;
     struct {
-        u64 opcode: 5;
-        u64 src_off: 9;
-        u64 length: 4;
-        u64 rsvd1: 23;
-        u64 dst_off: 9;
-        u64 direction: 2;
-        u64 rsvd2: 12;
+        std::uint64_t opcode: 5;
+        std::uint64_t src_off: 9;
+        std::uint64_t length: 4;
+        std::uint64_t rsvd1: 23;
+        std::uint64_t dst_off: 9;
+        std::uint64_t direction: 2;
+        std::uint64_t rsvd2: 12;
     } op_10110, op_00011;
     struct {
-        u64 opcode: 5;
-        u64 offset: 9;
-        u64 addr_h36: 36;
-        u64 left_shift: 3;
-        u64 line_shift: 2;
-        u64 ad_idx: 6;
-        u64 mode: 1;
-        u64 len: 1;
-        u64 rsvd: 1;
+        std::uint64_t opcode: 5;
+        std::uint64_t offset: 9;
+        std::uint64_t addr_h36: 36;
+        std::uint64_t left_shift: 3;
+        std::uint64_t line_shift: 2;
+        std::uint64_t ad_idx: 6;
+        std::uint64_t mode: 1;
+        std::uint64_t len: 1;
+        std::uint64_t rsvd: 1;
     } op_10111, op_11000;
     struct {
-        u64 opcode;
-        u64 imm64_l;
-        u64 imm64_h;
+        std::uint64_t opcode;
+        std::uint64_t imm64_l;
+        std::uint64_t imm64_h;
     } universe;
-    u64 val64;
+    std::uint64_t val64;
 } machine_code;
 
-const string P_00001 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
+constexpr auto P_00001 =
     R"((\d{1,10}|0[xX][\dA-Fa-f]{1,8}|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}|)"
-    R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}))"
-    + assembler::normal_line_posfix_p;
+    R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}))";
 
-const string P_00010 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
+constexpr auto P_00010 =
     R"((\d{1,5}|0[xX][\dA-Fa-f]{1,4}|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])\s*,\s+)"
     R"((0[xX][\dA-Fa-f]{1,4})\s*,\s+)"
     R"(((META)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}|)"
-    R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([12])\s*\}))"
-    + assembler::normal_line_posfix_p;
+    R"(PHV\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([12])\s*\}))";
 
-const string P_00011 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
+constexpr auto P_00011 =
     R"((META|PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}\s*,\s+)"
-    R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
-    + assembler::normal_line_posfix_p;
+    R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])";
 
-const string P_00100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
-    R"(((0[xX][\dA-Fa-f]{1,6})|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])?)"
-    + assembler::normal_line_posfix_p;
+constexpr auto P_00100 =
+    R"(((0[xX][\dA-Fa-f]{1,6})|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])?)";
 
-const string P_00101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
+constexpr auto P_00101 =
     R"(((0[xX][\dA-Fa-f]{1,3})\s*,\s+|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*]\s*,\s+)?)"
-    R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
-    + assembler::normal_line_posfix_p;
+    R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])";
 
-const string P_00110_00111 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
-    R"(((0[xX][\dA-Fa-f]{1,6})|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])?)"
-    + assembler::normal_line_posfix_p;
+constexpr auto P_00110_00111 =
+    R"(((0[xX][\dA-Fa-f]{1,6})|AD\s*\[\s*([0-9]|[1-5][0-9]|6[0-3])\s*])?)";
 
-const string P_10100 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
+constexpr auto P_10100 =
     R"(((0[xX][\dA-Fa-f]{16})(\s*,\s+(0[xX][\dA-Fa-f]{1,16}))?|)"
     R"(AD\s*\{\s*([0-9]|[1-5][0-9]|6[0-3])\s*:\s*([1-4])\s*\})\s*,\s+)"
-    R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
-    + assembler::normal_line_posfix_p;
+    R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])";
 
-const string P_10101 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
+constexpr auto P_10101 =
     R"(PHV\s*(\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-9]|[1-3][0-9]|40)\s*\}|)"
     R"(\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*]\s*,\s+)"
     R"(META\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-9]|[1-3][0-9]|40)\s*\})\s*,\s+)"
-    R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
-    + assembler::normal_line_posfix_p;
+    R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])";
 
-const string P_10110 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
+constexpr auto P_10110 =
     R"((META|PHV)\s*\{\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-9]|1[0-6])\s*\}\s*,\s+)"
-    R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])"
-    + assembler::normal_line_posfix_p;
+    R"((META|PHV)\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])";
 
-const string P_10111_11000 = assembler::normal_line_prefix_p +  // NOLINT [runtime/string]
+constexpr auto P_10111_11000 =
     R"(PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*]\s*,\s+)"
-    R"((0[xX][\dA-Fa-f]{1,9}|AD\s*\{\s*([0-9]|[1-5][0-9]|6[0-3])\s*:\s*([0-7])\s*\})\s*,\s+([0-3]))"
-    + assembler::normal_line_posfix_p;
+    R"((0[xX][\dA-Fa-f]{1,9}|AD\s*\{\s*([0-9]|[1-5][0-9]|6[0-3])\s*:\s*([0-7])\s*\})\s*,\s+([0-3]))";
 
 #endif  // INC_MAT_DEF_H_

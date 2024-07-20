@@ -18,8 +18,9 @@ using std::vector;
 using std::regex;
 using std::smatch;
 
-using u32 = std::uint32_t;
-using u64 = std::uint64_t;
+constexpr auto comment_empty_line_p = R"(^\s*\/\/.*[\n\r]?$|^\s*$)";
+constexpr auto g_normal_line_prefix_p = R"(^\s*[A-Z\d+-]+\s+)";
+constexpr auto g_normal_line_posfix_p = R"(\s*;\s*(\/\/.*)?$)";
 
 class assembler {
     friend class parser_assembler;
@@ -37,11 +38,7 @@ class assembler {
 
     int execute(const string&, const string&);
 
-    static const string comment_empty_line_p;
-    static const string normal_line_prefix_p;
-    static const string normal_line_posfix_p;
-
-    static u32 get_xor_unit(const bool xor8_flg, const bool xor16_flg, const bool xor32_flg) {
+    static std::uint32_t get_xor_unit(const bool xor8_flg, const bool xor16_flg, const bool xor32_flg) {
         if (xor8_flg) {
             return 1;
         } else if (xor16_flg) {
@@ -68,14 +65,14 @@ class assembler {
     std::ifstream src_fstrm;
     std::ofstream dst_fstrm;
 
-    static void print_mcode_line_by_line(std::ostream &os, const std::vector<u64> &vec) {
+    static void print_mcode_line_by_line(std::ostream &os, const std::vector<std::uint64_t> &vec) {
         for (const auto &mcode : vec) {
             os << std::bitset<64>(mcode) << "\n";
         }
         os << std::flush;
     }
 
-    static void print_mcode_line_by_line(std::ostream &os, const std::vector<u32> &vec) {
+    static void print_mcode_line_by_line(std::ostream &os, const std::vector<std::uint32_t> &vec) {
         for (const auto &mcode : vec) {
             os << std::bitset<32>(mcode) << "\n";
         }

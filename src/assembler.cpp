@@ -90,7 +90,3 @@ int assembler::open_output_file(const string &out_fname) {
 
     return 0;
 }
-
-const string assembler::comment_empty_line_p = R"(^\s*\/\/.*[\n\r]?$|^\s*$)";  // NOLINT [runtime/string]
-const string assembler::normal_line_prefix_p = R"(^\s*[A-Z\d+-]+\s+)";  // NOLINT [runtime/string]
-const string assembler::normal_line_posfix_p = R"(\s*;\s*(\/\/.*)?$)";  // NOLINT [runtime/string]

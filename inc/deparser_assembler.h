@@ -9,8 +9,8 @@
 #include <string>
 #include "assembler.h"     // NOLINT [build/include_subdir]
 
-using str_u32_map = std::unordered_map<string, u32>;
-using u32_regex_map = std::unordered_map<u32, regex>;
+using str_u32_map = std::unordered_map<string, std::uint32_t>;
+using u32_regex_map = std::unordered_map<std::uint32_t, regex>;
 
 class deparser_assembler : public assembler {
  public:
@@ -30,13 +30,13 @@ class deparser_assembler : public assembler {
     void print_machine_code(void) override;
 
     inline int check_previous(const string &) const;
-    inline void swap_previous(const u32 &);
+    inline void swap_previous(const std::uint32_t &);
 
  private:
-    std::vector<u32> mcode_vec;
+    std::vector<std::uint32_t> mcode_vec;
     std::string prev_line_name;
 
-    static const string cmd_name_pattern;
+    static const char* cmd_name_pattern;
     static const int sndm_flg_idx;
     static const int calc_flg_idx;
     static const int xor_flg_idx;
