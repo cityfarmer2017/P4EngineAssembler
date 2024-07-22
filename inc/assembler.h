@@ -58,17 +58,15 @@ class assembler {
     virtual int output_entry_code(const string &) {
         return 0;
     }
+    virtual string get_state_no_pattern(void) const {
+        return "default";
+    }
 
  private:
     int open_output_file(const string &out_fname);
     void close_output_file(void) {
         dst_fstrm.close();
     }
-
-    std::ifstream src_fstrm;
-    std::ofstream dst_fstrm;
-    std::uint16_t cur_line_idx{0};
-    std::uint16_t file_line_idx{0};
 
     static void print_mcode_line_by_line(std::ostream &os, const std::vector<std::uint64_t> &vec) {
         for (const auto &mcode : vec) {
@@ -88,6 +86,11 @@ class assembler {
         std::cout << name + " doesn't match those parameters.\n\t";
         std::cout << "line #" << file_line_idx << ": " << line << std::endl;
     }
+
+    std::ifstream src_fstrm;
+    std::ofstream dst_fstrm;
+    std::uint16_t cur_line_idx{0};
+    std::uint16_t file_line_idx{0};
 };
 
 #endif  // INC_ASSEMBLER_H_

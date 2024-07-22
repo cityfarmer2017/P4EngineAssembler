@@ -11,10 +11,6 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
-inline string parser_assembler::get_name_pattern(void) const {
-    return cmd_name_pattern;
-}
-
 string parser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
     auto l_flg = !m.str(l_idx).empty();
     auto u_flg = !m.str(u_idx).empty();
@@ -39,7 +35,8 @@ string parser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) 
 constexpr auto last_flg_idx = 0;
 constexpr auto unsigned_flg_idx = 1;
 constexpr auto mask0_flg_idx = 2;
-constexpr auto flags_size = 3;
+constexpr auto match_state_no_line_flg_idx = 3;
+constexpr auto flags_size = 4;
 
 static inline void compose_mov_mdf(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
@@ -276,10 +273,46 @@ static inline int compose_nxth(const smatch &m, const machine_code &code) {
         mcode.op_10001.shift_val = stoul(m.str(8));
     }
     mcode.op_10001.sub_state = stoul(m.str(9));
+    if (mcode.op_10001.sub_state > MAX_STATE_NO) {
+        cout << "sub state no shall not exceed " << MAX_STATE_NO << endl;
+        return -1;
+    }
+    return 0;
+}
+
+int parser_assembler::process_state_no_line(const string &line, const string &pattern) {
+    const regex r(pattern);
+    smatch m;
+    if (!regex_match(line, m, r)) {
+        cout << "state no line match error." << endl;
+        return -1;
+    }
+    auto state_no = stoul(m.str(1));
+    if (state_no > MAX_STATE_NO) {
+        cout << "state no shall not exceed " << MAX_STATE_NO << endl;
+        return -1;
+    }
+    states_seq.emplace_back(state_no);
+    state_line_sub_map.emplace(std::make_pair(state_no, map_of_u16()));
+    state_line_sub_map.at(state_no).emplace(std::make_pair(cur_line_idx-1, 0xFFFF));
+    pre_last_flag = false;
     return 0;
 }
 
 int parser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
+    if (flags.size() != flags_size) {
+        return -1;
+    }
+
+    if (flags[match_state_no_line_flg_idx]) {
+        return process_state_no_line(line, get_state_no_pattern());
+    }
+
+    if (pre_last_flag && !states_seq.empty()) {
+        auto cur_state = states_seq.back();
+        state_line_sub_map.at(cur_state).emplace(std::make_pair(cur_line_idx-1, 0xFFFF));
+    }
+
     machine_code mcode;
     mcode.val64 = cmd_opcode_map.at(name);
     smatch m;
@@ -289,18 +322,10 @@ int parser_assembler::line_process(const string &line, const string &name, const
         return -1;
     }
 
-    if (flags.size() != flags_size) {
-        return -1;
-    }
-
     if (cur_line_idx == 0 && (mcode.universe.opcode != 0b10001 || !flags[last_flg_idx])) {
         cout << "the first line of source file must be NXTHL" << endl;
         return -1;
     }
-
-    // if (cur_line_idx - prev_last_idx == 1) {
-    //     start_line_idx_vec.emplace_back(cur_line_idx - 1);  // omit the default action line.
-    // }
 
     switch (mcode.val64) {
     case 0b00001:  // MOV, MDF
@@ -386,7 +411,13 @@ int parser_assembler::line_process(const string &line, const string &name, const
             print_cmd_param_unmatch_message(name, line);
             return rc;
         }
-        states.emplace(static_cast<std::uint16_t>(mcode.op_10001.sub_state));
+        if (cur_line_idx == 0) {
+            init_state = static_cast<std::uint16_t>(mcode.op_10001.sub_state);
+        } else {
+            auto state = static_cast<std::uint16_t>(mcode.op_10001.sub_state);
+            auto cur_state = states_seq.back();
+            state_line_sub_map.at(cur_state).rbegin()->second = state;
+        }
         break;
 
     case 0b10010:  // NXTD
@@ -394,6 +425,9 @@ int parser_assembler::line_process(const string &line, const string &name, const
     case 0b10011:  // NXTP
         if (!m.str(1).empty()) {
             mcode.op_10010.shift_val = stoul(m.str(2));
+        } {
+            auto cur_state = states_seq.back();
+            state_line_sub_map.at(cur_state).rbegin()->second = 0xFFFF;
         }
         break;
 
@@ -402,9 +436,13 @@ int parser_assembler::line_process(const string &line, const string &name, const
     }
 
     mcode.universe.last_flg = flags[last_flg_idx];
+    pre_last_flag = flags[last_flg_idx];
 
     if (cur_line_idx++ == 0) {
         entry_code = mcode.val64;
+    } else if (cur_line_idx > MAX_LINE_NO) {
+        cout << "total code lines shall not exceed " << MAX_LINE_NO << endl;
+        return -1;
     } else {
         mcode_vec.emplace_back(mcode.val64);
     }
@@ -441,12 +479,25 @@ int parser_assembler::output_entry_code(const string &out_fname) {
         std::cout << "cannot open file: " << path.string() << "/parser_default_action.txt" << std::endl;
     }
     dst_fstrm << std::bitset<64>(entry_code);
+    dst_fstrm.close();
+    #ifdef DEBUG
+    cout << "initial state: " << init_state << "\n";
+    for (const auto &s : states_seq) {
+        cout << s << ": ";
+        for (const auto &line_sub : state_line_sub_map.at(s)) {
+            cout << "<" << line_sub.first << ", " << line_sub.second << "> ";
+        }
+        cout << "\n";
+    }
+    #endif
     return 0;
 }
 
 const char* parser_assembler::cmd_name_pattern =
     R"((MOV|MDF|XCT|RMV|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
     R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
+
+const char* parser_assembler::state_no_pattern = R"(^#([\d]{1,3}):(\s+\/\/.*)?[\n\r]?$)";
 
 const int parser_assembler::l_idx = 6;
 const int parser_assembler::u_idx = 5;

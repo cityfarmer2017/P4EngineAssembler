@@ -23,7 +23,9 @@ class deparser_assembler : public assembler {
     deparser_assembler& operator=(deparser_assembler&&) = delete;
 
  private:
-    inline string get_name_pattern(void) const override;
+    string get_name_pattern(void) const override {
+        return cmd_name_pattern;
+    }
     string get_name_matched(const smatch&, vector<bool>&) const override;
     int line_process(const string&, const string&, const vector<bool>&) override;
     void write_machine_code(void) override;

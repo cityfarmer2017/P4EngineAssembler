@@ -10,10 +10,6 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
-inline string deparser_assembler::get_name_pattern(void) const {
-    return cmd_name_pattern;
-}
-
 string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
     auto name = m.str(1);
 
@@ -71,7 +67,8 @@ constexpr auto xor8_flg_idx = 4;
 constexpr auto xor16_flg_idx = 5;
 constexpr auto xor32_flg_idx = 6;
 constexpr auto jump_relative_flg_idx = 7;
-constexpr auto flags_size = 8;
+constexpr auto match_state_no_line_flg_idx = 8;
+constexpr auto flags_size = 9;
 
 static inline void print_cmd_bit_vld_unmatch_message(const string &line) {
     std::cout << line + "\n\tshall be following a <MSKALL / MSKADDR> line." << std::endl;
@@ -367,6 +364,10 @@ static inline void compose_copy(const smatch &m, const machine_code &code) {
 }
 
 int deparser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
+    if (flags.size() != flags_size) {
+        return -1;
+    }
+
     machine_code mcode;
     mcode.val64 = 0;
     mcode.val32 = cmd_opcode_map.at(name);
@@ -375,10 +376,6 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     smatch m;
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val32))) {
         cout << "regex match failed with line:\n\t" << line << endl;
-        return -1;
-    }
-
-    if (flags.size() != flags_size) {
         return -1;
     }
 
@@ -540,8 +537,10 @@ void deparser_assembler::write_machine_code(void) {
 }
 
 void deparser_assembler::print_machine_code(void) {
-    print_mcode_line_by_line(std::cout, mcode_vec);
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
+    #ifdef DEBUG
+    print_mcode_line_by_line(std::cout, mcode_vec);
+    #endif
 }
 
 inline int deparser_assembler::check_previous(const string &line) const {

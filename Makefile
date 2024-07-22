@@ -7,7 +7,8 @@ DEP_DIR := dep
 TEMP_DIRS := $(OBJ_DIR) $(BIN_DIR) $(DEP_DIR)
 
 CC := g++
-CCFLAGS := -g -Wall# -DDEBUG
+CCFLAGS := ${FLAG}
+CCFLAGS += -g -Wall# -DDEBUG
 
 SRCFILES := $(wildcard $(SRC_DIR)/*.cpp)
 INCLUDES := $(INC_DIR)

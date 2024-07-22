@@ -10,10 +10,6 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
-inline string mat_assembler::get_name_pattern(void) const {
-    return cmd_name_pattern;
-}
-
 string mat_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
     auto name = m.str(1);
 
@@ -69,9 +65,14 @@ constexpr auto xor8_flg_idx = 2;
 constexpr auto xor16_flg_idx = 3;
 constexpr auto xor32_flg_idx = 4;
 constexpr auto stm32_flg_idx = 5;
-constexpr auto flags_size = 6;
+constexpr auto match_state_no_line_flg_idx = 7;
+constexpr auto flags_size = 7;
 
 int mat_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
+    if (flags.size() != flags_size) {
+        return -1;
+    }
+
     machine_code mcode;
     mcode.val64 = cmd_opcode_map.at(name);
     mcode.universe.imm64_l = 0;
@@ -80,10 +81,6 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
 
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val64))) {
         cout << "regex match failed with line:\n\t" << line << endl;
-        return -1;
-    }
-
-    if (flags.size() != flags_size) {
         return -1;
     }
 
@@ -256,8 +253,10 @@ void mat_assembler::write_machine_code(void) {
 }
 
 void mat_assembler::print_machine_code(void) {
-    print_mcode_line_by_line(std::cout, mcode_vec);
     print_mcode_line_by_line(dst_fstrm, mcode_vec);
+    #ifdef DEBUG
+    print_mcode_line_by_line(std::cout, mcode_vec);
+    #endif
 }
 
 const char* mat_assembler::cmd_name_pattern =
