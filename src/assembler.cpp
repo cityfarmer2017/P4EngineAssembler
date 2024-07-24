@@ -9,7 +9,7 @@ using std::endl;
 int assembler::execute(const string &in_fname, const string &out_fname) {
     string line;
 
-    src_fstrm.open(in_fname);
+    std::ifstream src_fstrm(in_fname);
     if (!src_fstrm) {
         std::cout << "cannot open source file: " << in_fname << std::endl;
         return -1;
@@ -69,7 +69,7 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
     print_machine_code();
     close_output_file();
 
-    return output_entry_code(out_fname);
+    return process_extra_data(in_fname, out_fname);
 }
 
 int assembler::open_output_file(const string &out_fname) {

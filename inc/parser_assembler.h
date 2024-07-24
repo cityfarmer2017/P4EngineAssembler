@@ -8,16 +8,20 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <filesystem>
 #include "assembler.h"  // NOLINT [build/include_subdir]
 
 using str_u64_map = std::unordered_map<string, std::uint64_t>;
 using u64_regex_map = std::unordered_map<std::uint64_t, regex>;
 using vec_of_u16 = std::vector<std::uint16_t>;
 using map_of_u16 = std::map<std::uint16_t, std::uint16_t>;
-using unorderedmap_of_u16_map = std::unordered_map<std::uint16_t, map_of_u16>;
+using map_of_u16_map = std::map<std::uint16_t, map_of_u16>;
 
 constexpr std::uint16_t MAX_STATE_NO = 255;
-constexpr std::uint16_t MAX_LINE_NO = 256 * 32 - 1;
+constexpr std::uint16_t MATCH_ENTRY_CNT = 32;
+constexpr std::uint16_t MAX_LINE_NO = (MAX_STATE_NO + 1) * MATCH_ENTRY_CNT - 1;
+constexpr std::uint16_t TCAM_CHIP_NO = 20;
+constexpr std::uint16_t ENTRY_CNT_PER_CHIP = (MAX_STATE_NO + 1) * 4;
 
 class parser_assembler : public assembler {
  public:
@@ -37,19 +41,34 @@ class parser_assembler : public assembler {
     int line_process(const string&, const string&, const vector<bool>&) override;
     void write_machine_code(void) override;
     void print_machine_code(void) override;
-    int output_entry_code(const string &) override;
+    int process_extra_data(const string &, const string &) override;
     string get_state_no_pattern(void) const override {
         return state_no_pattern;
     }
 
     int process_state_no_line(const string&, const string&);
+    int output_entry_code(const string&);
+    int output_match_actionid_data(const std::filesystem::path&);
+
+    #ifdef DEBUG
+    void print_extra_data(void) {
+        std::cout << "initial state: " << init_state << "\n";
+        for (const auto &s : states_seq) {
+            std::cout << s << ": ";
+            for (const auto &line_sub : state_line_sub_map.at(s)) {
+                std::cout << "<" << line_sub.first << ", " << line_sub.second << "> ";
+            }
+            std::cout << "\n";
+        }
+    }
+    #endif
 
  private:
     vector<std::uint64_t> mcode_vec;
     std::uint64_t entry_code{0};
     std::uint16_t init_state;
     vec_of_u16 states_seq;
-    unorderedmap_of_u16_map state_line_sub_map;
+    map_of_u16_map state_line_sub_map;
     bool pre_last_flag{false};
 
     static const char* cmd_name_pattern;

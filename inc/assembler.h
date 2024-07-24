@@ -55,7 +55,7 @@ class assembler {
     virtual int line_process(const string&, const string&, const vector<bool>&) = 0;
     virtual void write_machine_code(void) = 0;
     virtual void print_machine_code(void) = 0;
-    virtual int output_entry_code(const string &) {
+    virtual int process_extra_data(const string &, const string &) {
         return 0;
     }
     virtual string get_state_no_pattern(void) const {
@@ -87,7 +87,6 @@ class assembler {
         std::cout << "line #" << file_line_idx << ": " << line << std::endl;
     }
 
-    std::ifstream src_fstrm;
     std::ofstream dst_fstrm;
     std::uint16_t cur_line_idx{0};
     std::uint16_t file_line_idx{0};

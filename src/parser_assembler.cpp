@@ -3,8 +3,12 @@
  */
 #include <limits>
 #include <filesystem>
+#include <memory>
 #include "parser_def.h"  // NOLINT [build/include_subdir]
 #include "parser_assembler.h"  // NOLINT [build/include_subdir]
+// #if WITH_SUB_MODULES
+#include "table_proc/match_actionid.h"
+// #endif
 
 using std::cout;
 using std::endl;
@@ -229,7 +233,7 @@ static inline void compose_hcsum_hcrc(const vector<bool> &flags, const smatch &m
     // but the assembler will only open the 32 bytes (480 ~ 511 at the tail to software programmer
     // so here I need to add the offset by extra 96 bytes (480 = 384 + 96)
     mcode.op_01100.offset = stoul(m.str(2)) + (m.str(1) == "PHV" ? 96 : 0);
-    mcode.op_01100.length = stoul(m.str(3));
+    mcode.op_01100.length = stoul(m.str(3)) - 1;
     mcode.op_01100.mask = stoul(m.str(4), nullptr, 0);
 }
 
@@ -294,7 +298,11 @@ int parser_assembler::process_state_no_line(const string &line, const string &pa
     }
     states_seq.emplace_back(state_no);
     state_line_sub_map.emplace(std::make_pair(state_no, map_of_u16()));
-    state_line_sub_map.at(state_no).emplace(std::make_pair(cur_line_idx-1, 0xFFFF));
+    state_line_sub_map.at(state_no).emplace(std::make_pair(cur_line_idx, 0xFFFF));
+    if (state_line_sub_map.at(state_no).size() > MATCH_ENTRY_CNT) {
+        cout << "for each state, the count of sub state shall not exceed " << MATCH_ENTRY_CNT << endl;
+        return -1;
+    }
     pre_last_flag = false;
     return 0;
 }
@@ -310,7 +318,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
     if (pre_last_flag && !states_seq.empty()) {
         auto cur_state = states_seq.back();
-        state_line_sub_map.at(cur_state).emplace(std::make_pair(cur_line_idx-1, 0xFFFF));
+        state_line_sub_map.at(cur_state).emplace(std::make_pair(cur_line_idx, 0xFFFF));
     }
 
     machine_code mcode;
@@ -414,6 +422,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         if (cur_line_idx == 0) {
             init_state = static_cast<std::uint16_t>(mcode.op_10001.sub_state);
         } else {
+        // if (cur_line_idx > 0) {
             auto state = static_cast<std::uint16_t>(mcode.op_10001.sub_state);
             auto cur_state = states_seq.back();
             state_line_sub_map.at(cur_state).rbegin()->second = state;
@@ -440,6 +449,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
     if (cur_line_idx++ == 0) {
         entry_code = mcode.val64;
+        mcode_vec.emplace_back(0x8000000000000012);  // in action ram, line 0 always store NXTDL.
     } else if (cur_line_idx > MAX_LINE_NO) {
         cout << "total code lines shall not exceed " << MAX_LINE_NO << endl;
         return -1;
@@ -462,34 +472,67 @@ void parser_assembler::print_machine_code(void) {
     #endif
 }
 
-int parser_assembler::output_entry_code(const string &out_fname) {
-    if (dst_fstrm.is_open()) {
-        std::cout << "output stream is in use." << std::endl;
+int parser_assembler::process_extra_data(const string &in_fname, const string &ot_fname) {
+    auto ot_path = std::filesystem::path(ot_fname).parent_path();
+    if (auto rc = output_entry_code(ot_path.string())) {
+        return rc;
+    }
+
+    if (auto rc = output_match_actionid_data(in_fname)) {
+        return rc;
+    }
+
+    return 0;
+}
+
+int parser_assembler::output_entry_code(const string &ot_path) {
+    std::ofstream ot_fstrm(ot_path + "/parser_entry_action.dat", std::ios::binary);
+    if (!ot_fstrm.is_open()) {
+        std::cout << "cannot open file: " << ot_path << "/parser_entry_action.dat" << std::endl;
         return -1;
     }
-    auto path = std::filesystem::path(out_fname).parent_path();
-    dst_fstrm.open(path.string() + "/parser_default_action.dat", std::ios::binary);
-    if (!dst_fstrm.is_open()) {
-        std::cout << "cannot open file: " << path.string() << "/parser_default_action.dat" << std::endl;
+    ot_fstrm.write(reinterpret_cast<const char*>(&entry_code), sizeof(entry_code));
+    ot_fstrm.close();
+
+    ot_fstrm.open(ot_path + "/parser_entry_action.txt");
+    if (!ot_fstrm.is_open()) {
+        std::cout << "cannot open file: " << ot_path << "/parser_entry_action.txt" << std::endl;
+        return -1;
     }
-    dst_fstrm.write(reinterpret_cast<const char*>(&entry_code), sizeof(entry_code));
-    dst_fstrm.close();
-    dst_fstrm.open(path.string() + "/parser_default_action.txt");
-    if (!dst_fstrm.is_open()) {
-        std::cout << "cannot open file: " << path.string() << "/parser_default_action.txt" << std::endl;
-    }
-    dst_fstrm << std::bitset<64>(entry_code);
-    dst_fstrm.close();
+    ot_fstrm << std::bitset<64>(entry_code);
+    ot_fstrm.close();
+
     #ifdef DEBUG
-    cout << "initial state: " << init_state << "\n";
-    for (const auto &s : states_seq) {
-        cout << s << ": ";
-        for (const auto &line_sub : state_line_sub_map.at(s)) {
-            cout << "<" << line_sub.first << ", " << line_sub.second << "> ";
-        }
-        cout << "\n";
-    }
+    print_extra_data();
     #endif
+
+    return 0;
+}
+
+int parser_assembler::output_match_actionid_data(const std::filesystem::path &in_path) {
+    auto path = in_path.parent_path().string() + "/" + "tables_parser";
+    if (!std::filesystem::exists(path)) {
+        std::cout << "no 'tables' sub directory under current sourc code path: " << in_path << std::endl;
+        return -1;
+    }
+
+    auto p_match_actionid = std::make_unique<match_actionid>();
+    if (auto rc = p_match_actionid->generate_sram_data(path, state_line_sub_map)) {
+        return rc;
+    }
+
+    auto ot_path = path + "/output";
+    if (!std::filesystem::exists(ot_path)) {
+        if (!std::filesystem::create_directories(ot_path)) {
+            std::cout << "failed to create directory: " << ot_path << std::endl;
+            return -1;
+        }
+    }
+    ot_path += "/" + in_path.stem().string();
+    if (auto rc = p_match_actionid->output_sram_data(ot_path)) {
+        return rc;
+    }
+
     return 0;
 }
 
@@ -497,7 +540,7 @@ const char* parser_assembler::cmd_name_pattern =
     R"((MOV|MDF|XCT|RMV|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
     R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
 
-const char* parser_assembler::state_no_pattern = R"(^#([\d]{1,3}):(\s+\/\/.*)?[\n\r]?$)";
+const char* parser_assembler::state_no_pattern = R"(^#([\d]{3}):(\s+\/\/.*)?[\n\r]?$)";
 
 const int parser_assembler::l_idx = 6;
 const int parser_assembler::u_idx = 5;

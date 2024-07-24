@@ -1,4 +1,4 @@
-// Parser default action
+// Parser entry action
 NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
 
 #255:
@@ -12,7 +12,7 @@ NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
     NXTDL ;
 
 // Parser instructions
-#0:
+#000:
     SHFT 64;
     XCT  ISR{0: 16}, PHV{0: 2};
     MOV  0x000A, PHV{2: 2};
@@ -38,7 +38,7 @@ NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
     PCSUM ;
     NXTHL ->11;
 
-#43:
+#043:
     SHFT 32;
     COPY META[CALC_RSLT], PHV{10: 4};
     NXTH ->11;
@@ -68,7 +68,7 @@ NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
     NXTH ->89;
     HCSUMM0L ISR{0:32}, 0X12345678;
 
-#89:
+#089:
     RSM16   0x100010001, 4, 1;
     RSM32 0x100010001, 3;
     NXTH ->43;
