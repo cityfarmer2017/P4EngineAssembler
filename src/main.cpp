@@ -4,6 +4,7 @@
 #include <memory>
 #include <filesystem>
 #include "parser_assembler.h"    // NOLINT [build/include_subdir]
+#include "table_proc/match_actionid.h"
 #include "deparser_assembler.h"  // NOLINT [build/include_subdir]
 #include "mat_assembler.h"       // NOLINT [build/include_subdir]
 
@@ -13,9 +14,8 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     string src_fstem(entry.path().stem());
     string src_fext(entry.path().extension());
 
-    string dst_fname(out_path);
+    auto dst_dir(out_path);
     if (!out_path.empty()) {
-        std::filesystem::path dst_dir(out_path);
         if (!std::filesystem::exists(dst_dir)) {
             if (!std::filesystem::create_directories(dst_dir)) {
                 std::cout << "failed to create directory: " << dst_dir << std::endl;
@@ -23,16 +23,22 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
             }
         }
     } else {
-        dst_fname = src_dir;
+        dst_dir = src_dir;
     }
 
-    if (dst_fname.back() != '/') {
-        dst_fname += "/";
+    if (dst_dir.back() != '/') {
+        dst_dir += "/";
     }
 
-    std::unique_ptr<assembler> p_asm = nullptr;
+    if (src_dir.back() != '/') {
+        src_dir += "/";
+    }
+
+    string dst_fname;
+    std::shared_ptr<assembler> p_asm(nullptr);
+    auto p_tbl = std::make_unique<match_actionid>(src_dir, dst_dir);
     if (src_fext == ".p4p") {
-        p_asm = std::make_unique<parser_assembler>();
+        p_asm = std::make_unique<parser_assembler>(std::move(p_tbl));
         dst_fname += "parser_";
     } else if (src_fext == ".p4m") {
         p_asm = std::make_unique<mat_assembler>();
@@ -48,10 +54,10 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     dst_fname += src_fstem;
 
     #ifdef DEBUG
-    std::cout << dst_fname << "\n";
+    std::cout << dst_dir + dst_fname << "\n";
     #endif
 
-    return p_asm->execute(src_dir + "/" + src_fname, dst_fname);
+    return p_asm->execute(src_dir + src_fname, dst_dir + dst_fname);
 }
 
 inline void print_help_information() {

@@ -9,6 +9,8 @@
 #include <string>
 #include <map>
 #include <filesystem>
+#include <memory>
+#include <utility>
 #include "assembler.h"  // NOLINT [build/include_subdir]
 
 using str_u64_map = std::unordered_map<string, std::uint64_t>;
@@ -18,13 +20,17 @@ using map_of_u16 = std::map<std::uint16_t, std::uint16_t>;
 using map_of_u16_map = std::map<std::uint16_t, map_of_u16>;
 
 constexpr std::uint16_t MAX_STATE_NO = 255;
-constexpr std::uint16_t MATCH_ENTRY_CNT = 32;
-constexpr std::uint16_t MAX_LINE_NO = (MAX_STATE_NO + 1) * MATCH_ENTRY_CNT - 1;
-constexpr std::uint16_t TCAM_CHIP_NO = 20;
+constexpr std::uint16_t MATCH_ENTRY_CNT_PER_STATE = 32;
+constexpr std::uint16_t MAX_TCAM_ENTRY_CNT = (MAX_STATE_NO + 1) * MATCH_ENTRY_CNT_PER_STATE;
+constexpr std::uint16_t MAX_LINE_NO = 16 * 1024 - 1;
+constexpr std::uint16_t TCAM_CHIP_CNT = 20;
 constexpr std::uint16_t ENTRY_CNT_PER_CHIP = (MAX_STATE_NO + 1) * 4;
 
 class parser_assembler : public assembler {
+    friend class match_actionid;
+
  public:
+    explicit parser_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
     parser_assembler() = default;
     virtual ~parser_assembler() = default;
 
@@ -48,7 +54,6 @@ class parser_assembler : public assembler {
 
     int process_state_no_line(const string&, const string&);
     int output_entry_code(const string&);
-    int output_match_actionid_data(const std::filesystem::path&);
 
     #ifdef DEBUG
     void print_extra_data(void) {

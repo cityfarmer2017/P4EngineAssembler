@@ -2,12 +2,48 @@
  * Copyright [2024] <wangdianchao@ehtcn.com>
  */
 #include <iostream>
+#include <regex>  // NOLINT [build/c++11]
 #include "../../inc/parser_assembler.h"
 #include "../../inc/table_proc/match_actionid.h"
 
+constexpr auto STATE_NO_LEN = 3;
+
+int match_actionid::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
+    auto in_path = input_path + "tables_parser";
+    if (!std::filesystem::exists(in_path)) {
+        std::cout << "no 'tables_parser' sub directory under current sourc code path: " << input_path << std::endl;
+        return -1;
+    }
+
+    auto p_parser_asm = std::dynamic_pointer_cast<parser_assembler>(p_asm);
+    if (auto rc = generate_sram_data(in_path, p_parser_asm->state_line_sub_map)) {
+        return rc;
+    }
+
+    auto ot_file_name = tcam_file_paths.cbegin()->stem().string();
+    auto ot_path = otput_path + "parser_tables/";
+    if (!std::filesystem::exists(ot_path)) {
+        if (!std::filesystem::create_directories(ot_path)) {
+            std::cout << "failed to create directory: " << ot_path << std::endl;
+            return -1;
+        }
+    }
+
+    ot_path += ot_file_name.substr(0, ot_file_name.size() - STATE_NO_LEN);
+    if (auto rc = output_sram_data(ot_path)) {
+        return rc;
+    }
+
+    return 0;
+}
+
 int match_actionid::generate_sram_data(const std::string &src_dir, const map_of_u16_map &state_chart_map) {
     for (const auto &entry : std::filesystem::recursive_directory_iterator(src_dir)) {
-        if (entry.path().extension() == ".tcam") {
+        const std::regex r(R"(^\w+_\d{3}.tcam$)");
+        if (!regex_match(entry.path().filename().string(), r)) {
+            std::cout << "tcam file pattern does not match." << std::endl;
+            return -1;
+        } else {
             tcam_file_paths.emplace(entry.path());
         }
     }
@@ -76,7 +112,7 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const map_of_
 
         auto it_inner = (it->second).cbegin();
         for (auto i = 0UL; i < it->second.size(); ++i) {
-            actionid_sram_vec[it->first * MATCH_ENTRY_CNT + i] = it_inner->first;
+            actionid_sram_vec[it->first * MATCH_ENTRY_CNT_PER_STATE + i] = it_inner->first;
             ++it_inner;
         }
 
@@ -87,7 +123,7 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const map_of_
 }
 
 int match_actionid::output_sram_data(const std::string &dst_file_stem) {
-    std::ofstream ot_file_strm(dst_file_stem + "_tcam2sram.txt");
+    std::ofstream ot_file_strm(dst_file_stem + "tcam2sram.txt");
     if (!ot_file_strm.is_open()) {
         std::cout << "cannot open dest file: " << dst_file_stem + "_tcam2sram.txt" << std::endl;
         return -1;
@@ -105,26 +141,26 @@ int match_actionid::output_sram_data(const std::string &dst_file_stem) {
     ot_file_strm << std::flush;
     ot_file_strm.close();
 
-    ot_file_strm.open(dst_file_stem + "_tcam2sram.dat", std::ios::binary);
+    ot_file_strm.open(dst_file_stem + "tcam2sram.dat", std::ios::binary);
     if (!ot_file_strm.is_open()) {
-        std::cout << "cannot open dest file: " << dst_file_stem + "_tcam2sram.dat" << std::endl;
+        std::cout << "cannot open dest file: " << dst_file_stem + "tcam2sram.dat" << std::endl;
         return -1;
     }
     ot_file_strm.write(reinterpret_cast<const char*>(u32_vec.data()), sizeof(u32_vec[0]) * u32_vec.size());
     ot_file_strm.close();
 
-    ot_file_strm.open(dst_file_stem + "_aid.dat", std::ios::binary);
+    ot_file_strm.open(dst_file_stem + "aid.dat", std::ios::binary);
     if (!ot_file_strm.is_open()) {
-        std::cout << "cannot open dest file: " << dst_file_stem + "_aid.dat" << std::endl;
+        std::cout << "cannot open dest file: " << dst_file_stem + "aid.dat" << std::endl;
         return -1;
     }
     ot_file_strm.write(reinterpret_cast<const char*>(actionid_sram_vec.data()),
                                                             sizeof(actionid_sram_vec[0]) * actionid_sram_vec.size());
     ot_file_strm.close();
 
-    ot_file_strm.open(dst_file_stem + "_aid.txt");
+    ot_file_strm.open(dst_file_stem + "aid.txt");
     if (!ot_file_strm.is_open()) {
-        std::cout << "cannot open dest file: " << dst_file_stem + "_aid.dat" << std::endl;
+        std::cout << "cannot open dest file: " << dst_file_stem + "aid.dat" << std::endl;
         return -1;
     }
     for (const auto &val : actionid_sram_vec) {

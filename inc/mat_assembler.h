@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <memory>
+#include <utility>
 #include "assembler.h"  // NOLINT [build/include_subdir]
 
 using str_u64_map = std::unordered_map<string, std::uint64_t>;
@@ -14,6 +16,7 @@ using u64_regex_map = std::unordered_map<std::uint64_t, regex>;
 
 class mat_assembler : public assembler {
  public:
+    explicit mat_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
     mat_assembler() = default;
     explicit mat_assembler(bool flag) : long_flag(flag) {}
     virtual ~mat_assembler() = default;

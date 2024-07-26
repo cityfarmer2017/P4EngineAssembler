@@ -288,19 +288,19 @@ int parser_assembler::process_state_no_line(const string &line, const string &pa
     const regex r(pattern);
     smatch m;
     if (!regex_match(line, m, r)) {
-        cout << "state no line match error." << endl;
+        cout << "state no line #" << file_line_idx << " match error.\n\t" << line << endl;
         return -1;
     }
     auto state_no = stoul(m.str(1));
     if (state_no > MAX_STATE_NO) {
-        cout << "state no shall not exceed " << MAX_STATE_NO << endl;
+        cout << "state no shall not exceed " << MAX_STATE_NO << ".\n\t" << line << endl;
         return -1;
     }
     states_seq.emplace_back(state_no);
     state_line_sub_map.emplace(std::make_pair(state_no, map_of_u16()));
     state_line_sub_map.at(state_no).emplace(std::make_pair(cur_line_idx, 0xFFFF));
-    if (state_line_sub_map.at(state_no).size() > MATCH_ENTRY_CNT) {
-        cout << "for each state, the count of sub state shall not exceed " << MATCH_ENTRY_CNT << endl;
+    if (state_line_sub_map.at(state_no).size() > MATCH_ENTRY_CNT_PER_STATE) {
+        cout << "for each state, the count of sub state shall not exceed " << MATCH_ENTRY_CNT_PER_STATE << endl;
         return -1;
     }
     pre_last_flag = false;
@@ -331,7 +331,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
     }
 
     if (cur_line_idx == 0 && (mcode.universe.opcode != 0b10001 || !flags[last_flg_idx])) {
-        cout << "the first line of source file must be NXTHL" << endl;
+        cout << "the first line of code must be NXTHL." << endl;
         return -1;
     }
 
@@ -447,7 +447,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
     mcode.universe.last_flg = flags[last_flg_idx];
     pre_last_flag = flags[last_flg_idx];
 
-    if (cur_line_idx++ == 0) {
+    if (cur_line_idx == 0) {
         entry_code = mcode.val64;
         mcode_vec.emplace_back(0x8000000000000012);  // in action ram, line 0 always store NXTDL.
     } else if (cur_line_idx > MAX_LINE_NO) {
@@ -456,6 +456,8 @@ int parser_assembler::line_process(const string &line, const string &name, const
     } else {
         mcode_vec.emplace_back(mcode.val64);
     }
+
+    ++cur_line_idx;
 
     return 0;
 }
@@ -478,7 +480,7 @@ int parser_assembler::process_extra_data(const string &in_fname, const string &o
         return rc;
     }
 
-    if (auto rc = output_match_actionid_data(in_fname)) {
+    if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
         return rc;
     }
 
@@ -505,33 +507,6 @@ int parser_assembler::output_entry_code(const string &ot_path) {
     #ifdef DEBUG
     print_extra_data();
     #endif
-
-    return 0;
-}
-
-int parser_assembler::output_match_actionid_data(const std::filesystem::path &in_path) {
-    auto path = in_path.parent_path().string() + "/" + "tables_parser";
-    if (!std::filesystem::exists(path)) {
-        std::cout << "no 'tables' sub directory under current sourc code path: " << in_path << std::endl;
-        return -1;
-    }
-
-    auto p_match_actionid = std::make_unique<match_actionid>();
-    if (auto rc = p_match_actionid->generate_sram_data(path, state_line_sub_map)) {
-        return rc;
-    }
-
-    auto ot_path = path + "/output";
-    if (!std::filesystem::exists(ot_path)) {
-        if (!std::filesystem::create_directories(ot_path)) {
-            std::cout << "failed to create directory: " << ot_path << std::endl;
-            return -1;
-        }
-    }
-    ot_path += "/" + in_path.stem().string();
-    if (auto rc = p_match_actionid->output_sram_data(ot_path)) {
-        return rc;
-    }
 
     return 0;
 }

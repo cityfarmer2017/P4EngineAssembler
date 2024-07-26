@@ -52,11 +52,6 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
         flags.clear();
     }
 
-    if (line.empty()) {
-        std::cout << "no empty line is allowed at the end of source file." << std::endl;
-        return -1;
-    }
-
     if (auto rc = open_output_file(out_fname + ".dat")) {
         return rc;
     }

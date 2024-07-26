@@ -12,6 +12,9 @@
 #include <bitset>
 #include <cstdint>
 #include <string>
+#include <memory>
+#include <utility>
+#include "table_proc/table.h"
 
 using std::string;
 using std::vector;
@@ -22,12 +25,13 @@ constexpr auto comment_empty_line_p = R"(^\s*\/\/.*[\n\r]?$|^\s*$)";
 constexpr auto g_normal_line_prefix_p = R"(^\s*[A-Z\d+-]+\s+)";
 constexpr auto g_normal_line_posfix_p = R"(\s*;\s*(\/\/.*)?$)";
 
-class assembler {
+class assembler : public std::enable_shared_from_this<assembler> {
     friend class parser_assembler;
     friend class deparser_assembler;
     friend class mat_assembler;
 
  public:
+    explicit assembler(std::unique_ptr<table> tb) : p_tbl(std::move(tb)) {}
     assembler() = default;
     virtual ~assembler() = default;
 
@@ -61,6 +65,8 @@ class assembler {
     virtual string get_state_no_pattern(void) const {
         return "default";
     }
+
+    std::unique_ptr<table> p_tbl;
 
  private:
     int open_output_file(const string &out_fname);
