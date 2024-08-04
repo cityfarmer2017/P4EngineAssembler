@@ -4,6 +4,7 @@
 #include <limits>
 #include "deparser_assembler.h"  // NOLINT [build/include_subdir]
 #include "deparser_def.h"  // NOLINT [build/include_subdir]
+#include "table_proc/mask_table.h"
 
 using std::cout;
 using std::endl;

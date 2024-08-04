@@ -47,7 +47,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         p_asm = std::make_unique<mat_assembler>(true);
         dst_fname += "mat_long_";
     } else {  // (src_fext == ".p4d")
-        p_asm = std::make_unique<deparser_assembler>();
+        p_asm = std::make_unique<deparser_assembler>(std::move(p_tbl));
         dst_fname += "deparser_";
     }
 
