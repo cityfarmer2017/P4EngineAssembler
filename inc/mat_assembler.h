@@ -16,7 +16,9 @@ using u64_regex_map = std::unordered_map<std::uint64_t, regex>;
 
 class mat_assembler : public assembler {
  public:
+    #if WITH_SUB_MODULES
     explicit mat_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
+    #endif
     mat_assembler() = default;
     explicit mat_assembler(bool flag) : long_flag(flag) {}
     virtual ~mat_assembler() = default;

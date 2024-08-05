@@ -35,6 +35,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     }
 
     string dst_fname;
+    #if WITH_SUB_MODULES
     std::shared_ptr<assembler> p_asm(nullptr);
     auto p_tbl = std::make_unique<match_actionid>(src_dir, dst_dir);
     if (src_fext == ".p4p") {
@@ -50,6 +51,22 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         p_asm = std::make_unique<deparser_assembler>(std::move(p_tbl));
         dst_fname += "deparser_";
     }
+    #else
+    std::unique_ptr<assembler> p_asm(nullptr);
+    if (src_fext == ".p4p") {
+        p_asm = std::make_unique<parser_assembler>();
+        dst_fname += "parser_";
+    } else if (src_fext == ".p4m") {
+        p_asm = std::make_unique<mat_assembler>();
+        dst_fname += "mat_";
+    } else if (src_fext == ".p4ml") {
+        p_asm = std::make_unique<mat_assembler>(true);
+        dst_fname += "mat_long_";
+    } else {  // (src_fext == ".p4d")
+        p_asm = std::make_unique<deparser_assembler>();
+        dst_fname += "deparser_";
+    }
+    #endif
 
     dst_fname += src_fstem;
 

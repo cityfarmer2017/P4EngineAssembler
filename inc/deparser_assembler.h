@@ -9,14 +9,16 @@
 #include <string>
 #include <memory>
 #include <utility>
-#include "assembler.h"     // NOLINT [build/include_subdir]
+#include "assembler.h"  // NOLINT [build/include_subdir]
 
 using str_u32_map = std::unordered_map<string, std::uint32_t>;
 using u32_regex_map = std::unordered_map<std::uint32_t, regex>;
 
 class deparser_assembler : public assembler {
  public:
+    #if WITH_SUB_MODULES
     explicit deparser_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
+    #endif
     deparser_assembler() = default;
     virtual ~deparser_assembler() = default;
 

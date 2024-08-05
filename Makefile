@@ -18,7 +18,7 @@ export SRC_DIR INC_DIR
 
 CC := g++
 CCFLAGS := ${DBG_FLAG}
-# CCFLAGS += ${SUB_FLAG}
+CCFLAGS += ${SUB_FLAG}
 CCFLAGS += -g -Wall# -DDEBUG
 export CC CCFLAGS
 
@@ -28,6 +28,14 @@ OBJECTS  := $(SRCFILES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEPENDS  := $(OBJECTS:$(OBJ_DIR)/%=$(DEP_DIR)/%.d)
 export OBJECTS
 
+.PHONY : all
+all : $(TEMP_DIRS) $(BIN_DIR)/$(APP_NAME)
+
+$(TEMP_DIRS) :
+	mkdir -p $@
+
+ifneq (,$(SUB_FLAG))
+
 SUB1_MODULE := table_proc
 # SUB2_MODULE := XXX
 SUB_MODULES += $(SUB1_MODULE)
@@ -35,20 +43,16 @@ SUB_MODULES += $(SUB1_MODULE)
 SUB1_OBJECTS := $(wildcard $(OBJ_DIR)/$(SUB1_MODULE)/*.o)
 # SUB2_OBJECTS := $(wildcard $(OBJ_DIR)/$(SUB2_MODULE)/*.o)
 
-.PHONY : all
-all : $(TEMP_DIRS) $(BIN_DIR)/$(APP_NAME)
-
-$(TEMP_DIRS) :
-	mkdir -p $@
-
-# ifneq (,$(SUB_FLAG))
 $(BIN_DIR)/$(APP_NAME) : $(OBJECTS) $(SUB1_OBJECTS)
 	@for m in $(SUB_MODULES); do cd $(SRC_DIR)/$$m; make SUB_MODULE=$$m || exit "$$?"; done
-# else
-# $(BIN_DIR)/$(APP_NAME) : $(OBJECTS)
-# 	@echo "\e[32m""Linking executable: $(BIN_DIR)/$(APP_NAME) without sub modules included.""\e[0m"
-# 	$(CC) $(CCFLAGS) -o $@ $(OBJECTS)
-# endif
+
+else  # ifneq (,$(SUB_FLAG))
+
+$(BIN_DIR)/$(APP_NAME) : $(OBJECTS)
+	@echo "\e[32m""Linking executable: $(BIN_DIR)/$(APP_NAME) without sub modules included.""\e[0m"
+	$(CC) $(CCFLAGS) -o $@ $(OBJECTS)
+
+endif  # ifneq (,$(SUB_FLAG))
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	$(CC) $(CCFLAGS) -I$(INCLUDES) -o $@ -c $< -MMD -MF $(patsubst $(OBJ_DIR)/%, $(DEP_DIR)/%.d, $@)

@@ -14,7 +14,9 @@
 #include <string>
 #include <memory>
 #include <utility>
+#if WITH_SUB_MODULES
 #include "table_proc/table.h"
+#endif
 
 using std::string;
 using std::vector;
@@ -31,7 +33,9 @@ class assembler : public std::enable_shared_from_this<assembler> {
     friend class mat_assembler;
 
  public:
+    #if WITH_SUB_MODULES
     explicit assembler(std::unique_ptr<table> tb) : p_tbl(std::move(tb)) {}
+    #endif
     assembler() = default;
     virtual ~assembler() = default;
 
@@ -66,7 +70,9 @@ class assembler : public std::enable_shared_from_this<assembler> {
         return "default";
     }
 
+    #if WITH_SUB_MODULES
     std::unique_ptr<table> p_tbl;
+    #endif
 
  private:
     int open_output_file(const string &out_fname);
