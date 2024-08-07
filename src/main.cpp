@@ -6,6 +6,7 @@
 #include "parser_assembler.h"    // NOLINT [build/include_subdir]
 #include "table_proc/match_actionid.h"
 #include "deparser_assembler.h"  // NOLINT [build/include_subdir]
+#include "table_proc/mask_table.h"
 #include "mat_assembler.h"       // NOLINT [build/include_subdir]
 
 int process_one_entry(const std::filesystem::directory_entry &entry, const string &out_path) {
@@ -37,8 +38,8 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     string dst_fname;
     #if WITH_SUB_MODULES
     std::shared_ptr<assembler> p_asm(nullptr);
-    auto p_tbl = std::make_unique<match_actionid>(src_dir, dst_dir);
     if (src_fext == ".p4p") {
+        auto p_tbl = std::make_unique<match_actionid>(src_dir, dst_dir);
         p_asm = std::make_unique<parser_assembler>(std::move(p_tbl));
         dst_fname += "parser_";
     } else if (src_fext == ".p4m") {
@@ -48,6 +49,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         p_asm = std::make_unique<mat_assembler>(true);
         dst_fname += "mat_long_";
     } else {  // (src_fext == ".p4d")
+        auto p_tbl = std::make_unique<mask_table>(src_dir, dst_dir);
         p_asm = std::make_unique<deparser_assembler>(std::move(p_tbl));
         dst_fname += "deparser_";
     }

@@ -2,6 +2,7 @@
  * Copyright [2024] <wangdianchao@ehtcn.com>
  */
 #include <limits>
+#include <filesystem>
 #include "deparser_assembler.h"  // NOLINT [build/include_subdir]
 #include "deparser_def.h"  // NOLINT [build/include_subdir]
 #if WITH_SUB_MODULES
@@ -544,6 +545,17 @@ void deparser_assembler::print_machine_code(void) {
     #ifdef DEBUG
     print_mcode_line_by_line(std::cout, mcode_vec);
     #endif
+}
+
+int deparser_assembler::process_extra_data(const string &in_fname, const string &ot_fname) {
+    #if WITH_SUB_MODULES
+    src_fname = std::filesystem::path(in_fname).stem();
+    if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
+        return rc;
+    }
+    #endif
+    (void)ot_fname;
+    return 0;
 }
 
 inline int deparser_assembler::check_previous(const string &line) const {

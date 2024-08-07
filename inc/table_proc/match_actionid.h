@@ -32,7 +32,7 @@ class match_actionid : public table {
     int generate_table_data(const std::shared_ptr<assembler>&) override;
 
  private:
-    int generate_sram_data(const std::string&, const map_of_u16_map&);
+    int generate_sram_data(const std::string&, const std::shared_ptr<assembler>&);
     int output_sram_data(const std::string&);
 
     std::set<std::filesystem::path> tcam_file_paths;

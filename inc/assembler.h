@@ -46,6 +46,14 @@ class assembler : public std::enable_shared_from_this<assembler> {
 
     int execute(const string&, const string&);
 
+    const string get_cur_src_file_name() const {
+        #if WITH_SUB_MODULES
+        return src_fname;
+        #else
+        return "";
+        #endif
+    }
+
     static std::uint32_t get_xor_unit(const bool xor8_flg, const bool xor16_flg, const bool xor32_flg) {
         if (xor8_flg) {
             return 1;
@@ -72,6 +80,7 @@ class assembler : public std::enable_shared_from_this<assembler> {
 
     #if WITH_SUB_MODULES
     std::unique_ptr<table> p_tbl;
+    std::string src_fname;
     #endif
 
  private:

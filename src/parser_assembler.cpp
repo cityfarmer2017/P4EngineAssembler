@@ -480,6 +480,7 @@ int parser_assembler::process_extra_data(const string &in_fname, const string &o
         return rc;
     }
     #if WITH_SUB_MODULES
+    src_fname = std::filesystem::path(in_fname).stem();
     if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
         return rc;
     }

@@ -15,8 +15,7 @@ int match_actionid::generate_table_data(const std::shared_ptr<assembler> &p_asm)
         return -1;
     }
 
-    auto p_parser_asm = std::dynamic_pointer_cast<parser_assembler>(p_asm);
-    if (auto rc = generate_sram_data(in_path, p_parser_asm->state_line_sub_map)) {
+    if (auto rc = generate_sram_data(in_path, p_asm)) {
         return rc;
     }
 
@@ -37,12 +36,18 @@ int match_actionid::generate_table_data(const std::shared_ptr<assembler> &p_asm)
     return 0;
 }
 
-int match_actionid::generate_sram_data(const std::string &src_dir, const map_of_u16_map &state_chart_map) {
+int match_actionid::generate_sram_data(const std::string &src_dir, const std::shared_ptr<assembler> &p_asm) {
+    auto p_parser_asm = std::dynamic_pointer_cast<parser_assembler>(p_asm);
+
     for (const auto &entry : std::filesystem::recursive_directory_iterator(src_dir)) {
-        const std::regex r(R"(^\w+_\d{3}.tcam$)");
-        if (!regex_match(entry.path().filename().string(), r)) {
+        const std::regex r(R"(^(\w+)_\d{3}.tcam$)");
+        std::smatch m;
+        auto str = entry.path().filename().string();
+        if (!regex_match(str, m, r)) {
             std::cout << "tcam file pattern does not match." << std::endl;
             return -1;
+        } else if (m.str(1) != p_parser_asm->get_cur_src_file_name()) {
+            continue;
         } else {
             tcam_file_paths.emplace(entry.path());
         }
@@ -53,12 +58,12 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const map_of_
         return -1;
     }
 
-    if (tcam_file_paths.size() != state_chart_map.size()) {
+    if (tcam_file_paths.size() != p_parser_asm->state_line_sub_map.size()) {
         std::cout << "the number of tcam files does not match sate chart generated from source code." << std::endl;
         return -1;
     }
 
-    auto it = state_chart_map.begin();
+    auto it = p_parser_asm->state_line_sub_map.begin();
 
     for (const auto &tcam_file_path : tcam_file_paths) {
         std::ifstream in_file_strm(tcam_file_path);
@@ -125,7 +130,7 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const map_of_
 int match_actionid::output_sram_data(const std::string &dst_file_stem) {
     std::ofstream ot_file_strm(dst_file_stem + "tcam2sram.txt");
     if (!ot_file_strm.is_open()) {
-        std::cout << "cannot open dest file: " << dst_file_stem + "_tcam2sram.txt" << std::endl;
+        std::cout << "cannot open dest file: " << dst_file_stem + "tcam2sram.txt" << std::endl;
         return -1;
     }
 

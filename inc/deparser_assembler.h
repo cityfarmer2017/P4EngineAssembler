@@ -35,6 +35,7 @@ class deparser_assembler : public assembler {
     int line_process(const string&, const string&, const vector<bool>&) override;
     void write_machine_code(void) override;
     void print_machine_code(void) override;
+    int process_extra_data(const string &, const string &) override;
 
     inline int check_previous(const string &) const;
     inline void swap_previous(const std::uint32_t &);

@@ -11,6 +11,8 @@ class assembler;
 
 class table {
     friend class match_actionid;
+    friend class mask_table;
+
  public:
     table(const std::string &in, const std::string &ot) : input_path(in), otput_path(ot) {}
     table() = default;
