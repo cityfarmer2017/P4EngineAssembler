@@ -475,8 +475,7 @@ void parser_assembler::print_machine_code(void) {
 }
 
 int parser_assembler::process_extra_data(const string &in_fname, const string &ot_fname) {
-    auto ot_path = std::filesystem::path(ot_fname).parent_path();
-    if (auto rc = output_entry_code(ot_path.string())) {
+    if (auto rc = output_entry_code(ot_fname)) {
         return rc;
     }
     #if WITH_SUB_MODULES
@@ -490,17 +489,18 @@ int parser_assembler::process_extra_data(const string &in_fname, const string &o
 }
 
 int parser_assembler::output_entry_code(const string &ot_path) {
-    std::ofstream ot_fstrm(ot_path + "/parser_entry_action.dat", std::ios::binary);
+    auto ot_fname = ot_path + "_entry_action";
+    std::ofstream ot_fstrm(ot_fname + ".dat", std::ios::binary);
     if (!ot_fstrm.is_open()) {
-        std::cout << "cannot open file: " << ot_path << "/parser_entry_action.dat" << std::endl;
+        std::cout << "cannot open file: " << ot_fname + ".dat" << std::endl;
         return -1;
     }
     ot_fstrm.write(reinterpret_cast<const char*>(&entry_code), sizeof(entry_code));
     ot_fstrm.close();
 
-    ot_fstrm.open(ot_path + "/parser_entry_action.txt");
+    ot_fstrm.open(ot_fname + ".txt");
     if (!ot_fstrm.is_open()) {
-        std::cout << "cannot open file: " << ot_path << "/parser_entry_action.txt" << std::endl;
+        std::cout << "cannot open file: " << ot_fname + ".txt" << std::endl;
         return -1;
     }
     ot_fstrm << std::bitset<64>(entry_code);

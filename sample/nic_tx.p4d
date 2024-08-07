@@ -1,0 +1,35 @@
+//set mdout.len = (hdr_len - 1) + pld_len
+    //get (hdr_len - 1) from phv
+    MOVE PHV{428:2}, TMP;
+
+    //get pld_len from MD.payload_len
+    COPY META{26:2}, PHV[430];
+    NOP ;
+    NOP ;
+
+    //add hdr_len + payload_len to phv
+    ADDU TMP, PHV{430:2}, PHV{432:3};
+    NOP ;
+    NOP ;
+
+    //set meta.len
+    COPY PHV{432:2}, META[4];
+    NOP ;
+    NOP ;
+
+//send metadata changed by pipeline
+    SNDMP ;
+
+//set hdr_len to LENGTH_R(offset:86*8)
+    COPY PHV{426:2}, META[86];
+    NOP ;
+    NOP ;
+
+//send hdr from phv, using LENGTH_R
+    MSKALL ;
+    SNDH PHV{120:};
+
+//send original payload(unsing MD.payload_len)
+    SNDP ;
+
+    END ;

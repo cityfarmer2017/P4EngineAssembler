@@ -11,14 +11,18 @@ constexpr auto MASK_LINE_LEN = 512UL;
 int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     auto in_path = input_path + "tables_deparser/";
     if (!std::filesystem::exists(in_path)) {
+        #if DEBUG
         std::cout << "no 'tables_deparser' sub directory under current sourc code path: " << input_path << std::endl;
-        return -1;
+        #endif
+        return 0;
     }
 
     auto file_name = p_asm->get_cur_src_file_name() + ".msk";
     if (!std::filesystem::exists(in_path + file_name)) {
+        #if DEBUG
         std::cout << file_name << "does not exists in path: " << in_path << std::endl;
-        return -1;
+        #endif
+        return 0;
     }
 
     std::vector<std::string> mask_strings;

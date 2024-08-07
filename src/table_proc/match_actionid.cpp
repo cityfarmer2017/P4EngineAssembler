@@ -77,11 +77,16 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
         std::string line;
         std::size_t sz = 0;
         while (getline(in_file_strm, line)) {
-            const std::regex r(R"([01x]{40})");
+            const std::regex r(R"(^[01x]{40}[\n\r]?$)");
             if (!regex_match(line, r)) {
                 std::cout << "tcam entry shall only include 40 collums of [01x]." << std::endl;
                 return -1;
             }
+
+            line = line.substr(0, 40);
+            // while (line.size() > 40) {
+            //     line.pop_back();
+            // }
 
             vec_of_str tcam_entry_vec;
             for (auto i = 0UL; i < line.size(); ++i, ++i) {

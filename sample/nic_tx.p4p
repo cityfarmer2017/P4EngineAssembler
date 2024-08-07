@@ -1,0 +1,169 @@
+//default action: get md.dest to match destTCAM in state0
+NXTHL META{64:2}, ->0; //NXTH use meta in bit uint
+
+//state0:
+//0-0: vpe_entry()
+//0-1: recircle_entry()
+//0-2: tompu_entry()
+//0-3: tompu2_entry()
+//0-4: TODO:error_entry()
+#000:
+//vpe_entry(): use md.src_engine to match src_engineTCAM in state1
+    NXTHL META{92:3}, ->1;
+
+//recircle_entry(): drop pkt
+    //get user_data for pkt_hdr
+    XCT ISR{0:32}, PHV{120:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{124:4};
+    SHFT 32;
+
+    //use user_data as pkt hdr
+    MOV 8, PHV{426:2};
+
+    MOV 0x80000000, META{0:8};  //mdout.finish=1
+    MOV 0x40000000, META{8:8};  //mdout.drop=1
+    MOV 0, META{16:8};          //dst_engine=0, dest=0, udata_len=0
+
+    PCSUM ;
+    NXTPL ;
+
+//tompu_entry(): drop pkt
+    //get user_data for pkt_hdr
+    XCT ISR{0:32}, PHV{120:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{124:4};
+    SHFT 32;
+
+    //use user_data as pkt hdr
+    MOV 8, PHV{426:2};
+
+    MOV 0x80000000, META{0:8};  //mdout.finish=1
+    MOV 0x40000000, META{8:8};  //mdout.drop=1
+    MOV 0, META{16:8};          //dst_engine=0, dest=0, udata_len=0
+
+    PCSUM ;
+    NXTPL ;
+
+//tompu2_entry(): drop pkt
+    //get user_data for pkt_hdr
+    XCT ISR{0:32}, PHV{120:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{124:4};
+    SHFT 32;
+
+    //use user_data as pkt hdr
+    MOV 8, PHV{426:2};
+
+    MOV 0x80000000, META{0:8};  //mdout.finish=1
+    MOV 0x40000000, META{8:8};  //mdout.drop=1
+    MOV 0, META{16:8};          //dst_engine=0, dest=0, udata_len=0
+
+    PCSUM ;
+    NXTPL ;
+
+//state1:
+//1-0: l2nic_virtio_entry()
+//1-1: cmdq_entry()
+//1-2: repq_entry()
+//1-3: rdma_entry()
+//1-4: error_entry()
+#001:
+//l2nic_virtio_entry():
+    //get user_data.qtype to match qtypeTCAM in state2
+    NXTHL ISR{0:5}, ->2;
+
+//cmdq_entry():
+    //pkt_in: |user_data(32B)|host_pkt|, use user_data as pkt_hdr, passthrough to MPU
+
+    //get user_data
+    XCT ISR{0:32}, PHV{120:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{124:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{128:4};
+    SHFT 32;
+    XCT ISR{0:16}, PHV{132:2};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{136:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{140:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{144:4};
+    SHFT 32;
+    XCT ISR{0:16}, PHV{148:4};
+    SHFT 32;
+
+    //set hdr_len
+    MOV 32, PHV{426:2};
+
+    //set (hdr_len - 1) for metadata
+    MOV 31, PHV{428:2};
+
+    //set mdout
+    MOV 0, META{0:8};           //mdout.finish=0
+    MOV 0xC00000, META{8:8};    //mdout.tompu=1, mdout.hw_recircle=1
+    MOV 0x4000000, META{16:8};  //dst_engine=0, dest=0, udata_len=4
+
+    PCSUM ;
+    NXTPL ;
+
+//repq_entry()
+    //TODO
+    NXTDL ;
+
+//rdma_entry()
+    //TODO
+    NXTDL ;
+
+
+//state2:
+//2-0: l2nic_entry()
+//2-1: virito_ctrlq_entry()
+//2-2: virtio_txq_entry()
+#002:
+//l2nic_entry() [56,78]
+    //pkt_in: |user_data(task_section,16B)|eth_hdr(14B)|payload|
+    //get user_data
+    XCT ISR{0:32}, PHV{0:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{4:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{8:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{12:4};
+    SHFT 32;
+
+    //get dmac+smac
+    XCT ISR{0:32}, PHV{120:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{124:4};
+    SHFT 32;
+    XCT ISR{0:32}, PHV{128:4};
+    SHFT 32;
+
+    //get eth_type
+    XCT ISR{0:16}, PHV{132:2};
+    SHFT 16;
+
+    //set hdr_len without vlan_tag(14B)
+    MOV 14, PHV{426:2};
+
+    //set (hdr_len - 1) for metadata
+    MOV 13, PHV{428:2};
+
+    //set mdout
+    MOV 0x80000000, META{0:8};  //mdout.finish=1
+    MOV 0, META{8:8};
+    MOV 0, META{16:8};          //dst_engine=0, dest=0, udata_len=0
+
+    PCSUM ;
+    NXTPL ;
+
+//virtio_ctrlq_entry()
+    //TODO
+    NXTDL ;
+
+//virtio_txq_entry()
+    //TODO
+    NXTDL ;
