@@ -411,6 +411,11 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         }
         break;
 
+    case 0b00101:  // MOVE
+        mcode.op_00101.offset = std::stoul(m.str(1));
+        mcode.op_00101.length = std::stoul(m.str(2)) - 1;
+        break;
+
     case 0b00110:  // SETH
     case 0b00111:  // SETL
         if (auto rc = compose_seth_setl(m, mcode)) {

@@ -7,6 +7,7 @@
 #include "../../inc/table_proc/match_actionid.h"
 
 constexpr auto STATE_NO_LEN = 3;
+constexpr auto ALL_X_STR40 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
 int match_actionid::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     auto in_path = input_path + "tables_parser";
@@ -53,8 +54,8 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
         }
     }
 
-    if (tcam_file_paths.size() >= MAX_STATE_NO) {
-        std::cout << "the number of tcam files shall not exceed " << MAX_STATE_NO << std::endl;
+    if (tcam_file_paths.size() > MAX_STATE_NO + 1) {
+        std::cout << "the number of tcam files shall not exceed " << MAX_STATE_NO + 1 << std::endl;
         return -1;
     }
 
@@ -72,7 +73,7 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
             return -1;
         }
 
-        std::vector<vec_of_str> str_vec_vec{20, vec_of_str{4, ""}};
+        std::vector<vec_of_str> str_vec_vec{20, vec_of_str{4, ALL_1_STR32}};
 
         std::string line;
         std::size_t sz = 0;
@@ -88,6 +89,12 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
             //     line.pop_back();
             // }
 
+            ++sz;
+
+            if (line == ALL_X_STR40) {
+                continue;
+            }
+
             vec_of_str tcam_entry_vec;
             for (auto i = 0UL; i < line.size(); ++i, ++i) {
                 tcam_entry_vec.emplace_back(line.substr(i, 2));
@@ -98,14 +105,12 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
             auto i = 0UL;
             for (const auto &c2 : tcam_entry_vec) {
                 auto c4 = c2_c4_map.at(c2);
-                str_vec_vec[i][0].insert(0, 1, c4[0]);
-                str_vec_vec[i][1].insert(0, 1, c4[1]);
-                str_vec_vec[i][2].insert(0, 1, c4[2]);
-                str_vec_vec[i][3].insert(0, 1, c4[3]);
+                str_vec_vec[i][0][32-sz] = c4[0];
+                str_vec_vec[i][1][32-sz] = c4[1];
+                str_vec_vec[i][2][32-sz] = c4[2];
+                str_vec_vec[i][3][32-sz] = c4[3];
                 ++i;
             }
-
-            ++sz;
         }
 
         if (sz != 32) {

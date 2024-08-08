@@ -10,4 +10,4 @@ How to make the tool:
     5. make clean
     6. make dist-clean
 
-Two makes with different -D macros must be itercepted by a 'make clean' or 'make dist-clean'.
+To make with different -D macro, a 'make clean' or 'make dist-clean' must be run in between.

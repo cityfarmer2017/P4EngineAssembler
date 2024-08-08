@@ -32,6 +32,12 @@ typedef union {
     } op_00011, op_00100;
     struct {
         std::uint32_t opcode: 5;
+        std::uint32_t offset: 9;
+        std::uint32_t length: 2;
+        std::uint32_t rsvd: 16;
+    } op_00101;
+    struct {
+        std::uint32_t opcode: 5;
         std::uint32_t dst_slct: 3;
         std::uint32_t value: 16;
         std::uint32_t ctrl_mode: 8;
