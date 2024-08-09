@@ -10,7 +10,7 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
-string mat_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
+string mat_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
     auto name = m.str(1);
 
     auto long_flg = !m.str(l_flg_idx).empty() || name == "HASH";
@@ -65,11 +65,67 @@ constexpr auto xor8_flg_idx = 2;
 constexpr auto xor16_flg_idx = 3;
 constexpr auto xor32_flg_idx = 4;
 constexpr auto stm32_flg_idx = 5;
-constexpr auto match_state_no_line_flg_idx = 7;
+constexpr auto match_assist_line_flg_idx = 6;
 constexpr auto flags_size = 7;
+
+int mat_assembler::process_assist_line(const string &line) {
+    const auto r = std::regex(R"(^)" + assist_line_pattern() + R"((\s+\/\/.*)?[\n\r]?$)");
+    std::smatch m;
+    if (!std::regex_match(line, m, r)) {
+        return -1;
+    }
+
+    if (m.str(1) == "start") {
+        if (cur_line_idx != 0) {
+            return -1;
+        }
+        if (!start_end_stk.empty() && start_end_stk.back() != "end") {
+            std::cout << "a '.start' line shall be the initial line or succeeding a '.end' line." << std::endl;
+            return -1;
+        }
+        start_end_stk.emplace_back("start");
+
+        auto idx = start_end_stk.size() / 2;
+        if (idx > 7) {
+            return -1;
+        }
+
+        cur_ram_idx = idx;
+    } else {
+        cur_line_idx = 0;
+        if (start_end_stk.empty() || start_end_stk.back() != "start") {
+            std::cout << "a '.end' line shall be coupled with a '.start' line." << std::endl;
+            return -1;
+        }
+        start_end_stk.emplace_back("end");
+    }
+
+    return 0;
+}
 
 int mat_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
     if (flags.size() != flags_size) {
+        return -1;
+    }
+
+    if (flags[match_assist_line_flg_idx]) {
+        return process_assist_line(line);
+    }
+
+    if (!(start_end_stk.size() % 2)) {
+        std::cout << "any normal code line shall be located between a '.start' and a '.end'" << std::endl;
+        return -1;
+    }
+
+    if (start_end_stk.size() / 2 < 6 && flags[long_flg_idx]) {
+        std::cout << "line #" << file_line_idx << ": " << line << "\n\t";
+        std::cout << "long instructions shall be located in ram_6-7 only." << std::endl;
+        return -1;
+    }
+
+    if (start_end_stk.size() / 2 >= 6 && !flags[long_flg_idx]) {
+        std::cout << "line #" << file_line_idx << ": " << line << "\n\t";
+        std::cout << "normal instructions shall be located in ram_0-5 only." << std::endl;
         return -1;
     }
 
@@ -80,12 +136,7 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
     smatch m;
 
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val64))) {
-        cout << "regex match failed with line:\n\t" << line << endl;
-        return -1;
-    }
-
-    if (long_flag != flags[long_flg_idx]) {
-        cout << "normal and long instructions shall not be mixed.\n\t" << line << endl;
+        cout << "regex match failed with line: #" << file_line_idx << "\n\t" << line << endl;
         return -1;
     }
 
@@ -215,7 +266,7 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
             mcode.op_10101.calc_mode = flags[crc_poly1_flg_idx] ? 1 : 2;
         } else if (name == "XOR") {
             mcode.op_10101.calc_mode = 3;
-            mcode.op_10101.xor_unit = get_xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
+            mcode.op_10101.xor_unit = xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
         }
         break;
 
@@ -239,28 +290,61 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         break;
     }
 
-    mcode_vec.emplace_back(mcode.val64);
+    ram_mcode_vec[cur_ram_idx].emplace_back(mcode.val64);
     if (mcode.universe.imm64_l) {
-        mcode_vec.emplace_back(mcode.universe.imm64_l);
-        mcode_vec.emplace_back(mcode.universe.imm64_h);
+        ram_mcode_vec[cur_ram_idx].emplace_back(mcode.universe.imm64_l);
+        ram_mcode_vec[cur_ram_idx].emplace_back(mcode.universe.imm64_h);
     }
+
+    // std::cout << cur_line_idx << "\n";
+    ++cur_line_idx;
 
     return 0;
 }
 
+int mat_assembler::open_output_file(const string &out_fname) {
+    for (auto i = 0; i < static_cast<int>(ram_mcode_vec.size()); ++i) {
+        auto str_strm = std::ostringstream();
+        str_strm << "_ram" << i;
+        auto ot_fpath = out_fname;
+        ot_fpath.insert(ot_fpath.size() - 4, str_strm.str());
+        if (auto rc = assembler::open_output_file(ot_fpath)) {
+            return rc;
+        }
+        ot_fstrms.emplace_back(std::move(dst_fstrm));
+    }
+    return 0;
+}
+
+void mat_assembler::close_output_file(void) {
+    for (auto &strm : ot_fstrms) {
+        strm.close();
+    }
+    ot_fstrms.clear();
+}
+
 void mat_assembler::write_machine_code(void) {
-    dst_fstrm.write(reinterpret_cast<const char*>(mcode_vec.data()), sizeof(mcode_vec[0]) * mcode_vec.size());
+    auto i = 0;
+    for (const auto &mcode_vec : ram_mcode_vec) {
+        ot_fstrms[i++].write(reinterpret_cast<const char*>(mcode_vec.data()), sizeof(mcode_vec[0]) * mcode_vec.size());
+    }
 }
 
 void mat_assembler::print_machine_code(void) {
-    print_mcode_line_by_line(dst_fstrm, mcode_vec);
-    #ifdef DEBUG
-    print_mcode_line_by_line(std::cout, mcode_vec);
-    #endif
+    auto i = 0;
+    for (const auto &mcode_vec : ram_mcode_vec) {
+        #ifdef DEBUG
+        std::cout << ".ram" << i << "\n";
+        print_mcode_line_by_line(std::cout, mcode_vec);
+        #endif
+        print_mcode_line_by_line(ot_fstrms[i++], mcode_vec);
+    }
 }
 
 const char* mat_assembler::cmd_name_pattern =
     R"(((MOV|COPY)(L)?|MDF|COUNT|METER|LOCK|ULCK|HASH|(CRC)16P([12])|(XOR)(4|8|16|32)|(RSM|WSM)(16|32)))";
+
+const char* mat_assembler::extra_line_pattern = R"(\.(start|end))";
 
 const int mat_assembler::l_flg_idx = 3;
 const int mat_assembler::crc_flg_idx = 5;

@@ -14,7 +14,7 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
-string deparser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
+string deparser_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
     auto name = m.str(1);
 
     auto sndm_m_flg = false;
@@ -71,7 +71,7 @@ constexpr auto xor8_flg_idx = 4;
 constexpr auto xor16_flg_idx = 5;
 constexpr auto xor32_flg_idx = 6;
 constexpr auto jump_relative_flg_idx = 7;
-constexpr auto match_state_no_line_flg_idx = 8;
+constexpr auto match_assist_line_flg_idx = 8;
 constexpr auto flags_size = 9;
 
 static inline void print_cmd_bit_vld_unmatch_message(const string &line) {
@@ -228,14 +228,14 @@ static inline void compose_xor(const vector<bool> &flags, const smatch &m, const
     auto &mcode = const_cast<machine_code&>(code);
     mcode.op_10001.src_off = stoul(m.str(1));
     mcode.op_10001.src_len = stoul(m.str(2));
-    mcode.op_10001.calc_unit = assembler::get_xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
+    mcode.op_10001.calc_unit = assembler::xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
     mcode.op_10001.dst_slct = m.str(3) == "PHV";
     mcode.op_10001.dst_off = stoul(m.str(4));
 }
 
 static inline void compose_xorr(const vector<bool> &flags, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    mcode.op_10010.calc_unit = assembler::get_xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
+    mcode.op_10010.calc_unit = assembler::xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
     mcode.op_10010.dst_slct = m.str(1) == "PHV";
     mcode.op_10010.dst_off = stoul(m.str(2));
 }
@@ -512,6 +512,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             print_cmd_param_unmatch_message(name, line);
             return rc;
         }
+        be_mask_table_necessary = name == "MSKADDR";
         break;
 
     case 0b11001:  // J / BEZ
@@ -555,8 +556,10 @@ void deparser_assembler::print_machine_code(void) {
 int deparser_assembler::process_extra_data(const string &in_fname, const string &ot_fname) {
     #if WITH_SUB_MODULES
     src_fname = std::filesystem::path(in_fname).stem();
-    if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
-        return rc;
+    if (be_mask_table_necessary) {
+        if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
+            return rc;
+        }
     }
     #endif
     (void)ot_fname;

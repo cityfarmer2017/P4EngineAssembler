@@ -45,9 +45,6 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     } else if (src_fext == ".p4m") {
         p_asm = std::make_unique<mat_assembler>();
         dst_fname += "mat_";
-    } else if (src_fext == ".p4ml") {
-        p_asm = std::make_unique<mat_assembler>(true);
-        dst_fname += "mat_long_";
     } else {  // (src_fext == ".p4d")
         auto p_tbl = std::make_unique<mask_table>(src_dir, dst_dir);
         p_asm = std::make_unique<deparser_assembler>(std::move(p_tbl));
@@ -61,9 +58,6 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     } else if (src_fext == ".p4m") {
         p_asm = std::make_unique<mat_assembler>();
         dst_fname += "mat_";
-    } else if (src_fext == ".p4ml") {
-        p_asm = std::make_unique<mat_assembler>(true);
-        dst_fname += "mat_long_";
     } else {  // (src_fext == ".p4d")
         p_asm = std::make_unique<deparser_assembler>();
         dst_fname += "deparser_";
@@ -120,7 +114,7 @@ int main(int argc, char* argv[]) {
     if (std::filesystem::is_regular_file(argv[1])) {
         auto entry = std::filesystem::directory_entry(argv[1]);
         string src_fext(entry.path().extension());
-        if ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4ml") && (src_fext != ".p4d")) {
+        if ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4d")) {
             print_help_information();
             return -1;
         }
@@ -130,7 +124,7 @@ int main(int argc, char* argv[]) {
     for (const auto &entry : std::filesystem::directory_iterator(argv[1])) {
         string src_fext(entry.path().extension());
         if (!entry.is_regular_file() ||
-            ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4ml") && (src_fext != ".p4d"))) {
+            ((src_fext != ".p4p") && (src_fext != ".p4m") && (src_fext != ".p4d"))) {
             continue;
         }
 

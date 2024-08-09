@@ -11,18 +11,14 @@ constexpr auto MASK_LINE_LEN = 512UL;
 int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     auto in_path = input_path + "tables_deparser/";
     if (!std::filesystem::exists(in_path)) {
-        #if DEBUG
-        std::cout << "no 'tables_deparser' sub directory under current sourc code path: " << input_path << std::endl;
-        #endif
-        return 0;
+        std::cout << "no 'tables_deparser' directory under current sourc code path: " << input_path << std::endl;
+        return -1;
     }
 
-    auto file_name = p_asm->get_cur_src_file_name() + ".msk";
+    auto file_name = p_asm->src_file_name() + ".msk";
     if (!std::filesystem::exists(in_path + file_name)) {
-        #if DEBUG
-        std::cout << file_name << "does not exists in path: " << in_path << std::endl;
-        #endif
-        return 0;
+        std::cout << file_name << " does not exists in path: " << in_path << std::endl;
+        return -1;
     }
 
     std::vector<std::string> mask_strings;
@@ -84,7 +80,7 @@ int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
         }
     }
 
-    auto ot_file_name = ot_path + p_asm->get_cur_src_file_name();
+    auto ot_file_name = ot_path + p_asm->src_file_name();
     auto ot_file_strm = std::ofstream(ot_file_name + "_msk.txt");
     if (!ot_file_strm.is_open()) {
         std::cout << "cannot open dest file: " << ot_file_name + "_msk.txt" << std::endl;

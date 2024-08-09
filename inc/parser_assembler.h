@@ -42,16 +42,16 @@ class parser_assembler : public assembler {
     parser_assembler& operator=(parser_assembler&&) = delete;
 
  private:
-    string get_name_pattern(void) const override {
+    string name_pattern(void) const override {
         return cmd_name_pattern;
     }
-    string get_name_matched(const smatch&, vector<bool>&) const override;
+    string name_matched(const smatch&, vector<bool>&) const override;
     int line_process(const string&, const string&, const vector<bool>&) override;
     void write_machine_code(void) override;
     void print_machine_code(void) override;
     int process_extra_data(const string &, const string &) override;
-    string get_state_no_pattern(void) const override {
-        return state_no_pattern;
+    string assist_line_pattern(void) const override {
+        return stateno_pattern;
     }
 
     int process_state_no_line(const string&, const string&);
@@ -79,7 +79,7 @@ class parser_assembler : public assembler {
     bool pre_last_flag{false};
 
     static const char* cmd_name_pattern;
-    static const char* state_no_pattern;
+    static const char* stateno_pattern;
     static const int l_idx;   // index of L sub-pattern for Last flag
     static const int u_idx;   // index of U sub-pattern for Unsigned flag
     static const int m0_idx;  // index of M0 sub-pattern for Mask to 0 flag

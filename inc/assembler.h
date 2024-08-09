@@ -46,7 +46,7 @@ class assembler : public std::enable_shared_from_this<assembler> {
 
     int execute(const string&, const string&);
 
-    const string get_cur_src_file_name() const {
+    const string src_file_name() const {
         #if WITH_SUB_MODULES
         return src_fname;
         #else
@@ -54,7 +54,7 @@ class assembler : public std::enable_shared_from_this<assembler> {
         #endif
     }
 
-    static std::uint32_t get_xor_unit(const bool xor8_flg, const bool xor16_flg, const bool xor32_flg) {
+    static std::uint32_t xor_unit(const bool xor8_flg, const bool xor16_flg, const bool xor32_flg) {
         if (xor8_flg) {
             return 1;
         } else if (xor16_flg) {
@@ -66,16 +66,20 @@ class assembler : public std::enable_shared_from_this<assembler> {
     }
 
  protected:
-    virtual string get_name_pattern(void) const = 0;
-    virtual string get_name_matched(const smatch&, vector<bool>&) const = 0;
+    virtual string name_pattern(void) const = 0;
+    virtual string name_matched(const smatch&, vector<bool>&) const = 0;
     virtual int line_process(const string&, const string&, const vector<bool>&) = 0;
     virtual void write_machine_code(void) = 0;
     virtual void print_machine_code(void) = 0;
     virtual int process_extra_data(const string &, const string &) {
         return 0;
     }
-    virtual string get_state_no_pattern(void) const {
+    virtual string assist_line_pattern(void) const {
         return "default";
+    }
+    virtual int open_output_file(const string &out_fname);
+    virtual void close_output_file(void) {
+        dst_fstrm.close();
     }
 
     #if WITH_SUB_MODULES
@@ -84,10 +88,6 @@ class assembler : public std::enable_shared_from_this<assembler> {
     #endif
 
  private:
-    int open_output_file(const string &out_fname);
-    void close_output_file(void) {
-        dst_fstrm.close();
-    }
 
     static void print_mcode_line_by_line(std::ostream &os, const std::vector<std::uint64_t> &vec) {
         for (const auto &mcode : vec) {

@@ -15,7 +15,7 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
-string parser_assembler::get_name_matched(const smatch &m, vector<bool> &flags) const {
+string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
     auto l_flg = !m.str(l_idx).empty();
     auto u_flg = !m.str(u_idx).empty();
     auto m0_flg = !m.str(m0_idx).empty();
@@ -313,7 +313,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
     }
 
     if (flags[match_state_no_line_flg_idx]) {
-        return process_state_no_line(line, get_state_no_pattern());
+        return process_state_no_line(line, assist_line_pattern());
     }
 
     if (pre_last_flag && !states_seq.empty()) {
@@ -517,7 +517,7 @@ const char* parser_assembler::cmd_name_pattern =
     R"((MOV|MDF|XCT|RMV|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
     R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
 
-const char* parser_assembler::state_no_pattern = R"(^#([\d]{3}):(\s+\/\/.*)?[\n\r]?$)";
+const char* parser_assembler::stateno_pattern = R"(#([\d]{3}):)";
 
 const int parser_assembler::l_idx = 6;
 const int parser_assembler::u_idx = 5;

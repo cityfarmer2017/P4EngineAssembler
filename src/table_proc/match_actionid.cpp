@@ -47,7 +47,7 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
         if (!regex_match(str, m, r)) {
             std::cout << "tcam file pattern does not match." << std::endl;
             return -1;
-        } else if (m.str(1) != p_parser_asm->get_cur_src_file_name()) {
+        } else if (m.str(1) != p_parser_asm->src_file_name()) {
             continue;
         } else {
             tcam_file_paths.emplace(entry.path());

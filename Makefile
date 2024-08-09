@@ -34,14 +34,14 @@ all : $(TEMP_DIRS) $(BIN_DIR)/$(APP_NAME)
 $(TEMP_DIRS) :
 	mkdir -p $@
 
-ifneq (,$(SUB_FLAG))
-
 SUB1_MODULE := table_proc
 # SUB2_MODULE := XXX
 SUB_MODULES += $(SUB1_MODULE)
 # SUB_MODULES += $(SUB2_MODULE)
 SUB1_OBJECTS := $(wildcard $(OBJ_DIR)/$(SUB1_MODULE)/*.o)
 # SUB2_OBJECTS := $(wildcard $(OBJ_DIR)/$(SUB2_MODULE)/*.o)
+
+ifneq (,$(SUB_FLAG))
 
 $(BIN_DIR)/$(APP_NAME) : $(OBJECTS) $(SUB1_OBJECTS)
 	@for m in $(SUB_MODULES); do cd $(SRC_DIR)/$$m; make SUB_MODULE=$$m || exit "$$?"; done

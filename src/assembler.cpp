@@ -18,11 +18,11 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
     while (getline(src_fstrm, line)) {
         ++file_line_idx;
 
-        const regex r2(get_state_no_pattern());
-        auto match_state_no_line = regex_match(line, r2);
-        const regex r1(R"(^\s*)" + get_name_pattern() + R"(\s+.*;\s*(\/\/.*)?[\n\r]?$)");
+        const regex r2(R"(^)" + assist_line_pattern() + R"((\s+\/\/.*)?[\n\r]?$)");
+        auto match_assist_line = regex_match(line, r2);
+        const regex r1(R"(^\s*)" + name_pattern() + R"(\s+.*;\s*(\/\/.*)?[\n\r]?$)");
         smatch m;
-        if (!regex_match(line, m, r1) && !match_state_no_line) {
+        if (!regex_match(line, m, r1) && !match_assist_line) {
             const regex r(comment_empty_line_p);
             if (regex_match(line, r)) {
                 continue;
@@ -42,8 +42,8 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
         }
 
         vector<bool> flags;
-        string name = get_name_matched(m, flags);
-        flags.emplace_back(match_state_no_line ? true : false);
+        string name = name_matched(m, flags);
+        flags.emplace_back(match_assist_line ? true : false);
 
         if (auto rc = line_process(line, name, flags)) {
             return rc;
