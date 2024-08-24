@@ -73,6 +73,7 @@ class parser_assembler : public assembler {
  private:
     vector<std::uint64_t> mcode_vec;
     std::uint64_t entry_code{0};
+    std::uint16_t cur_line_idx{0};
     std::uint16_t init_state;
     vec_of_u16 states_seq;
     map_of_u16_map state_line_sub_map;

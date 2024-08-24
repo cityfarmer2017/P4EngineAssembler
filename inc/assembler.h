@@ -71,9 +71,7 @@ class assembler : public std::enable_shared_from_this<assembler> {
     virtual int line_process(const string&, const string&, const vector<bool>&) = 0;
     virtual void write_machine_code(void) = 0;
     virtual void print_machine_code(void) = 0;
-    virtual int process_extra_data(const string &, const string &) {
-        return 0;
-    }
+    virtual int process_extra_data(const string&, const string&) = 0;
     virtual string assist_line_pattern(void) const {
         return "default";
     }
@@ -108,7 +106,6 @@ class assembler : public std::enable_shared_from_this<assembler> {
     }
 
     std::ofstream dst_fstrm;
-    std::uint16_t cur_line_idx{0};
     std::uint16_t file_line_idx{0};
 };
 

@@ -3,11 +3,13 @@
  */
 #include <memory>
 #include <filesystem>
+#include <regex>                 // NOLINT
 #include "parser_assembler.h"    // NOLINT [build/include_subdir]
 #include "table_proc/match_actionid.h"
 #include "deparser_assembler.h"  // NOLINT [build/include_subdir]
 #include "table_proc/mask_table.h"
 #include "mat_assembler.h"       // NOLINT [build/include_subdir]
+#include "table_proc/mat_link.h"
 
 int process_one_entry(const std::filesystem::directory_entry &entry, const string &out_path) {
     string src_dir(entry.path().has_parent_path() ? entry.path().parent_path() : std::filesystem::current_path());
@@ -28,7 +30,20 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         dst_dir += "/";
     }
 
-    dst_dir += src_fstem + "/";
+    if (src_fext == ".p4m") {
+        auto re = std::regex(R"(^([a-zA-Z0-9]+)_(ma[0-9])$)");
+        auto m = std::smatch();
+        if (!std::regex_match(src_fstem, m, re)) {
+            std::cout << "the file name - " << src_fname << " is not valid." << std::endl;
+            return -1;
+        }
+
+        dst_dir += m.str(1) + "/";
+        dst_dir += m.str(2) + "/";
+    } else {
+        dst_dir += src_fstem + "/";
+    }
+
     if (!std::filesystem::exists(dst_dir)) {
         if (!std::filesystem::create_directories(dst_dir)) {
             std::cout << "failed to create directory: " << dst_dir << std::endl;
@@ -44,7 +59,8 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         p_asm = std::make_unique<parser_assembler>(std::move(p_tbl));
         dst_fname += "parser";
     } else if (src_fext == ".p4m") {
-        p_asm = std::make_unique<mat_assembler>();
+        auto p_tbl = std::make_unique<mat_link>(src_dir, dst_dir);
+        p_asm = std::make_unique<mat_assembler>(std::move(p_tbl));
         dst_fname += "mat";
     } else {  // (src_fext == ".p4d")
         auto p_tbl = std::make_unique<mask_table>(src_dir, dst_dir);

@@ -1,58 +1,74 @@
 .start // ram-0
     MOV 12345678, PHV{0:4};
+    NOP ;
+    NOP ;
     MOV 0x12345678, META{100:8};
     MOV AD[36], PHV{13:3};
     MOV AD[33], META{111:7};
-    MOV 0, PHV{511:4};
 .end // ram-0
 .start // ram-1
     MDF 12345, 0xFAFA, META{0:4};
+    NOP ;
+    NOP ;
     MDF 0x1234, 0XCC, PHV{96:2};
     MDF AD[38], 0x3333, PHV{13:1};
     MDF AD[33], 0xeeee, META{111:3};
 .end // ram-1
 .start // ram-2
     COPY PHV{0:8}, META[0];
+    NOP ;
+    NOP ;
     COPY PHV{128:4}, PHV[256];
     COPY META{16:8}, META[32];
     COPY PHV{12:4}, META[64];
 .end // ram-2
 .start // ram-3
     COUNT 0x123456;
+    NOP ;
+    NOP ;
     COUNT ;
+    NOP ;
     COUNT AD[37];
 .end // ram-3
 .start // ram-4
     METER 0xABC, PHV[0];
+    NOP ;
+    NOP ;
     METER PHV[10];
+    NOP ;
     METER AD[38], PHV[33];
 .end // ram-4
 .start // ram-5
     LOCK 0x123456;
+    NOP ;
+    NOP ;
     ULCK ;
+    NOP ;
     LOCK AD[3];
 .end // ram-5
 .start // ram-6
     MOVL 0x1234567890123456, PHV[0];
-    MOVL 0x1234567890123456, 0x12, PHV[0];
-    MOVL AD{0:3}, PHV[33];
-
+    //nop
+    //nop
+    //MOVL 0x1234567890123456, 0x12, PHV[0];
+    //MOVL AD{0:3}, PHV[33];
     HASH PHV{0:40}, PHV[0];
     CRC16P1 PHV{0:30}, META[40];
     CRC16P2 PHV[50], META{0:20}, META[80];
     XOR4 PHV[100], META{16:30}, PHV[300];
-    XOR8 PHV{0:40}, PHV[0];
-    XOR16 PHV{0:40}, PHV[0];
+    //XOR8 PHV{0:40}, PHV[0];
+    //XOR16 PHV{0:40}, PHV[0];
     XOR32 PHV{0:40}, PHV[0];
 .end
 .start // ram-7
     COPYL PHV{0:8}, META[0];
+    NOPL ;
+    NOPL ;
     COPYL PHV{128:4}, PHV[256];
     COPYL META{16:16}, META[32];
     COPYL PHV{12:14}, META[64];
-
     RSM16 PHV[0], 0x1010101, 2;
     RSM32 PHV[3], AD{22: 5}, 1;
     WSM16 PHV[0], AD{23: 7}, 3;
-    WSM32 PHV[3], 0x11100, 0;
+    //WSM32 PHV[3], 0x11100, 0;
 .end

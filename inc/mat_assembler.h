@@ -15,6 +15,8 @@ using str_u64_map = std::unordered_map<string, std::uint64_t>;
 using u64_regex_map = std::unordered_map<std::uint64_t, regex>;
 
 class mat_assembler : public assembler {
+    friend class mat_link;
+
  public:
     #if WITH_SUB_MODULES
     explicit mat_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
@@ -37,6 +39,7 @@ class mat_assembler : public assembler {
     void close_output_file(void) override;
     void write_machine_code(void) override;
     void print_machine_code(void) override;
+    int process_extra_data(const string &, const string &) override;
     string assist_line_pattern(void) const override {
         return extra_line_pattern;
     }

@@ -2,6 +2,7 @@
  * Copyright [2024] <wangdianchao@ehtcn.com>
  */
 #include <limits>
+#include <filesystem>
 #include "mat_assembler.h"  // NOLINT [build/include_subdir]
 #include "mat_def.h"  // NOLINT [build/include_subdir]
 
@@ -76,28 +77,25 @@ int mat_assembler::process_assist_line(const string &line) {
     }
 
     if (m.str(1) == "start") {
-        if (cur_line_idx != 0) {
-            return -1;
-        }
         if (!start_end_stk.empty() && start_end_stk.back() != "end") {
+            std::cout << "line #" << file_line_idx << ": \n\t";
             std::cout << "a '.start' line shall be the initial line or succeeding a '.end' line." << std::endl;
             return -1;
         }
         start_end_stk.emplace_back("start");
-
-        auto idx = start_end_stk.size() / 2;
-        if (idx > 7) {
+        // cur_ram_idx = start_end_stk.size() / 2;
+        if (cur_ram_idx > 7) {
+            std::cout << "test" << std::endl;
             return -1;
         }
-
-        cur_ram_idx = idx;
     } else {
-        cur_line_idx = 0;
         if (start_end_stk.empty() || start_end_stk.back() != "start") {
+            std::cout << "line #" << file_line_idx << ": \n\t";
             std::cout << "a '.end' line shall be coupled with a '.start' line." << std::endl;
             return -1;
         }
         start_end_stk.emplace_back("end");
+        ++cur_ram_idx;
     }
 
     return 0;
@@ -136,7 +134,6 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
 
     if (name == "NOP" || name == "NOPL") {
         ram_mcode_vec[cur_ram_idx].emplace_back(mcode.val64);
-        ++cur_line_idx;
         return 0;
     }
 
@@ -302,9 +299,6 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         ram_mcode_vec[cur_ram_idx].emplace_back(mcode.universe.imm64_h);
     }
 
-    // std::cout << cur_line_idx << "\n";
-    ++cur_line_idx;
-
     return 0;
 }
 
@@ -345,6 +339,16 @@ void mat_assembler::print_machine_code(void) {
         #endif
         print_mcode_line_by_line(ot_fstrms[i++], mcode_vec);
     }
+}
+
+int mat_assembler::process_extra_data(const string &in_fname, const string &ot_fname) {
+    #if WITH_SUB_MODULES
+    src_fname = std::filesystem::path(in_fname).stem();
+    if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
+        return rc;
+    }
+    #endif
+    return 0;
 }
 
 const char* mat_assembler::cmd_name_pattern =
