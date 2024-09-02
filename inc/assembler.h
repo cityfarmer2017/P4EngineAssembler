@@ -88,7 +88,6 @@ class assembler : public std::enable_shared_from_this<assembler> {
     #endif
 
  private:
-
     static void print_mcode_line_by_line(std::ostream &os, const std::vector<std::uint64_t> &vec) {
         for (const auto &mcode : vec) {
             os << std::bitset<64>(mcode) << "\n";

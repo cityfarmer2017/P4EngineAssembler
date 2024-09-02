@@ -80,10 +80,10 @@ int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
         }
     }
 
-    auto ot_file_name = ot_path + p_asm->src_file_name();
-    auto ot_file_strm = std::ofstream(ot_file_name + "_msk.txt");
+    // auto ot_file_name = ot_path + p_asm->src_file_name();
+    auto ot_file_strm = std::ofstream(ot_path + "mask.txt");
     if (!ot_file_strm.is_open()) {
-        std::cout << "cannot open dest file: " << ot_file_name + "_msk.txt" << std::endl;
+        std::cout << "cannot open dest file: " << ot_path + "mask.txt" << std::endl;
         return -1;
     }
 
@@ -98,9 +98,9 @@ int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     ot_file_strm << std::flush;
     ot_file_strm.close();
 
-    ot_file_strm.open(ot_file_name + "_msk.dat", std::ios::binary);
+    ot_file_strm.open(ot_path + "mask.dat", std::ios::binary);
     if (!ot_file_strm.is_open()) {
-        std::cout << "cannot open dest file: " << ot_file_name + "_msk.dat" << std::endl;
+        std::cout << "cannot open dest file: " << ot_path + "mask.dat" << std::endl;
         return -1;
     }
     ot_file_strm.write(reinterpret_cast<const char*>(u64_vals.data()), sizeof(u64_vals[0]) * u64_vals.size());

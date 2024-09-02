@@ -15,15 +15,12 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     string src_fstem(entry.path().stem());
     string src_fext(entry.path().extension());
 
+    if (src_dir.back() != '/') {
+        src_dir += "/";
+    }
+
     auto dst_dir(out_path);
-    if (!out_path.empty()) {
-        if (!std::filesystem::exists(dst_dir)) {
-            if (!std::filesystem::create_directories(dst_dir)) {
-                std::cout << "failed to create directory: " << dst_dir << std::endl;
-                return -1;
-            }
-        }
-    } else {
+    if (out_path.empty()) {
         dst_dir = src_dir;
     }
 
@@ -31,8 +28,12 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         dst_dir += "/";
     }
 
-    if (src_dir.back() != '/') {
-        src_dir += "/";
+    dst_dir += src_fstem + "/";
+    if (!std::filesystem::exists(dst_dir)) {
+        if (!std::filesystem::create_directories(dst_dir)) {
+            std::cout << "failed to create directory: " << dst_dir << std::endl;
+            return -1;
+        }
     }
 
     string dst_fname;
@@ -41,30 +42,30 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     if (src_fext == ".p4p") {
         auto p_tbl = std::make_unique<match_actionid>(src_dir, dst_dir);
         p_asm = std::make_unique<parser_assembler>(std::move(p_tbl));
-        dst_fname += "parser_";
+        dst_fname += "parser";
     } else if (src_fext == ".p4m") {
         p_asm = std::make_unique<mat_assembler>();
-        dst_fname += "mat_";
+        dst_fname += "mat";
     } else {  // (src_fext == ".p4d")
         auto p_tbl = std::make_unique<mask_table>(src_dir, dst_dir);
         p_asm = std::make_unique<deparser_assembler>(std::move(p_tbl));
-        dst_fname += "deparser_";
+        dst_fname += "deparser";
     }
     #else
     std::unique_ptr<assembler> p_asm(nullptr);
     if (src_fext == ".p4p") {
         p_asm = std::make_unique<parser_assembler>();
-        dst_fname += "parser_";
+        dst_fname += "parser";
     } else if (src_fext == ".p4m") {
         p_asm = std::make_unique<mat_assembler>();
-        dst_fname += "mat_";
+        dst_fname += "mat";
     } else {  // (src_fext == ".p4d")
         p_asm = std::make_unique<deparser_assembler>();
-        dst_fname += "deparser_";
+        dst_fname += "deparser";
     }
     #endif
 
-    dst_fname += src_fstem;
+    // dst_fname += src_fstem;
 
     #ifdef DEBUG
     std::cout << dst_dir + dst_fname << "\n";

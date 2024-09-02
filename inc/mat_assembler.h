@@ -34,7 +34,7 @@ class mat_assembler : public assembler {
     string name_matched(const smatch&, vector<bool>&) const override;
     int line_process(const string&, const string&, const vector<bool>&) override;
     int open_output_file(const string&) override;
-    void close_output_file(void) override; 
+    void close_output_file(void) override;
     void write_machine_code(void) override;
     void print_machine_code(void) override;
     string assist_line_pattern(void) const override {

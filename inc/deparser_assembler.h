@@ -15,7 +15,7 @@ using str_u32_map = std::unordered_map<string, std::uint32_t>;
 using u32_regex_map = std::unordered_map<std::uint32_t, regex>;
 
 class deparser_assembler : public assembler {
-   friend class mask_table;
+    friend class mask_table;
 
  public:
     #if WITH_SUB_MODULES
