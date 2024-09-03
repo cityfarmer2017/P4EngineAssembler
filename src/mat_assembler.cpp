@@ -133,8 +133,14 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
     mcode.val64 = cmd_opcode_map.at(name);
     mcode.universe.imm64_l = 0;
     mcode.universe.imm64_h = 0;
-    smatch m;
 
+    if (name == "NOP" || name == "NOPL") {
+        ram_mcode_vec[cur_ram_idx].emplace_back(mcode.val64);
+        ++cur_line_idx;
+        return 0;
+    }
+
+    smatch m;
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val64))) {
         cout << "regex match failed with line: #" << file_line_idx << "\n\t" << line << endl;
         return -1;
@@ -342,7 +348,7 @@ void mat_assembler::print_machine_code(void) {
 }
 
 const char* mat_assembler::cmd_name_pattern =
-    R"(((MOV|COPY)(L)?|MDF|COUNT|METER|LOCK|ULCK|HASH|(CRC)16P([12])|(XOR)(4|8|16|32)|(RSM|WSM)(16|32)))";
+    R"(((MOV|COPY|NOP)(L)?|MDF|COUNT|METER|LOCK|ULCK|HASH|(CRC)16P([12])|(XOR)(4|8|16|32)|(RSM|WSM)(16|32)))";
 
 const char* mat_assembler::extra_line_pattern = R"(\.(start|end))";
 
@@ -355,6 +361,7 @@ const str_u64_map mat_assembler::cmd_opcode_map = {
     {"MOV",    0b00001},
     {"MDF",    0b00010},
     {"COPY",   0b00011},
+    {"NOP",    0b00011},
     {"COUNT",  0b00100},
     {"METER",  0b00101},
     {"LOCK",   0b00110},
@@ -364,6 +371,7 @@ const str_u64_map mat_assembler::cmd_opcode_map = {
     {"CRC",    0b10101},
     {"XOR",    0b10101},
     {"COPYL",  0b10110},
+    {"NOPL",   0b10110},
     {"RSM",    0b10111},
     {"WSM",    0b11000}
 };
