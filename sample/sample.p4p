@@ -39,6 +39,7 @@ NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
     NXTHL ->11;
 
 #043:
+    R32XCT ISR{16: 16}, PHV{6: 2};
     SHFT 32;
     COPY META[CALC_RSLT], PHV{10: 4};
     NXTH ->11;

@@ -379,10 +379,15 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
         break;
 
-    case 0b00010:  // RMV
+    case 0b00010:  // RMV / RVS32_RMV / RVS16_RMV
     // intended fall through
-    case 0b00011:  // XCT
+    case 0b00011:  // XCT / RVS32_XCT / RVS16_XCT
         compose_rmv_xct(m, mcode);
+        if (name == "R32RMV" || name == "R32XCT") {
+            mcode.op_00010.byte_rvs_mode = 1;
+        } else if (name == "R16RMV" || name == "R16XCT") {
+            mcode.op_00010.byte_rvs_mode = 2;
+        }
         break;
 
     case 0b10101:  // ADDU / SUBU
@@ -545,45 +550,49 @@ int parser_assembler::output_entry_code(const string &ot_path) {
 }
 
 const char* parser_assembler::cmd_name_pattern =
-    R"((MOV|MDF|XCT|RMV|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
+    R"((MOV|MDF|(R(32|16))?(XCT|RMV)|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
     R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
 
 const char* parser_assembler::stateno_pattern = R"(#([\d]{3}):)";
 
-const int parser_assembler::l_idx = 6;
-const int parser_assembler::u_idx = 5;
-const int parser_assembler::m0_idx = 3;
+const int parser_assembler::l_idx = 9;
+const int parser_assembler::u_idx = 8;
+const int parser_assembler::m0_idx = 6;
 
 const str_u64_map parser_assembler::cmd_opcode_map = {
-    {"MOV",    0b00001},
-    {"MDF",    0b00001},
-    {"XCT",    0b00011},
-    {"RMV",    0b00010},
-    {"ADDU",   0b10101},
-    {"SUBU",   0b10101},
-    {"COPY",   0b10100},
-    {"RSM16",  0b00111},
-    {"RSM32",  0b00111},
-    {"LOCK",   0b00101},
-    {"ULCK",   0b00110},
-    {"NOP",    0b01000},
-    {"SHFT",   0b00100},
-    {"CSET",   0b01001},
-    {"HCSUM",  0b01100},
-    {"HCRC16", 0b01011},
-    {"HCRC32", 0b01010},
-    {"PCSUM",  0b01111},
-    {"PCRC16", 0b01110},
-    {"PCRC32", 0b01101},
-    {"SNE",    0b10000},
-    {"SGT",    0b10000},
-    {"SLT",    0b10000},
-    {"SEQ",    0b10000},
-    {"SGE",    0b10000},
-    {"SLE",    0b10000},
-    {"NXTH",   0b10001},
-    {"NXTP",   0b10011},
-    {"NXTD",   0b10010}
+    {"MOV",       0b00001},
+    {"MDF",       0b00001},
+    {"XCT",       0b00011},
+    {"R32XCT",    0b00011},
+    {"R16XCT",    0b00011},
+    {"RMV",       0b00010},
+    {"R32RMV",    0b00010},
+    {"R16RMV",    0b00010},
+    {"ADDU",      0b10101},
+    {"SUBU",      0b10101},
+    {"COPY",      0b10100},
+    {"RSM16",     0b00111},
+    {"RSM32",     0b00111},
+    {"LOCK",      0b00101},
+    {"ULCK",      0b00110},
+    {"NOP",       0b01000},
+    {"SHFT",      0b00100},
+    {"CSET",      0b01001},
+    {"HCSUM",     0b01100},
+    {"HCRC16",    0b01011},
+    {"HCRC32",    0b01010},
+    {"PCSUM",     0b01111},
+    {"PCRC16",    0b01110},
+    {"PCRC32",    0b01101},
+    {"SNE",       0b10000},
+    {"SGT",       0b10000},
+    {"SLT",       0b10000},
+    {"SEQ",       0b10000},
+    {"SGE",       0b10000},
+    {"SLE",       0b10000},
+    {"NXTH",      0b10001},
+    {"NXTP",      0b10011},
+    {"NXTD",      0b10010}
 };
 
 const u64_regex_map parser_assembler::opcode_regex_map = {

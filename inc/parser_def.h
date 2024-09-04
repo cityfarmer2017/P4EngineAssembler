@@ -23,7 +23,8 @@ typedef union {
         std::uint64_t src_off: 5;
         std::uint64_t src_len: 5;
         std::uint64_t src_slct: 1;
-        std::uint64_t rsvd: 32;
+        std::uint64_t byte_rvs_mode: 2;
+        std::uint64_t rsvd: 30;
         std::uint64_t dst_off: 9;
         std::uint64_t dst_len: 4;
         std::uint64_t dst_slct: 2;
