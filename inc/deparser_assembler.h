@@ -39,7 +39,7 @@ class deparser_assembler : public assembler {
     void print_machine_code(void) override;
     int process_extra_data(const string &, const string &) override;
 
-    inline int check_previous(const string &) const;
+    inline bool previous_not_mask(const string &) const;
     inline void swap_previous(const std::uint32_t &);
 
  private:

@@ -169,7 +169,11 @@ static inline void compose_rsm16_rsm32(const string &name, const smatch &m, cons
     mcode.op_00111.line_off = stoul(m.str(4));
 }
 
-static inline void compose_shft(const smatch &m, const machine_code &code) {
+static inline bool phv_length_valid(std::uint32_t length, std::uint32_t phv_len) {
+    return length <= phv_len;
+}
+
+static inline int compose_shft(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     if (!m.str(1).empty()) {
         if (!m.str(2).empty()) {
@@ -183,16 +187,40 @@ static inline void compose_shft(const smatch &m, const machine_code &code) {
             mcode.op_00100.calc_slct = 3;
         } else if (!m.str(4).empty()) {
             mcode.op_00100.inline_flg = 1;
-            mcode.op_00100.length = stoul(m.str(5)) - 1;
-            if (m.str(6) == "CSUM") {
+            mcode.op_00100.length = stoul(m.str(4)) - 1;
+            if (m.str(5) == "CSUM") {
                 mcode.op_00100.calc_slct = 1;
-            } else if (m.str(6) == "CRC16") {
+            } else if (m.str(5) == "CRC16") {
                 mcode.op_00100.calc_slct = 2;
-            } else if (m.str(6) == "CRC32") {
+            } else if (m.str(5) == "CRC32") {
                 mcode.op_00100.calc_slct = 3;
             }
+        } else if (!m.str(6).empty()) {
+            if (!phv_length_valid(stoul(m.str(6)), (512 - stoul(m.str(7))) * 8)) {
+                return -1;
+            }
+            mcode.op_00100.inline_flg = 1;
+            mcode.op_00100.length = stoul(m.str(6)) - 1;
+            mcode.op_00100.phv_flg = 1;
+            mcode.op_00100.phv_off = stoul(m.str(7));
+        } else if (!m.str(8).empty()) {
+            if (!phv_length_valid(stoul(m.str(8)), (512 - stoul(m.str(10))) * 8)) {
+                return -1;
+            }
+            mcode.op_00100.inline_flg = 1;
+            mcode.op_00100.length = stoul(m.str(8)) - 1;
+            if (m.str(9) == "CSUM") {
+                mcode.op_00100.calc_slct = 1;
+            } else if (m.str(9) == "CRC16") {
+                mcode.op_00100.calc_slct = 2;
+            } else if (m.str(9) == "CRC32") {
+                mcode.op_00100.calc_slct = 3;
+            }
+            mcode.op_00100.phv_flg = 1;
+            mcode.op_00100.phv_off = stoul(m.str(10));
         }
     }
+    return 0;
 }
 
 static inline int compose_cset(const smatch &m, const machine_code &code) {
@@ -382,7 +410,10 @@ int parser_assembler::line_process(const string &line, const string &name, const
         break;
 
     case 0b00100:  // SHFT
-        compose_shft(m, mcode);
+        if (auto rc = compose_shft(m, mcode)) {
+            print_cmd_param_unmatch_message(name, line);
+            return rc;
+        }
         break;
 
     case 0b01001:  // CSET

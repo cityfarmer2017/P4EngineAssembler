@@ -387,9 +387,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     case 0b00001:  // SNDM[PM]
         compose_sndm(flags, mcode);
         if (flags[sendm_mask_flg_idx]) {
-            if (auto rc = check_previous(line)) {
+            if (previous_not_mask(line)) {
                 print_cmd_bit_vld_unmatch_message(line);
-                return rc;
+                return -1;
             }
             swap_previous(mcode.val32);
         }
@@ -403,9 +403,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             return rc;
         }
         if (name == "SNDH" && mcode.op_00010.src_slct == 0) {
-            if (auto rc = check_previous(line)) {
+            if (previous_not_mask(line)) {
                 print_cmd_bit_vld_unmatch_message(line);
-                return rc;
+                return -1;
             }
             swap_previous(mcode.val32);
         }
@@ -436,9 +436,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     case 0b01100:  // AND
     case 0b11100:  // OR
         compose_cmpct_and_or(m, mcode);
-        if (auto rc = check_previous(line)) {
+        if (previous_not_mask(line)) {
             print_cmd_bit_vld_unmatch_message(line);
-            return rc;
+            return -1;
         }
         swap_previous(mcode.val32);
         break;
@@ -447,9 +447,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     case 0b01101:  // ANDR
     case 0b11101:  // ORR
         compose_cmpctr_andr_orr(m, mcode);
-        if (auto rc = check_previous(line)) {
+        if (previous_not_mask(line)) {
             print_cmd_bit_vld_unmatch_message(line);
-            return rc;
+            return -1;
         }
         swap_previous(mcode.val32);
         break;
@@ -462,9 +462,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             return rc;
         }
         if (flags[calc_mask_and_flg_idx] || flags[calc_mask_or_flg_idx]) {
-            if (auto rc = check_previous(line)) {
+            if (previous_not_mask(line)) {
                 print_cmd_bit_vld_unmatch_message(line);
-                return rc;
+                return -1;
             }
             swap_previous(mcode.val32);
         }
@@ -480,18 +480,18 @@ int deparser_assembler::line_process(const string &line, const string &name, con
 
     case 0b10011:  // HASH
         compose_hash(m , mcode);
-        if (auto rc = check_previous(line)) {
+        if (previous_not_mask(line)) {
             print_cmd_bit_vld_unmatch_message(line);
-            return rc;
+            return -1;
         }
         swap_previous(mcode.val32);
         break;
 
     case 0b10100:  // HASHR
         compose_hashr(m , mcode);
-        if (auto rc = check_previous(line)) {
+        if (previous_not_mask(line)) {
             print_cmd_bit_vld_unmatch_message(line);
-            return rc;
+            return -1;
         }
         swap_previous(mcode.val32);
         break;
@@ -566,11 +566,8 @@ int deparser_assembler::process_extra_data(const string &in_fname, const string 
     return 0;
 }
 
-inline int deparser_assembler::check_previous(const string &line) const {
-    if (prev_line_name != "MSKALL" && prev_line_name != "MSKADDR") {
-        return -1;
-    }
-    return 0;
+inline bool deparser_assembler::previous_not_mask(const string &line) const {
+    return (prev_line_name != "MSKALL" && prev_line_name != "MSKADDR");
 }
 
 inline void deparser_assembler::swap_previous(const std::uint32_t &mcode) {

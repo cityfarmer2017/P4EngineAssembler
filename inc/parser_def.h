@@ -34,7 +34,10 @@ typedef union {
         std::uint64_t length: 8;
         std::uint64_t calc_slct: 3;
         std::uint64_t inline_flg: 1;
-        std::uint64_t rsvd: 46;
+        std::uint64_t rsvd1: 30;
+        std::uint64_t phv_flg: 1;
+        std::uint64_t phv_off: 9;
+        std::uint64_t rsvd2: 6;
         std::uint64_t last_flg : 1;
     } op_00100;
     struct {
@@ -171,7 +174,9 @@ constexpr auto P_01000_01101_01110_01111 = R"()";
 
 constexpr auto P_00100 =
     R"((([1-9][0-9]?|1[0-9]{2}|2[0-4][0-9]|25[0-6])|(CSUM|CRC16|CRC32)|)"
-    R"((([1-9][0-9]?|1[0-9]{2}|2[0-4][0-9]|25[0-6])\s*,\s*(CSUM|CRC16|CRC32)))?)";
+    R"(([1-9][0-9]?|1[0-9]{2}|2[0-4][0-9]|25[0-6])\s*,\s*(CSUM|CRC16|CRC32)|)"
+    R"(([1-9][0-9]?|1[0-9]{2}|2[0-4][0-9]|25[0-6])\s*,\s*PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*]|)"
+    R"(([1-9][0-9]?|1[0-9]{2}|2[0-4][0-9]|25[0-6])\s*,\s*(CSUM|CRC16|CRC32)\s*,\s*PHV\s*\[\s*([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*])?)";
 
 constexpr auto P_01001 =
     R"((POLY|INIT|CTRL\s*,\s+0b000([01]{5})|XOROT)\s*,\s+(\d{1,10}|(0[xX])[\dA-Fa-f]{1,8}))";
