@@ -44,6 +44,35 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         dst_dir += src_fstem + "/";
     }
 
+    #if WITH_SUB_MODULES
+    std::shared_ptr<assembler> p_asm(nullptr);
+    if (src_fext == ".p4p") {
+        dst_dir += "parser/";
+        auto p_tbl = std::make_unique<match_actionid>(src_dir, dst_dir);
+        p_asm = std::make_unique<parser_assembler>(std::move(p_tbl));
+    } else if (src_fext == ".p4m") {
+        auto p_tbl = std::make_unique<mat_link>(src_dir, dst_dir);
+        p_asm = std::make_unique<mat_assembler>(std::move(p_tbl));
+        // dst_dir += "mat/";
+    } else {  // (src_fext == ".p4d")
+        dst_dir += "deparser/";
+        auto p_tbl = std::make_unique<mask_table>(src_dir, dst_dir);
+        p_asm = std::make_unique<deparser_assembler>(std::move(p_tbl));
+    }
+    #else
+    std::unique_ptr<assembler> p_asm(nullptr);
+    if (src_fext == ".p4p") {
+        p_asm = std::make_unique<parser_assembler>();
+        dst_dir += "parser/";
+    } else if (src_fext == ".p4m") {
+        p_asm = std::make_unique<mat_assembler>();
+        // dst_dir += "mat/";
+    } else {  // (src_fext == ".p4d")
+        p_asm = std::make_unique<deparser_assembler>();
+        dst_dir += "deparser/";
+    }
+    #endif
+
     if (!std::filesystem::exists(dst_dir)) {
         if (!std::filesystem::create_directories(dst_dir)) {
             std::cout << "failed to create directory: " << dst_dir << std::endl;
@@ -51,43 +80,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         }
     }
 
-    string dst_fname;
-    #if WITH_SUB_MODULES
-    std::shared_ptr<assembler> p_asm(nullptr);
-    if (src_fext == ".p4p") {
-        auto p_tbl = std::make_unique<match_actionid>(src_dir, dst_dir);
-        p_asm = std::make_unique<parser_assembler>(std::move(p_tbl));
-        dst_fname += "parser";
-    } else if (src_fext == ".p4m") {
-        auto p_tbl = std::make_unique<mat_link>(src_dir, dst_dir);
-        p_asm = std::make_unique<mat_assembler>(std::move(p_tbl));
-        dst_fname += "mat";
-    } else {  // (src_fext == ".p4d")
-        auto p_tbl = std::make_unique<mask_table>(src_dir, dst_dir);
-        p_asm = std::make_unique<deparser_assembler>(std::move(p_tbl));
-        dst_fname += "deparser";
-    }
-    #else
-    std::unique_ptr<assembler> p_asm(nullptr);
-    if (src_fext == ".p4p") {
-        p_asm = std::make_unique<parser_assembler>();
-        dst_fname += "parser";
-    } else if (src_fext == ".p4m") {
-        p_asm = std::make_unique<mat_assembler>();
-        dst_fname += "mat";
-    } else {  // (src_fext == ".p4d")
-        p_asm = std::make_unique<deparser_assembler>();
-        dst_fname += "deparser";
-    }
-    #endif
-
-    // dst_fname += src_fstem;
-
-    #ifdef DEBUG
-    std::cout << dst_dir + dst_fname << "\n";
-    #endif
-
-    return p_asm->execute(src_dir + src_fname, dst_dir + dst_fname);
+    return p_asm->execute(src_dir + src_fname, dst_dir + "action");
 }
 
 inline void print_help_information() {
@@ -95,7 +88,7 @@ inline void print_help_information() {
     std::cout << "P4eAsm \"path to source (file / directory)\" [\"path to destination (directory)\"]\n\t";
     std::cout << "P4eAsm \"-h\" or \"--help\" for help.\n";
     std::cout << "Examples:\n\t";
-    std::cout << "P4eAsm ./parser_sample.p4p ./dst\n\t";
+    std::cout << "P4eAsm ./sample.p4p ./dst\n\t";
     std::cout << "P4eAsm ./\n";
     std::cout << "Info:\n\t";
     std::cout << "source file posfix - .p4p for parser, .p4d for deparser, .p4m for mat\n\t";

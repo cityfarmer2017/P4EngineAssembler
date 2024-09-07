@@ -525,7 +525,7 @@ int parser_assembler::process_extra_data(const string &in_fname, const string &o
 }
 
 int parser_assembler::output_entry_code(const string &ot_path) {
-    auto ot_fname = ot_path + "_entry_action";
+    auto ot_fname = ot_path + "_entry";
     std::ofstream ot_fstrm(ot_fname + ".dat", std::ios::binary);
     if (!ot_fstrm.is_open()) {
         std::cout << "cannot open file: " << ot_fname + ".dat" << std::endl;

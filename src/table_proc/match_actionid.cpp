@@ -20,17 +20,14 @@ int match_actionid::generate_table_data(const std::shared_ptr<assembler> &p_asm)
         return rc;
     }
 
-    // auto ot_file_name = tcam_file_paths.cbegin()->stem().string();
-    auto ot_path = otput_path + "parser_tables/";
-    if (!std::filesystem::exists(ot_path)) {
-        if (!std::filesystem::create_directories(ot_path)) {
-            std::cout << "failed to create directory: " << ot_path << std::endl;
+    if (!std::filesystem::exists(otput_path)) {
+        if (!std::filesystem::create_directories(otput_path)) {
+            std::cout << "failed to create directory: " << otput_path << std::endl;
             return -1;
         }
     }
 
-    // ot_path += ot_file_name.substr(0, ot_file_name.size() - STATE_NO_LEN);
-    if (auto rc = output_sram_data(ot_path)) {
+    if (auto rc = output_sram_data(otput_path)) {
         return rc;
     }
 

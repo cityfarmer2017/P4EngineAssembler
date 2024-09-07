@@ -72,18 +72,16 @@ int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
         mask_strings.emplace_back(mask);
     }
 
-    auto ot_path = otput_path + "deparser_tables/";
-    if (!std::filesystem::exists(ot_path)) {
-        if (!std::filesystem::create_directories(ot_path)) {
-            std::cout << "failed to create directory: " << ot_path << std::endl;
+    if (!std::filesystem::exists(otput_path)) {
+        if (!std::filesystem::create_directories(otput_path)) {
+            std::cout << "failed to create directory: " << otput_path << std::endl;
             return -1;
         }
     }
 
-    // auto ot_file_name = ot_path + p_asm->src_file_name();
-    auto ot_file_strm = std::ofstream(ot_path + "mask.txt");
+    auto ot_file_strm = std::ofstream(otput_path + "mask.txt");
     if (!ot_file_strm.is_open()) {
-        std::cout << "cannot open dest file: " << ot_path + "mask.txt" << std::endl;
+        std::cout << "cannot open dest file: " << otput_path + "mask.txt" << std::endl;
         return -1;
     }
 
@@ -98,9 +96,9 @@ int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     ot_file_strm << std::flush;
     ot_file_strm.close();
 
-    ot_file_strm.open(ot_path + "mask.dat", std::ios::binary);
+    ot_file_strm.open(otput_path + "mask.dat", std::ios::binary);
     if (!ot_file_strm.is_open()) {
-        std::cout << "cannot open dest file: " << ot_path + "mask.dat" << std::endl;
+        std::cout << "cannot open dest file: " << otput_path + "mask.dat" << std::endl;
         return -1;
     }
     ot_file_strm.write(reinterpret_cast<const char*>(u64_vals.data()), sizeof(u64_vals[0]) * u64_vals.size());
