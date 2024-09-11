@@ -53,7 +53,6 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     } else if (src_fext == ".p4m") {
         auto p_tbl = std::make_unique<mat_link>(src_dir, dst_dir);
         p_asm = std::make_unique<mat_assembler>(std::move(p_tbl));
-        // dst_dir += "mat/";
     } else {  // (src_fext == ".p4d")
         dst_dir += "deparser/";
         auto p_tbl = std::make_unique<mask_table>(src_dir, dst_dir);
@@ -66,7 +65,6 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         dst_dir += "parser/";
     } else if (src_fext == ".p4m") {
         p_asm = std::make_unique<mat_assembler>();
-        // dst_dir += "mat/";
     } else {  // (src_fext == ".p4d")
         p_asm = std::make_unique<deparser_assembler>();
         dst_dir += "deparser/";

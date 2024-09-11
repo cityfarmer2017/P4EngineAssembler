@@ -27,8 +27,15 @@ int mat_link::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
         return rc;
     }
 
-    if (auto rc = output_normal_action_ids(otput_path)) {
-        return rc;
+    file_name = p_asm->src_file_name() + ".ad";
+    if (std::filesystem::exists(in_path + file_name)) {
+        if (auto rc = output_normal_action_ids(otput_path, in_path + file_name)) {
+            return rc;
+        }
+    } else {
+        if (auto rc = output_normal_action_ids(otput_path)) {
+            return rc;
+        }
     }
 
     if (auto rc = output_default_action_ids(otput_path)) {
@@ -44,7 +51,17 @@ inline std::string get_cluter_table_string(std::uint32_t cluster, std::uint32_t 
     return strm.str();
 }
 
-int mat_link::output_normal_action_ids(const std::string &ot_path) {
+int mat_link::output_normal_action_ids(const std::string &ot_path, const std::string &ad_path) {
+    auto ad_ifstrm = std::ifstream();
+    if (!ad_path.empty()) {
+        ad_ifstrm.open(ad_path);
+        if (!ad_ifstrm.is_open()) {
+            std::cout << "ERROR: cannot open " << ad_path << " !!!" << std::endl;
+            return -1;
+        }
+    }
+
+    auto prev_cluster_table = 0xFFUL;
     for (const auto &tp : cluster_table_entry_2_ram_action) {
         auto ot_path1 = ot_path + "action_ids/";
         if (!std::filesystem::exists(ot_path1)) {
@@ -54,27 +71,78 @@ int mat_link::output_normal_action_ids(const std::string &ot_path) {
             }
         }
 
-        ot_path1 += get_cluter_table_string(std::get<0>(tp.first), std::get<1>(tp.first));
-        std::uint32_t aid_entry = tp.second.first;
-        aid_entry <<= 16;
-        aid_entry |= tp.second.second;
+        auto ram_bitmap = tp.second.first;
+        auto action_id = tp.second.second;
+        std::vector<std::uint16_t> ad_aid{action_id, ram_bitmap, 0, 0, 0, 0, 0};
 
-        auto ot_fstrm = std::ofstream(ot_path1 + ".txt", std::ios::app);
+        if (ad_ifstrm.is_open()) {
+            auto line = std::string();
+            if (!std::getline(ad_ifstrm, line)) {
+                std::cout << "ERROR: get line from " << ad_path << " !!!" << std::endl;
+                return -1;
+            }
+            line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+            if (line.size() > 20) {
+                std::cout << "ERROR: line is too long.\n\t" << line << std::endl;
+                return -1;
+            }
+            if (line != "00000000000000000000") {
+                for (auto &c : line) {
+                    if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F'))) {
+                        std::cout << "ERROR: lines of ad file shall only include heximal digits.\n\t";
+                        std::cout << line << std::endl;
+                        return -1;
+                    }
+                }
+                for (auto i = 0UL, j = ad_aid.size() - 1; i < line.size() && j >= 2; i += 4, --j) {
+                    auto str = line.substr(i, 4);
+                    if (str != "0000") {
+                        ad_aid[j] = static_cast<std::uint16_t>(std::stoul(str, nullptr, 16));
+                    }
+                }
+            }
+        }
+
+        auto cluster_id = std::get<0>(tp.first);
+        auto table_id = std::get<1>(tp.first);
+        ot_path1 += get_cluter_table_string(cluster_id, table_id);
+
+        std::uint16_t cluster_table = cluster_id;
+        cluster_table <<= 8;
+        cluster_table |= table_id;
+
+        auto ot_fstrm = std::ofstream();
+        if (cluster_table != prev_cluster_table) {
+            ot_fstrm.open(ot_path1 + ".txt", std::ios::trunc);
+        } else {
+            ot_fstrm.open(ot_path1 + ".txt", std::ios::app);
+        }
         if (!ot_fstrm.is_open()) {
             std::cout << "cannot open file: " << ot_path1 + ".txt" << std::endl;
             return -1;
         }
-        ot_fstrm << std::bitset<80>(0) << std::bitset<32>(aid_entry) << "\n";
+        for (auto it = ad_aid.crbegin(); it != ad_aid.crend(); ++it) {
+            ot_fstrm << std::bitset<16>(*it);
+        }
+        ot_fstrm << "\n";
         ot_fstrm.close();
 
-        ot_fstrm.open(ot_path1 + ".dat", std::ios::app);
+        if (cluster_table != prev_cluster_table) {
+            ot_fstrm.open(ot_path1 + ".dat", std::ios::trunc);
+        } else {
+            ot_fstrm.open(ot_path1 + ".dat", std::ios::app);
+        }
         if (!ot_fstrm.is_open()) {
             std::cout << "cannot open file: " << ot_path1 + ".dat" << std::endl;
             return -1;
         }
-        ot_fstrm.write(reinterpret_cast<const char*>(&aid_entry), sizeof(aid_entry) + 10);
+        ot_fstrm.write(reinterpret_cast<const char*>(ad_aid.data()), sizeof(ad_aid[0]) * ad_aid.size());
         ot_fstrm.close();
+
+        prev_cluster_table = cluster_table;
     }
+
+    ad_ifstrm.close();
 
     return 0;
 }
@@ -134,7 +202,6 @@ int mat_link::generate_action_id(const std::string &in_path, const std::shared_p
                     return -1;
                 }
                 start_end_stk.emplace_back("start");
-                // cur_ram_idx = start_end_stk.size() / 2;
                 if (cur_ram_idx > 7) {
                     std::cout << "test" << std::endl;
                     return -1;

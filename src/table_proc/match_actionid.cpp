@@ -75,16 +75,17 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
         std::string line;
         std::size_t sz = 0;
         while (getline(in_file_strm, line)) {
-            const std::regex r(R"(^[01x]{40}[\n\r]?$)");
-            if (!regex_match(line, r)) {
-                std::cout << "tcam entry shall only include 40 collums of [01x]." << std::endl;
+            line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+            if (line.size() > 40) {
+                std::cout << "ERROR: line is too long.\n\t" << line << std::endl;
                 return -1;
             }
-
-            line = line.substr(0, 40);
-            // while (line.size() > 40) {
-            //     line.pop_back();
-            // }
+            for (const auto &c : line) {
+                if (c != '0' && c != '1' && c != 'x') {
+                    std::cout << "tcam entry shall only include '0', '1' or 'x'." << std::endl;
+                    return -1;
+                }
+            }
 
             ++sz;
 

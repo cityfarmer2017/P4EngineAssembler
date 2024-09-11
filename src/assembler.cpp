@@ -7,14 +7,13 @@ using std::cout;
 using std::endl;
 
 int assembler::execute(const string &in_fname, const string &out_fname) {
-    string line;
-
     std::ifstream src_fstrm(in_fname);
     if (!src_fstrm) {
         std::cout << "cannot open source file: " << in_fname << std::endl;
         return -1;
     }
 
+    string line;
     while (getline(src_fstrm, line)) {
         ++file_line_idx;
 

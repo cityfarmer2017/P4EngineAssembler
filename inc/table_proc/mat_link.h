@@ -34,7 +34,7 @@ class mat_link : public table {
 
  private:
     int generate_action_id(const std::string&, const std::shared_ptr<mat_assembler>&);
-    int output_normal_action_ids(const std::string&);
+    int output_normal_action_ids(const std::string&, const std::string &ad_path = "");
     int output_default_action_ids(const std::string&);
     int process_normal_action(const std::smatch&);
     std::vector<std::uint16_t> get_table_entries(const std::smatch&);
