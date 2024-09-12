@@ -7,6 +7,7 @@ NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
     HCSUM PHV{16:16}, 0xAAAAAAAA;
 
     SNE TCAM_KEY{0: 10}, 0x1234567890;
+    COPY META[INTR2], TMP;
 
     //NXTHL ISR{0:40}, META{0:0}, >>32, ->1;
     NXTDL ;

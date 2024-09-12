@@ -134,23 +134,28 @@ static inline int compose_addu_subu(const string &name, const smatch &m, const m
 static inline void compose_copy(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     if (m.str(1) != "CALC_RSLT") {
-        auto idx = stoul(m.str(2));
-        if (idx <= 3) {
-            mcode.op_10100.src_slct = idx + 0b100;
+        if (!m.str(2).empty()) {
+            auto idx = stoul(m.str(2));
+            if (idx <= 3) {
+                mcode.op_10100.src_slct = idx + 0b100;
+            } else {
+                mcode.op_10100.src_slct = idx + 0b1000;
+            }
         } else {
+            auto idx = stoul(m.str(3));
             mcode.op_10100.src_slct = idx + 0b1000;
         }
     }
-    if (m.str(3) == "TMP") {
+    if (m.str(4) == "TMP") {
         mcode.op_10100.dst_slct = 2;
     } else {
-        if (!m.str(4).empty()) {  // META
+        if (!m.str(5).empty()) {  // META
             mcode.op_10100.dst_slct = 1;
-            mcode.op_10100.dst_off = stoul(m.str(5));
-            mcode.op_10100.dst_len = stoul(m.str(6)) - 1;
+            mcode.op_10100.dst_off = stoul(m.str(6));
+            mcode.op_10100.dst_len = stoul(m.str(7)) - 1;
         } else {  // PHV
-            mcode.op_10100.dst_off = stoul(m.str(7));
-            mcode.op_10100.dst_len = stoul(m.str(8)) - 1;
+            mcode.op_10100.dst_off = stoul(m.str(8));
+            mcode.op_10100.dst_len = stoul(m.str(9)) - 1;
         }
     }
 }
