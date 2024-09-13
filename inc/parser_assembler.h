@@ -53,6 +53,7 @@ class parser_assembler : public assembler {
     string assist_line_pattern(void) const override {
         return stateno_pattern;
     }
+    bool state_chart_has_loop() override;
 
     int process_state_no_line(const string&, const string&);
     int output_entry_code(const string&);

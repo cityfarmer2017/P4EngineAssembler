@@ -55,6 +55,10 @@ NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
     NXTH ->255;
     SUBUL ISR{0: 32} , TMP, TMP;
 
+    SUBU TMP { 0 : 16 } , TMP, TMP;
+    ADDU TMP{16: 16}, 0x0101, META{0: 4};
+    NXTHL ->255;
+
 #100:
     LOCK 0X101010;
     ULCK ;

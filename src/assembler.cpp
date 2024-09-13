@@ -51,6 +51,11 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
         flags.clear();
     }
 
+    if (state_chart_has_loop()) {
+        std::cout << "ERROR: parser state chart has loop, please check!!!" << std::endl;
+        return -1;
+    }
+
     if (auto rc = open_output_file(out_fname + ".dat")) {
         return rc;
     }

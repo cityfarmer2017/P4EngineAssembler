@@ -78,6 +78,10 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         }
     }
 
+    #ifdef DEBUG
+    std::cout << "\n" << dst_dir + "action" << "\n";
+    #endif
+
     return p_asm->execute(src_dir + src_fname, dst_dir + "action");
 }
 

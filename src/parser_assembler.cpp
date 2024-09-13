@@ -4,6 +4,8 @@
 #include <limits>
 #include <filesystem>
 #include <memory>
+#include <set>
+#include <stack>
 #include "parser_def.h"  // NOLINT [build/include_subdir]
 #include "parser_assembler.h"  // NOLINT [build/include_subdir]
 #if WITH_SUB_MODULES
@@ -14,6 +16,8 @@ using std::cout;
 using std::endl;
 using std::stoul;
 using std::stoull;
+
+constexpr auto end_state_no = static_cast<std::uint16_t>(0xFFFF);
 
 string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
     auto l_flg = !m.str(l_idx).empty();
@@ -331,7 +335,7 @@ int parser_assembler::process_state_no_line(const string &line, const string &pa
     }
     states_seq.emplace_back(state_no);
     state_line_sub_map.emplace(std::make_pair(state_no, map_of_u16()));
-    state_line_sub_map.at(state_no).emplace(std::make_pair(cur_line_idx, 0xFFFF));
+    state_line_sub_map.at(state_no).emplace(std::make_pair(cur_line_idx, end_state_no));
     if (state_line_sub_map.at(state_no).size() > MATCH_ENTRY_CNT_PER_STATE) {
         cout << "for each state, the count of sub state shall not exceed " << MATCH_ENTRY_CNT_PER_STATE << endl;
         return -1;
@@ -351,7 +355,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
     if (pre_last_flag && !states_seq.empty()) {
         auto cur_state = states_seq.back();
-        state_line_sub_map.at(cur_state).emplace(std::make_pair(cur_line_idx, 0xFFFF));
+        state_line_sub_map.at(cur_state).emplace(std::make_pair(cur_line_idx, end_state_no));
     }
 
     machine_code mcode;
@@ -477,7 +481,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
             mcode.op_10010.shift_val = stoul(m.str(2));
         } {
             auto cur_state = states_seq.back();
-            state_line_sub_map.at(cur_state).rbegin()->second = 0xFFFF;
+            state_line_sub_map.at(cur_state).rbegin()->second = end_state_no;
         }
         break;
 
@@ -552,6 +556,44 @@ int parser_assembler::output_entry_code(const string &ot_path) {
     #endif
 
     return 0;
+}
+
+bool parser_assembler::state_chart_has_loop() {
+    auto state_line_sub_set = std::set<std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>>();
+    auto state_line_sub_stk = std::stack<std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>>();
+    auto reach_end = false;
+
+    for (auto state = init_state; ;) {
+        for (const auto &line_sub : state_line_sub_map.at(state)) {
+            if (line_sub.second == end_state_no) {
+                reach_end = true;
+                break;
+            }
+            auto state_line_sub = std::make_tuple(state, line_sub.first, line_sub.second);
+            if (state_line_sub_set.count(state_line_sub)) {
+                return true;
+            }
+            state_line_sub_set.emplace(state_line_sub);
+            state_line_sub_stk.emplace(state_line_sub);
+        }
+
+        if (reach_end) {
+            while (!state_line_sub_stk.empty() && state == std::get<2>(state_line_sub_stk.top())) {
+                state = std::get<0>(state_line_sub_stk.top());
+                state_line_sub_set.erase(state_line_sub_stk.top());
+                state_line_sub_stk.pop();
+            }
+            reach_end = false;
+        }
+
+        if (state_line_sub_stk.empty()) {
+            break;
+        }
+
+        state = std::get<2>(state_line_sub_stk.top());
+    }
+
+    return false;
 }
 
 const char* parser_assembler::cmd_name_pattern =

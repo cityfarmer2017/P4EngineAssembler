@@ -334,7 +334,7 @@ void mat_assembler::print_machine_code(void) {
     auto i = 0;
     for (const auto &mcode_vec : ram_mcode_vec) {
         #ifdef DEBUG
-        std::cout << ".ram" << i << "\n";
+        std::cout << "_ram" << i << "\n";
         print_mcode_line_by_line(std::cout, mcode_vec);
         #endif
         print_mcode_line_by_line(ot_fstrms[i++], mcode_vec);
