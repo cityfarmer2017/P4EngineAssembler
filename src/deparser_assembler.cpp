@@ -5,7 +5,7 @@
 #include <filesystem>
 #include "deparser_assembler.h"  // NOLINT [build/include_subdir]
 #include "deparser_def.h"  // NOLINT [build/include_subdir]
-#if WITH_SUB_MODULES
+#if !WITHOUT_SUB_MODULES
 #include "table_proc/mask_table.h"
 #endif
 
@@ -554,7 +554,7 @@ void deparser_assembler::print_machine_code(void) {
 }
 
 int deparser_assembler::process_extra_data(const string &in_fname, const string &ot_fname) {
-    #if WITH_SUB_MODULES
+    #if !WITHOUT_SUB_MODULES
     src_fname = std::filesystem::path(in_fname).stem();
     if (be_mask_table_necessary) {
         if (auto rc = p_tbl->generate_table_data(shared_from_this())) {

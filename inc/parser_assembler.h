@@ -30,7 +30,7 @@ class parser_assembler : public assembler {
     friend class match_actionid;
 
  public:
-    #if WITH_SUB_MODULES
+    #if !WITHOUT_SUB_MODULES
     explicit parser_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
     #endif
     parser_assembler() = default;

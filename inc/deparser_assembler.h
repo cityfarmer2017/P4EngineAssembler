@@ -18,7 +18,7 @@ class deparser_assembler : public assembler {
     friend class mask_table;
 
  public:
-    #if WITH_SUB_MODULES
+    #if !WITHOUT_SUB_MODULES
     explicit deparser_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
     #endif
     deparser_assembler() = default;

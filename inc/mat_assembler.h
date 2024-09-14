@@ -18,7 +18,7 @@ class mat_assembler : public assembler {
     friend class mat_link;
 
  public:
-    #if WITH_SUB_MODULES
+    #if !WITHOUT_SUB_MODULES
     explicit mat_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
     #endif
     mat_assembler() = default;

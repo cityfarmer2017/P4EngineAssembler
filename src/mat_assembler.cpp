@@ -342,7 +342,7 @@ void mat_assembler::print_machine_code(void) {
 }
 
 int mat_assembler::process_extra_data(const string &in_fname, const string &ot_fname) {
-    #if WITH_SUB_MODULES
+    #if !WITHOUT_SUB_MODULES
     src_fname = std::filesystem::path(in_fname).stem();
     if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
         return rc;

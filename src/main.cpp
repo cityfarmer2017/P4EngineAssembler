@@ -44,7 +44,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         dst_dir += src_fstem + "/";
     }
 
-    #if WITH_SUB_MODULES
+    #if !WITHOUT_SUB_MODULES
     std::shared_ptr<assembler> p_asm(nullptr);
     if (src_fext == ".p4p") {
         dst_dir += "parser/";

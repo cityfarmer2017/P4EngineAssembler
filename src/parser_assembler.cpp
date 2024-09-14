@@ -8,7 +8,7 @@
 #include <stack>
 #include "parser_def.h"  // NOLINT [build/include_subdir]
 #include "parser_assembler.h"  // NOLINT [build/include_subdir]
-#if WITH_SUB_MODULES
+#if !WITHOUT_SUB_MODULES
 #include "table_proc/match_actionid.h"
 #endif
 
@@ -523,7 +523,7 @@ int parser_assembler::process_extra_data(const string &in_fname, const string &o
     if (auto rc = output_entry_code(ot_fname)) {
         return rc;
     }
-    #if WITH_SUB_MODULES
+    #if !WITHOUT_SUB_MODULES
     src_fname = std::filesystem::path(in_fname).stem();
     if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
         return rc;
