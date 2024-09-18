@@ -17,7 +17,8 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
-constexpr auto end_state_no = static_cast<std::uint16_t>(0xFFFF);
+constexpr auto END_STATE_NO = static_cast<std::uint16_t>(0xFFFF);
+constexpr auto MAX_META_LEN = 1040;
 
 string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
     auto l_flg = !m.str(l_idx).empty();
@@ -40,11 +41,11 @@ string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) cons
     return name;
 }
 
-constexpr auto last_flg_idx = 0;
-constexpr auto unsigned_flg_idx = 1;
-constexpr auto mask0_flg_idx = 2;
-constexpr auto match_state_no_line_flg_idx = 3;
-constexpr auto flags_size = 4;
+constexpr auto LAST_FLG_IDX = 0;
+constexpr auto UNSIGNED_FLG_IDX = 1;
+constexpr auto MASK0_FLG_IDX = 2;
+constexpr auto MATCH_STATE_NO_LINE_FLG_IDX = 3;
+constexpr auto FLAGS_SIZE = 4;
 
 static inline void compose_mov_mdf(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
@@ -258,7 +259,7 @@ static inline int compose_cset(const smatch &m, const machine_code &code) {
 
 static inline void compose_hcsum_hcrc(const vector<bool> &flags, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    if (!flags[mask0_flg_idx]) {
+    if (!flags[MASK0_FLG_IDX]) {
         mcode.op_01100.mask_flg = 1;
     }
     if (m.str(1) == "TMP") {
@@ -277,7 +278,7 @@ static inline void compose_hcsum_hcrc(const vector<bool> &flags, const smatch &m
 static inline void compose_alu_set(
     const string &name, const vector<bool> &flags, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    if (!flags[unsigned_flg_idx]) {
+    if (!flags[UNSIGNED_FLG_IDX]) {
         mcode.op_10000.sign_flg = 1;
     }
     if (name == "SGT") {
@@ -301,11 +302,17 @@ static inline int compose_nxth(const smatch &m, const machine_code &code) {
     if (!m.str(1).empty()) {
         mcode.op_10001.isr_off = stoul(m.str(2));
         mcode.op_10001.isr_len = stoul(m.str(3));
+        if (mcode.op_10001.isr_off + mcode.op_10001.isr_len > 32) {
+            return -1;
+        }
     }
     if (!m.str(4).empty()) {
         mcode.op_10001.meta_off = stoul(m.str(5));
         mcode.op_10001.meta_len = stoul(m.str(6));
         mcode.op_10001.meta_intrinsic = 1;
+        if (mcode.op_10001.meta_off + mcode.op_10001.meta_len > MAX_META_LEN) {
+            return -1;
+        }
     }
     if (mcode.op_10001.meta_len + mcode.op_10001.isr_len > 40) {
         return -1;
@@ -335,7 +342,7 @@ int parser_assembler::process_state_no_line(const string &line, const string &pa
     }
     states_seq.emplace_back(state_no);
     state_line_sub_map.emplace(std::make_pair(state_no, map_of_u16()));
-    state_line_sub_map.at(state_no).emplace(std::make_pair(cur_line_idx, end_state_no));
+    state_line_sub_map.at(state_no).emplace(std::make_pair(cur_line_idx, END_STATE_NO));
     if (state_line_sub_map.at(state_no).size() > MATCH_ENTRY_CNT_PER_STATE) {
         cout << "for each state, the count of sub state shall not exceed " << MATCH_ENTRY_CNT_PER_STATE << endl;
         return -1;
@@ -345,17 +352,17 @@ int parser_assembler::process_state_no_line(const string &line, const string &pa
 }
 
 int parser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
-    if (flags.size() != flags_size) {
+    if (flags.size() != FLAGS_SIZE) {
         return -1;
     }
 
-    if (flags[match_state_no_line_flg_idx]) {
+    if (flags[MATCH_STATE_NO_LINE_FLG_IDX]) {
         return process_state_no_line(line, assist_line_pattern());
     }
 
     if (pre_last_flag && !states_seq.empty()) {
         auto cur_state = states_seq.back();
-        state_line_sub_map.at(cur_state).emplace(std::make_pair(cur_line_idx, end_state_no));
+        state_line_sub_map.at(cur_state).emplace(std::make_pair(cur_line_idx, END_STATE_NO));
     }
 
     machine_code mcode;
@@ -367,7 +374,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         return -1;
     }
 
-    if (cur_line_idx == 0 && (mcode.universe.opcode != 0b10001 || !flags[last_flg_idx])) {
+    if (cur_line_idx == 0 && (mcode.universe.opcode != 0b10001 || !flags[LAST_FLG_IDX])) {
         cout << "the first line of code must be NXTHL." << endl;
         return -1;
     }
@@ -481,7 +488,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
             mcode.op_10010.shift_val = stoul(m.str(2));
         } {
             auto cur_state = states_seq.back();
-            state_line_sub_map.at(cur_state).rbegin()->second = end_state_no;
+            state_line_sub_map.at(cur_state).rbegin()->second = END_STATE_NO;
         }
         break;
 
@@ -489,8 +496,8 @@ int parser_assembler::line_process(const string &line, const string &name, const
         break;
     }
 
-    mcode.universe.last_flg = flags[last_flg_idx];
-    pre_last_flag = flags[last_flg_idx];
+    mcode.universe.last_flg = flags[LAST_FLG_IDX];
+    pre_last_flag = flags[LAST_FLG_IDX];
 
     if (cur_line_idx == 0) {
         entry_code = mcode.val64;
@@ -565,7 +572,7 @@ bool parser_assembler::state_chart_has_loop() {
 
     for (auto state = init_state; ;) {
         for (const auto &line_sub : state_line_sub_map.at(state)) {
-            if (line_sub.second == end_state_no) {
+            if (line_sub.second == END_STATE_NO) {
                 reach_end = true;
                 break;
             }

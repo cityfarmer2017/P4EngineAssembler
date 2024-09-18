@@ -1,5 +1,5 @@
 // Parser entry action
-NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
+NXTHL ISR{0:32}, META{0:8}, >>32, ->0;
 
 #255:
     HCRC16 TMP{8:8}, 0x88888888;
@@ -37,7 +37,7 @@ NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
     ULCK ;
     NOP ;
     PCSUM ;
-    NXTHL ->11;
+    NXTHL ISR{5:23}, ->11;
 
 #043:
     R32XCT ISR{16: 16}, PHV{6: 2};
@@ -57,7 +57,7 @@ NXTHL ISR{0:39}, META{0:1}, >>32, ->0;
 
     SUBU TMP { 0 : 16 } , TMP, TMP;
     ADDU TMP{16: 16}, 0x0101, META{0: 4};
-    NXTHL ->255;
+    NXTHL META{0 : 40}, ->255;
 
 #100:
     LOCK 0X101010;
