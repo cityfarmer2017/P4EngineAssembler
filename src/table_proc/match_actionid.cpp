@@ -177,7 +177,7 @@ int match_actionid::output_sram_data(const std::string &dst_file_stem) {
         return -1;
     }
     for (const auto &val : actionid_sram_vec) {
-        ot_file_strm << val << "\n";
+        ot_file_strm << std::bitset<16>(val) << "\n";
     }
     ot_file_strm << std::flush;
     ot_file_strm.close();

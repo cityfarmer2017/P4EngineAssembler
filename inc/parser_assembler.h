@@ -19,7 +19,7 @@ using vec_of_u16 = std::vector<std::uint16_t>;
 using map_of_u16 = std::map<std::uint16_t, std::uint16_t>;
 using map_of_u16_map = std::map<std::uint16_t, map_of_u16>;
 
-constexpr std::uint16_t MAX_STATE_NO = 255;
+constexpr std::uint16_t MAX_STATE_NO = 31;
 constexpr std::uint16_t MATCH_ENTRY_CNT_PER_STATE = 32;
 constexpr std::uint16_t MAX_TCAM_ENTRY_CNT = (MAX_STATE_NO + 1) * MATCH_ENTRY_CNT_PER_STATE;
 constexpr std::uint16_t MAX_LINE_NO = 16 * 1024 - 1;
@@ -85,6 +85,7 @@ class parser_assembler : public assembler {
     static const int l_idx;   // index of L sub-pattern for Last flag
     static const int u_idx;   // index of U sub-pattern for Unsigned flag
     static const int m0_idx;  // index of M0 sub-pattern for Mask to 0 flag
+    static const int rvs_idx;
     static const str_u64_map cmd_opcode_map;
     static const u64_regex_map opcode_regex_map;
 };

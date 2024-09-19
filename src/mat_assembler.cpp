@@ -128,6 +128,11 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
     }
 
     machine_code mcode;
+    if (!cmd_opcode_map.count(name)) {
+        std::cout << "ERROR: line #" << file_line_idx << "\n\t";
+        std::cout << "no opcode match this instruction name - " << name << std::endl;
+        return -1;
+    }
     mcode.val64 = cmd_opcode_map.at(name);
     mcode.universe.imm64_l = 0;
     mcode.universe.imm64_h = 0;

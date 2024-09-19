@@ -24,19 +24,28 @@ string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) cons
     auto l_flg = !m.str(l_idx).empty();
     auto u_flg = !m.str(u_idx).empty();
     auto m0_flg = !m.str(m0_idx).empty();
-    string name;
+    auto name = m.str(1);
 
-    if (u_flg) {
+    auto rvs32_flg = false;
+    auto rvs16_flg = false;
+    if (!m.str(rvs_idx).empty()) {
+        name = m.str(rvs_idx + 1);
+        if (m.str(rvs_idx) == "R16") {
+            rvs16_flg = true;
+        } else {
+            rvs32_flg = true;
+        }
+    } else if (u_flg) {
         name = m.str(u_idx - 1);
     } else if (m0_flg) {
         name = m.str(m0_idx - 1);
-    } else {
-        name = m.str(1);
     }
 
     flags.emplace_back(l_flg);
     flags.emplace_back(u_flg);
     flags.emplace_back(m0_flg);
+    flags.emplace_back(rvs16_flg);
+    flags.emplace_back(rvs32_flg);
 
     return name;
 }
@@ -44,8 +53,10 @@ string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) cons
 constexpr auto LAST_FLG_IDX = 0;
 constexpr auto UNSIGNED_FLG_IDX = 1;
 constexpr auto MASK0_FLG_IDX = 2;
-constexpr auto MATCH_STATE_NO_LINE_FLG_IDX = 3;
-constexpr auto FLAGS_SIZE = 4;
+constexpr auto RVS16_FLG_IDX = 3;
+constexpr auto RVS32_FLG_IDX = 4;
+constexpr auto MATCH_STATE_NO_LINE_FLG_IDX = 5;  // this flag must always be the last one in flags vector
+constexpr auto FLAGS_SIZE = 6;
 
 static inline void compose_mov_mdf(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
@@ -78,7 +89,7 @@ static inline void compose_mov_mdf(const smatch &m, const machine_code &code) {
     }
 }
 
-static inline void compose_rmv_xct(const smatch &m, const machine_code &code) {
+static inline void compose_rmv_xct(const smatch &m, const machine_code &code, const vector<bool> &flags) {
     auto &mcode = const_cast<machine_code&>(code);
     if (m.str(1) == "TMP") {
         mcode.op_00011.src_slct = 1;
@@ -100,6 +111,12 @@ static inline void compose_rmv_xct(const smatch &m, const machine_code &code) {
         }
         mcode.op_00011.dst_off = stoul(m.str(dst_off_idx));
         mcode.op_00011.dst_len = stoul(m.str(dst_len_idx)) - 1;
+    }
+
+    if (flags[RVS32_FLG_IDX]) {
+        mcode.op_00010.byte_rvs_mode = 1;
+    } else if (flags[RVS16_FLG_IDX]) {
+        mcode.op_00010.byte_rvs_mode = 2;
     }
 }
 
@@ -366,9 +383,14 @@ int parser_assembler::line_process(const string &line, const string &name, const
     }
 
     machine_code mcode;
+    if (!cmd_opcode_map.count(name)) {
+        std::cout << "ERROR: line #" << file_line_idx << "\n\t";
+        std::cout << "no opcode match this instruction name - " << name << std::endl;
+        return -1;
+    }
     mcode.val64 = cmd_opcode_map.at(name);
-    smatch m;
 
+    smatch m;
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val64))) {
         cout << "regex match failed with line #" << file_line_idx << ":\n\t" << line << endl;
         return -1;
@@ -398,12 +420,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
     case 0b00010:  // RMV / RVS32_RMV / RVS16_RMV
     // intended fall through
     case 0b00011:  // XCT / RVS32_XCT / RVS16_XCT
-        compose_rmv_xct(m, mcode);
-        if (name == "R32RMV" || name == "R32XCT") {
-            mcode.op_00010.byte_rvs_mode = 1;
-        } else if (name == "R16RMV" || name == "R16XCT") {
-            mcode.op_00010.byte_rvs_mode = 2;
-        }
+        compose_rmv_xct(m, mcode, flags);
         break;
 
     case 0b10101:  // ADDU / SUBU
@@ -604,24 +621,21 @@ bool parser_assembler::state_chart_has_loop() {
 }
 
 const char* parser_assembler::cmd_name_pattern =
-    R"((MOV|MDF|(R(32|16))?(XCT|RMV)|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
+    R"((MOV|MDF|(R32|R16)?(XCT|RMV)|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
     R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
 
 const char* parser_assembler::stateno_pattern = R"(#([\d]{3}):)";
 
-const int parser_assembler::l_idx = 9;
-const int parser_assembler::u_idx = 8;
-const int parser_assembler::m0_idx = 6;
+const int parser_assembler::l_idx = 8;
+const int parser_assembler::u_idx = 7;
+const int parser_assembler::m0_idx = 5;
+const int parser_assembler::rvs_idx = 2;
 
 const str_u64_map parser_assembler::cmd_opcode_map = {
     {"MOV",       0b00001},
     {"MDF",       0b00001},
     {"XCT",       0b00011},
-    {"R32XCT",    0b00011},
-    {"R16XCT",    0b00011},
     {"RMV",       0b00010},
-    {"R32RMV",    0b00010},
-    {"R16RMV",    0b00010},
     {"ADDU",      0b10101},
     {"SUBU",      0b10101},
     {"COPY",      0b10100},

@@ -374,6 +374,11 @@ int deparser_assembler::line_process(const string &line, const string &name, con
 
     machine_code mcode;
     mcode.val64 = 0;
+    if (!cmd_opcode_map.count(name)) {
+        std::cout << "ERROR: line #" << file_line_idx << "\n\t";
+        std::cout << "no opcode match this instruction name - " << name << std::endl;
+        return -1;
+    }
     mcode.val32 = cmd_opcode_map.at(name);
     auto opcode = mcode.val32;
 
