@@ -52,13 +52,13 @@
     //nop
     //MOVL 0x1234567890123456, 0x12, PHV[0];
     //MOVL AD{0:3}, PHV[33];
-    HASH PHV{0:40}, PHV[0];
-    CRC16P1 PHV{0:30}, META[40];
-    CRC16P2 PHV[50], META{0:20}, META[80];
-    XOR4 PHV[100], META{16:30}, PHV[300];
+    HASH PHV[0], AD[0], PHV[128];
+    CRC16P1 PHV[30], META[40];
+    CRC16P2 PHV[50], META[0], META[80];
+    XOR4 PHV[100], META[16], PHV[300];
     //XOR8 PHV{0:40}, PHV[0];
     //XOR16 PHV{0:40}, PHV[0];
-    XOR32 PHV{0:40}, PHV[0];
+    XOR32 PHV[40], PHV[0];
 .end
 .start // ram-7
     COPYL PHV{0:8}, META[0];

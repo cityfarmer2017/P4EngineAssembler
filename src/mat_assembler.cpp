@@ -257,19 +257,27 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         break;
 
     case 0b10101:  // HASH / CRC16P[12] / XOR(4|8|16|32)
-        if (!m.str(2).empty()) {
-            mcode.op_10101.src1_off = stoul(m.str(2));
-            mcode.op_10101.calc_len = stoul(m.str(3)) - 1;
+        if (name == "HASH") {
+            if (m.str(4).empty()) {
+                print_cmd_param_unmatch_message(name, line);
+                return -1;
+            }
+            mcode.op_10101.ad_idx = stoul(m.str(5));
         } else {
-            mcode.op_10101.src_mode = 1;
-            mcode.op_10101.src1_off = stoul(m.str(4));
-            mcode.op_10101.src2_off = stoul(m.str(5));
-            mcode.op_10101.calc_len = stoul(m.str(6)) - 1;
+            if (!m.str(4).empty()) {
+                print_cmd_param_unmatch_message(name, line);
+                return -1;
+            }
         }
-        if (m.str(7) == "PHV") {
+        mcode.op_10101.src1_off = stoul(m.str(1));
+        if (!m.str(2).empty()) {
+            mcode.op_10101.src_mode = 1;
+            mcode.op_10101.src2_off = stoul(m.str(3));
+        }
+        if (m.str(6) == "PHV") {
             mcode.op_10101.dst_slct = 1;
         }
-        mcode.op_10101.dst_off = stoul(m.str(8));
+        mcode.op_10101.dst_off = stoul(m.str(7));
         if (name == "CRC") {
             mcode.op_10101.calc_mode = flags[crc_poly1_flg_idx] ? 1 : 2;
         } else if (name == "XOR") {
