@@ -11,6 +11,8 @@
 #include "mat_assembler.h"       // NOLINT [build/include_subdir]
 #include "table_proc/mat_link.h"
 
+constexpr auto SOURCE_FILE_NAME_P = R"(([a-zA-Z][a-zA-Z0-9]*)(_[a-zA-Z0-9]+)*)";
+
 int process_one_entry(const std::filesystem::directory_entry &entry, const string &out_path) {
     string src_dir(entry.path().has_parent_path() ? entry.path().parent_path() : std::filesystem::current_path());
     string src_fname(entry.path().filename());
@@ -31,7 +33,7 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
     }
 
     if (src_fext == ".p4m") {
-        auto re = std::regex(R"(^([a-zA-Z0-9]+)_(ma[0-9])$)");
+        auto re = std::regex(R"(^()" + std::string(SOURCE_FILE_NAME_P) + R"()_(ma[0-9])$)");
         auto m = std::smatch();
         if (!std::regex_match(src_fstem, m, re)) {
             std::cout << "the file name - " << src_fname << " is not valid." << std::endl;
@@ -39,8 +41,14 @@ int process_one_entry(const std::filesystem::directory_entry &entry, const strin
         }
 
         dst_dir += m.str(1) + "/";
-        dst_dir += m.str(2) + "/";
+        dst_dir += m.str(4) + "/";
     } else {
+        auto re = std::regex(R"(^)" + std::string(SOURCE_FILE_NAME_P) + R"($)");
+        if (!std::regex_match(src_fstem, re)) {
+            std::cout << "the file name - " << src_fname << " is not valid." << std::endl;
+            return -1;
+        }
+
         dst_dir += src_fstem + "/";
     }
 
