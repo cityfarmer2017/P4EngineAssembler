@@ -89,41 +89,42 @@ static inline void compose_sndm(const vector<bool> &flags, const machine_code &c
 
 static inline int compose_sndh_sndp_sndpc(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    if (m.str(1).empty()) {
+    if (m.str(1).empty() && m.str(2).empty()) {
         mcode.op_00010.src_slct = 3;
     } else {
-        if (m.str(2) == "PLD") {
+        if (m.str(1) == "PLD") {
             mcode.op_00010.src_slct = 2;
-        } else if (m.str(2) == "HDR") {
+        } else if (m.str(1) == "HDR") {
             mcode.op_00010.src_slct = 1;
         }
-        if (m.str(3).empty()) {
+        if (m.str(2).empty()) {
             mcode.op_00010.off_ctrl = 1;
             mcode.op_00010.len_ctrl = 1;
         } else {
-            if (m.str(4).empty() && m.str(5).empty()) {
+            if (m.str(3).empty() && m.str(4).empty()) {
                 return -1;
             }
-            if (m.str(4).empty()) {
+            if (m.str(3).empty()) {
                 mcode.op_00010.off_ctrl = 1;
             } else {
-                mcode.op_00010.offset = stoul(m.str(4));
+                mcode.op_00010.offset = stoul(m.str(3));
             }
-            if (m.str(5).empty()) {
+            if (m.str(4).empty()) {
                 mcode.op_00010.len_ctrl = 1;
             } else {
-                mcode.op_00010.length = stoul(m.str(5));
+                mcode.op_00010.length = stoul(m.str(4));
             }
         }
-        if (!m.str(6).empty()) {
-            if (m.str(7) == "CSUM") {
-                mcode.op_00011.calc_mode = 1;
-            } else if (m.str(7) == "CRC16") {
-                mcode.op_00011.calc_mode = 2;
-            } else {  // m.str(7) == "CRC32"
-                mcode.op_00011.calc_mode = 3;
-            }
-        }
+    }
+    if ((!m.str(1).empty() || !m.str(2).empty()) && m.str(5).empty() && !m.str(6).empty()) {
+        return -1;
+    }
+    if (m.str(6) == "CSUM") {
+        mcode.op_00011.calc_mode = 1;
+    } else if (m.str(6) == "CRC16") {
+        mcode.op_00011.calc_mode = 2;
+    } else {  // m.str(6) == "CRC32"
+        mcode.op_00011.calc_mode = 3;
     }
     return 0;
 }

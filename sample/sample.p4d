@@ -98,4 +98,6 @@ BEZR 200, -300, PHV32[32];
 
 RET ;
 
+SNDPC CRC32;
+
 END ;
