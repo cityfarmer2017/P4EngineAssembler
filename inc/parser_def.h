@@ -75,13 +75,13 @@ typedef union {
     } op_01001;
     struct {
         std::uint64_t opcode: 5;
-        std::uint64_t rsvd1: 2;
         std::uint64_t offset: 7;
+        std::uint64_t phv_slct: 2;
         std::uint64_t length: 5;
         std::uint64_t src_slct: 2;
         std::uint64_t mask: 32;
         std::uint64_t mask_flg: 1;
-        std::uint64_t rsvd2: 9;
+        std::uint64_t rsvd: 9;
         std::uint64_t last_flg: 1;
     } op_01010, op_01011, op_01100;
     struct {
@@ -182,8 +182,11 @@ constexpr auto P_00100 =
 constexpr auto P_01001 =
     R"((POLY|INIT|CTRL\s*,\s+0b000([01]{5})|XOROT)\s*,\s+(\d{1,10}|(0[xX])[\dA-Fa-f]{1,8}))";
 
-constexpr auto P_01010_01011_01100 =
-    R"((TMP|ISR|PHV)\s*\{\s*([12]?[0-9]|3[01])\s*:\s*([1-9]|[12][0-9]|3[0-2])\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,8}))";
+constexpr auto P_01010_01011 =
+    R"((PHV\s*\{\s*([1-9]?[0-9]|[1-4][0-9]{2}|50[0-9]|51[01])|(TMP|ISR)\s*\{\s*(0|8|16|24))\s*:\s*(8|16|24|32)\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,8}))";
+
+constexpr auto P_01100 =
+    R"((PHV\s*\{\s*([1-9]?[0-9]|[1-4][0-9]{2}|50[0-9]|51[01])|(TMP|ISR)\s*\{\s*(0|8|16|24))\s*:\s*(16|32)\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,8}))";
 
 constexpr auto P_10000 =
     R"(TCAM_KEY\s*\{\s*([12]?[0-9]|3[01])\s*:\s*([1-9]|10)\s*\}\s*,\s+(0[xX][\dA-Fa-f]{1,10}))";

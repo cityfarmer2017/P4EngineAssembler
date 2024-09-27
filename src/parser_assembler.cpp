@@ -274,22 +274,29 @@ static inline int compose_cset(const smatch &m, const machine_code &code) {
     return 0;
 }
 
-static inline void compose_hcsum_hcrc(const vector<bool> &flags, const smatch &m, const machine_code &code) {
+static inline int check_offset_length(std::int16_t offset, std::int16_t length, std::int16_t valid_len) {
+    return offset + length >= valid_len ? -1 : 0;
+}
+static inline int compose_hcsum_hcrc(const vector<bool> &flags, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     if (!flags[MASK0_FLG_IDX]) {
         mcode.op_01100.mask_flg = 1;
     }
-    if (m.str(1) == "TMP") {
-        mcode.op_01100.src_slct = 1;
-    } else if (m.str(1) == "PHV") {
+    mcode.op_01100.mask = stoul(m.str(6), nullptr, 0);
+    mcode.op_01100.length = stoul(m.str(5)) - 1;
+    if (!m.str(2).empty()) {
         mcode.op_01100.src_slct = 2;
+        auto offset = stoul(m.str(2));
+        mcode.op_01100.offset = offset;
+        mcode.op_01100.phv_slct = offset >> 7;
+        return check_offset_length(mcode.op_01100.offset * 8, mcode.op_01100.length, 1024);
+    } else {
+        if (m.str(3) == "TMP") {
+            mcode.op_01100.src_slct = 1;
+        }
+        mcode.op_01100.offset = stoul(m.str(4));
+        return check_offset_length(mcode.op_01100.offset, mcode.op_01100.length, 32);
     }
-    // for PHV logic will always get data from byte offset 384 and on, totally 128 bytes
-    // but the assembler will only open the 32 bytes (480 ~ 511 at the tail to software programmer
-    // so here I need to add the offset by extra 96 bytes (480 = 384 + 96)
-    mcode.op_01100.offset = stoul(m.str(2)) + (m.str(1) == "PHV" ? 96 : 0);
-    mcode.op_01100.length = stoul(m.str(3)) - 1;
-    mcode.op_01100.mask = stoul(m.str(4), nullptr, 0);
 }
 
 static inline void compose_alu_set(
@@ -466,7 +473,10 @@ int parser_assembler::line_process(const string &line, const string &name, const
     case 0b01011:  // HCRC16
     // intended fall through
     case 0b01010:  // HCRC32
-        compose_hcsum_hcrc(flags, m, mcode);
+        if (auto rc = compose_hcsum_hcrc(flags, m, mcode)) {
+            print_cmd_param_unmatch_message(name, line);
+            return rc;
+        }
         break;
 
     case 0b01000:  // NOP
@@ -675,9 +685,9 @@ const u64_regex_map parser_assembler::opcode_regex_map = {
     {0b01000, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
     {0b00100, regex(string(g_normal_line_prefix_p) + P_00100 + g_normal_line_posfix_p)},
     {0b01001, regex(string(g_normal_line_prefix_p) + P_01001 + g_normal_line_posfix_p)},
-    {0b01100, regex(string(g_normal_line_prefix_p) + P_01010_01011_01100 + g_normal_line_posfix_p)},
-    {0b01011, regex(string(g_normal_line_prefix_p) + P_01010_01011_01100 + g_normal_line_posfix_p)},
-    {0b01010, regex(string(g_normal_line_prefix_p) + P_01010_01011_01100 + g_normal_line_posfix_p)},
+    {0b01100, regex(string(g_normal_line_prefix_p) + P_01100 + g_normal_line_posfix_p)},
+    {0b01011, regex(string(g_normal_line_prefix_p) + P_01010_01011 + g_normal_line_posfix_p)},
+    {0b01010, regex(string(g_normal_line_prefix_p) + P_01010_01011 + g_normal_line_posfix_p)},
     {0b01111, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
     {0b01110, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
     {0b01101, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
