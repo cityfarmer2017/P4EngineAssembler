@@ -23,7 +23,7 @@ CCFLAGS += ${SUB_FLAG}
 CCFLAGS += -g -Wall# -DDEBUG
 export CC CCFLAGS
 
-.PHONE : all clean dist-clean
+.PHONY : all clean dist-clean
 
 all :
 	@cd $(SRC_DIR); make || exit "$$?";
