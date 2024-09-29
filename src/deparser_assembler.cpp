@@ -63,16 +63,16 @@ string deparser_assembler::name_matched(const smatch &m, vector<bool> &flags) co
     return name;
 }
 
-constexpr auto sendm_mask_flg_idx = 0;
-constexpr auto sendm_pipeline_flg_idx = 1;
-constexpr auto calc_mask_and_flg_idx = 2;
-constexpr auto calc_mask_or_flg_idx = 3;
-constexpr auto xor8_flg_idx = 4;
-constexpr auto xor16_flg_idx = 5;
-constexpr auto xor32_flg_idx = 6;
-constexpr auto jump_relative_flg_idx = 7;
-constexpr auto match_assist_line_flg_idx = 8;
-constexpr auto flags_size = 9;
+constexpr auto SENDM_MASK_FLG_IDX = 0;
+constexpr auto SENDM_PIPELINE_FLG_IDX = 1;
+constexpr auto CALC_MASK_AND_FLG_IDX = 2;
+constexpr auto CALC_MASK_OR_FLG_IDX = 3;
+constexpr auto XOR8_FLG_IDX = 4;
+constexpr auto XOR16_FLG_IDX = 5;
+constexpr auto XOR32_FLG_IDX = 6;
+constexpr auto JUMP_RELATIVE_FLG_IDX = 7;
+constexpr auto MATCH_ASSIT_LINE_FLG_IDX = 8;
+constexpr auto FLAGS_SZ = 9;
 
 static inline void print_cmd_bit_vld_unmatch_message(const string &line) {
     std::cout << line + "\n\tshall be following a <MSKALL / MSKADDR> line." << std::endl;
@@ -80,9 +80,9 @@ static inline void print_cmd_bit_vld_unmatch_message(const string &line) {
 
 static inline void compose_sndm(const vector<bool> &flags, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    if (flags[sendm_mask_flg_idx]) {
+    if (flags[SENDM_MASK_FLG_IDX]) {
         mcode.op_00001.src_slct = 2;
-    } else if (!flags[sendm_pipeline_flg_idx]) {
+    } else if (!flags[SENDM_PIPELINE_FLG_IDX]) {
         mcode.op_00001.src_slct = 1;
     }
 }
@@ -216,9 +216,9 @@ static inline int compose_crc16_crc32_csum(
             mcode.op_01110.length = stoul(m.str(4));
         }
     }
-    if (flags[calc_mask_and_flg_idx] || flags[calc_mask_or_flg_idx]) {
+    if (flags[CALC_MASK_AND_FLG_IDX] || flags[CALC_MASK_OR_FLG_IDX]) {
         mcode.op_01110.mask_en = 1;
-        if (flags[calc_mask_or_flg_idx]) {
+        if (flags[CALC_MASK_OR_FLG_IDX]) {
             mcode.op_01110.mask_flg = 1;
         }
     }
@@ -229,14 +229,14 @@ static inline void compose_xor(const vector<bool> &flags, const smatch &m, const
     auto &mcode = const_cast<machine_code&>(code);
     mcode.op_10001.src_off = stoul(m.str(1));
     mcode.op_10001.src_len = stoul(m.str(2));
-    mcode.op_10001.calc_unit = assembler::xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
+    mcode.op_10001.calc_unit = assembler::xor_unit(flags[XOR8_FLG_IDX], flags[XOR16_FLG_IDX], flags[XOR32_FLG_IDX]);
     mcode.op_10001.dst_slct = m.str(3) == "PHV";
     mcode.op_10001.dst_off = stoul(m.str(4));
 }
 
 static inline void compose_xorr(const vector<bool> &flags, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    mcode.op_10010.calc_unit = assembler::xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
+    mcode.op_10010.calc_unit = assembler::xor_unit(flags[XOR8_FLG_IDX], flags[XOR16_FLG_IDX], flags[XOR32_FLG_IDX]);
     mcode.op_10010.dst_slct = m.str(1) == "PHV";
     mcode.op_10010.dst_off = stoul(m.str(2));
 }
@@ -316,14 +316,14 @@ static inline int compose_j_bez(
     if ((name == "J" && !m.str(3).empty())) {
         return -1;
     }
-    if (!flags[jump_relative_flg_idx] && (m.str(2) == "-" || m.str(5) == "-")) {
+    if (!flags[JUMP_RELATIVE_FLG_IDX] && (m.str(2) == "-" || m.str(5) == "-")) {
         return -1;
     }
     mcode.op_11001.target_1 =
-        flags[jump_relative_flg_idx] ? std::stol(m.str(1), nullptr, 0) : stoul(m.str(1), nullptr, 0);
+        flags[JUMP_RELATIVE_FLG_IDX] ? std::stol(m.str(1), nullptr, 0) : stoul(m.str(1), nullptr, 0);
     if (!m.str(4).empty()) {
         mcode.op_11001.target_2 =
-            flags[jump_relative_flg_idx] ? std::stol(m.str(4), nullptr, 0) : stoul(m.str(4), nullptr, 0);
+            flags[JUMP_RELATIVE_FLG_IDX] ? std::stol(m.str(4), nullptr, 0) : stoul(m.str(4), nullptr, 0);
     }
     if (!m.str(6).empty() && m.str(6) != "CONDR") {
         mcode.op_11001.src_slct = 1;
@@ -347,9 +347,9 @@ static inline int compose_j_bez(
         mcode.op_11001.src_off = src_off;
     }
     if (name == "J") {
-        mcode.op_11001.jump_mode = flags[jump_relative_flg_idx] ? 1 : 0;
+        mcode.op_11001.jump_mode = flags[JUMP_RELATIVE_FLG_IDX] ? 1 : 0;
     } else if (name == "BEZ") {
-        mcode.op_11001.jump_mode = flags[jump_relative_flg_idx] ? 0b11 : 0b10;
+        mcode.op_11001.jump_mode = flags[JUMP_RELATIVE_FLG_IDX] ? 0b11 : 0b10;
     }
     return 0;
 }
@@ -369,7 +369,7 @@ static inline void compose_copy(const smatch &m, const machine_code &code) {
 }
 
 int deparser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
-    if (flags.size() != flags_size) {
+    if (flags.size() != FLAGS_SZ) {
         return -1;
     }
 
@@ -392,7 +392,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
     switch (opcode) {
     case 0b00001:  // SNDM[PM]
         compose_sndm(flags, mcode);
-        if (flags[sendm_mask_flg_idx]) {
+        if (flags[SENDM_MASK_FLG_IDX]) {
             if (previous_not_mask(line)) {
                 print_cmd_bit_vld_unmatch_message(line);
                 return -1;
@@ -467,7 +467,7 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             print_cmd_param_unmatch_message(name, line);
             return rc;
         }
-        if (flags[calc_mask_and_flg_idx] || flags[calc_mask_or_flg_idx]) {
+        if (flags[CALC_MASK_AND_FLG_IDX] || flags[CALC_MASK_OR_FLG_IDX]) {
             if (previous_not_mask(line)) {
                 print_cmd_bit_vld_unmatch_message(line);
                 return -1;

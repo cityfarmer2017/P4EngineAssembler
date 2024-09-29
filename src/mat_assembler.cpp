@@ -47,6 +47,24 @@ string mat_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
         name = m.str(sm_flg_idx-1);
     }
 
+    auto rvs16_flg = false;
+    auto rvs32_flg = false;
+    auto rvs64_flg = false;
+    auto rvs128_flg = false;
+    auto rvs_str = m.str(rvs_flg_idx);
+    if (!rvs_str.empty()) {
+        if (rvs_str == "R16") {
+            rvs16_flg = true;
+        } else if (rvs_str == "R32") {
+            rvs32_flg = true;
+        } else if (rvs_str == "R64") {
+            rvs64_flg = true;
+        } else {  // (rvs_str == "R128")
+            rvs128_flg = true;
+        }
+        name.erase(0, rvs_str.size());
+    }
+
     flags.emplace_back(long_flg);
     flags.emplace_back(crc_p1_flg);
     // flags.emplace_back(crc_p2_flg);
@@ -56,18 +74,26 @@ string mat_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
     flags.emplace_back(xor_32_flg);
     // flags.emplace_back(sm_16_flg);
     flags.emplace_back(sm_32_flg);
+    flags.emplace_back(rvs16_flg);
+    flags.emplace_back(rvs32_flg);
+    flags.emplace_back(rvs64_flg);
+    flags.emplace_back(rvs128_flg);
 
     return name;
 }
 
-constexpr auto long_flg_idx = 0;
-constexpr auto crc_poly1_flg_idx = 1;
-constexpr auto xor8_flg_idx = 2;
-constexpr auto xor16_flg_idx = 3;
-constexpr auto xor32_flg_idx = 4;
-constexpr auto stm32_flg_idx = 5;
-constexpr auto match_assist_line_flg_idx = 6;
-constexpr auto flags_size = 7;
+constexpr auto LONG_FLG_IDX = 0;
+constexpr auto CRC_POLY1_FLG_IDX = 1;
+constexpr auto XOR8_FLG_IDX = 2;
+constexpr auto XOR16_FLG_IDX = 3;
+constexpr auto XOR32_FLG_IDX = 4;
+constexpr auto STM32_FLG_IDX = 5;
+constexpr auto RVS16_FLAG_IDX = 6;
+constexpr auto RVS32_FLAG_IDX = 7;
+constexpr auto RVS64_FLAG_IDX = 8;
+constexpr auto RVS128_FLAG_IDX = 9;
+constexpr auto MATCH_ASSIST_LINE_FLG_IDX = 10;
+constexpr auto FLAGS_SZ = 11;
 
 int mat_assembler::process_assist_line(const string &line) {
     const auto r = std::regex(R"(^)" + assist_line_pattern() + R"((\s+\/\/.*)?[\n\r]?$)");
@@ -102,11 +128,11 @@ int mat_assembler::process_assist_line(const string &line) {
 }
 
 int mat_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
-    if (flags.size() != flags_size) {
+    if (flags.size() != FLAGS_SZ) {
         return -1;
     }
 
-    if (flags[match_assist_line_flg_idx]) {
+    if (flags[MATCH_ASSIST_LINE_FLG_IDX]) {
         return process_assist_line(line);
     }
 
@@ -115,13 +141,13 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         return -1;
     }
 
-    if (start_end_stk.size() / 2 < 6 && flags[long_flg_idx]) {
+    if (start_end_stk.size() / 2 < 6 && flags[LONG_FLG_IDX]) {
         std::cout << "line #" << file_line_idx << ": " << line << "\n\t";
         std::cout << "long instructions shall be located in ram_6-7 only." << std::endl;
         return -1;
     }
 
-    if (start_end_stk.size() / 2 >= 6 && !flags[long_flg_idx]) {
+    if (start_end_stk.size() / 2 >= 6 && !flags[LONG_FLG_IDX]) {
         std::cout << "line #" << file_line_idx << ": " << line << "\n\t";
         std::cout << "normal instructions shall be located in ram_0-5 only." << std::endl;
         return -1;
@@ -204,6 +230,19 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         mcode.op_00011.src_off = stoul(m.str(2));
         mcode.op_00011.length = stoul(m.str(3)) - 1;
         mcode.op_00011.dst_off = stoul(m.str(5));
+        if (flags[RVS16_FLAG_IDX]) {
+            mcode.op_00011.swap_mode = 1;
+        } else if (flags[RVS32_FLAG_IDX]) {
+            mcode.op_00011.swap_mode = 2;
+        } else if (flags[RVS64_FLAG_IDX]) {
+            mcode.op_00011.swap_mode = 3;
+        } else if (flags[RVS128_FLAG_IDX]) {
+            if (!flags[LONG_FLG_IDX]) {
+                std::cout << "instruction name wrong.\n\t" << line << std::endl;
+                return -1;
+            }
+            mcode.op_00011.swap_mode = 4;
+        }
         break;
 
     case 0b00100:  // COUNT
@@ -279,10 +318,10 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         }
         mcode.op_10101.dst_off = stoul(m.str(7));
         if (name == "CRC") {
-            mcode.op_10101.calc_mode = flags[crc_poly1_flg_idx] ? 1 : 2;
+            mcode.op_10101.calc_mode = flags[CRC_POLY1_FLG_IDX] ? 1 : 2;
         } else if (name == "XOR") {
             mcode.op_10101.calc_mode = 3;
-            mcode.op_10101.xor_unit = xor_unit(flags[xor8_flg_idx], flags[xor16_flg_idx], flags[xor32_flg_idx]);
+            mcode.op_10101.xor_unit = xor_unit(flags[XOR8_FLG_IDX], flags[XOR16_FLG_IDX], flags[XOR32_FLG_IDX]);
         }
         break;
 
@@ -297,7 +336,7 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
         } else {
             mcode.op_10111.addr_h36 = stoull(m.str(2), nullptr, 0);
         }
-        if (flags[stm32_flg_idx]) {
+        if (flags[STM32_FLG_IDX]) {
             mcode.op_10111.len = 1;
         }
         break;
@@ -365,14 +404,16 @@ int mat_assembler::process_extra_data(const string &in_fname, const string &ot_f
 }
 
 const char* mat_assembler::cmd_name_pattern =
-    R"(((MOV|COPY|NOP)(L)?|MDF|COUNT|METER|LOCK|ULCK|HASH|(CRC)16P([12])|(XOR)(4|8|16|32)|(RSM|WSM)(16|32)))";
+    R"(((MOV|(R16|R32|R64|R128)?COPY|NOP)(L)?|)"
+    R"(MDF|COUNT|METER|LOCK|ULCK|HASH|(CRC)16P([12])|(XOR)(4|8|16|32)|(RSM|WSM)(16|32)))";
 
 const char* mat_assembler::extra_line_pattern = R"(\.(start|end))";
 
-const int mat_assembler::l_flg_idx = 3;
-const int mat_assembler::crc_flg_idx = 5;
-const int mat_assembler::xor_flg_idx = 7;
-const int mat_assembler::sm_flg_idx = 9;
+const int mat_assembler::rvs_flg_idx = 3;
+const int mat_assembler::l_flg_idx = 4;
+const int mat_assembler::crc_flg_idx = 6;
+const int mat_assembler::xor_flg_idx = 8;
+const int mat_assembler::sm_flg_idx = 10;
 
 const str_u64_map mat_assembler::cmd_opcode_map = {
     {"MOV",    0b00001},

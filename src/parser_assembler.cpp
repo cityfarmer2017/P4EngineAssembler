@@ -56,7 +56,7 @@ constexpr auto MASK0_FLG_IDX = 2;
 constexpr auto RVS16_FLG_IDX = 3;
 constexpr auto RVS32_FLG_IDX = 4;
 constexpr auto MATCH_STATE_NO_LINE_FLG_IDX = 5;  // this flag must always be the last one in flags vector
-constexpr auto FLAGS_SIZE = 6;
+constexpr auto FLAGS_SZ = 6;
 
 static inline void compose_mov_mdf(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
@@ -376,7 +376,7 @@ int parser_assembler::process_state_no_line(const string &line, const string &pa
 }
 
 int parser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
-    if (flags.size() != FLAGS_SIZE) {
+    if (flags.size() != FLAGS_SZ) {
         return -1;
     }
 

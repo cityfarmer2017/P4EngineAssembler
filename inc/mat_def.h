@@ -86,6 +86,7 @@ typedef union {
         std::uint64_t rsvd1: 23;
         std::uint64_t dst_off: 9;
         std::uint64_t direction: 2;
+        std::uint64_t swap_mode: 3;
         std::uint64_t rsvd2: 12;
     } op_10110, op_00011;
     struct {

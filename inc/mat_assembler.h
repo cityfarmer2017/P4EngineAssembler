@@ -54,6 +54,7 @@ class mat_assembler : public assembler {
 
     static const char* cmd_name_pattern;
     static const char* extra_line_pattern;
+    static const int rvs_flg_idx;
     static const int l_flg_idx;
     static const int crc_flg_idx;
     static const int xor_flg_idx;
