@@ -112,7 +112,16 @@ typedef union {
         std::uint64_t shift_val: 6;
         std::uint64_t rsvd: 52;
         std::uint64_t last_flg: 1;
-    } op_10010, op_10011;
+    } op_10010;
+    struct {
+        std::uint64_t opcode: 5;
+        std::uint64_t shift_val: 6;
+        std::uint64_t not_final_flg: 1;
+        std::uint64_t ignored_byte_cnt: 3;
+        std::uint64_t dest_phv_off: 9;
+        std::uint64_t rsvd: 39;
+        std::uint64_t last_flg: 1;
+    } op_10011;
     struct {
         std::uint64_t opcode: 5;
         std::uint64_t rsvd1: 7;
@@ -196,6 +205,10 @@ constexpr auto P_10001 =
     R"((META\s*\{\s*([1-9]?[0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-9]|[123][0-9]|40)\s*\}\s*,\s+)?)"
     R"((>>([1-9]|[12][0-9]|3[0-2])\s*,\s+)?->([0-9]|[1-9][0-9]{1,2}|2[0-4][0-9]|25[0-5]))";
 
-constexpr auto P_10010_10011 = R"((>>([1-9]|[12][0-9]|3[0-2]))?)";
+constexpr auto P_10010 = R"((>>([1-9]|[12][0-9]|3[0-2]))?)";
+
+constexpr auto P_10011 =
+    R"((PHV\s*\{\s*([1-9]?[0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\s*\}\s*(,)?\s*)?)"
+    R"((>>([1-9]|[12][0-9]|3[0-2]))?)";
 
 #endif  // INC_PARSER_DEF_H_

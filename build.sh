@@ -8,8 +8,10 @@ bin_file="$bin_dir/$app_name";
 
 obj_dir="$top_dir/build/obj";
 
-if [ "$(ls -A $bin_dir)" ] || [ "$(ls -A $obj_dir)" ]; then
-    make clean;
+if [ -d $bin_dir ]; then
+    if [ "$(ls -A $bin_dir)" ] || [ "$(ls -A $obj_dir)" ]; then
+        make clean;
+    fi
 fi
 
 make;

@@ -352,6 +352,22 @@ static inline int compose_nxth(const smatch &m, const machine_code &code) {
     return 0;
 }
 
+static inline int compose_nxtp(const smatch &m, const machine_code &code) {
+    auto &mcode = const_cast<machine_code&>(code);
+    if (!m.str(4).empty() && m.str(5).empty()) {
+        return -1;
+    }
+    if (!m.str(1).empty()) {
+        mcode.op_10011.dest_phv_off = stoul(m.str(2));
+        mcode.op_10011.ignored_byte_cnt = stoul(m.str(3));
+        mcode.op_10011.not_final_flg = 1;
+    }
+    if (!m.str(5).empty()) {
+        mcode.op_10010.shift_val = stoul(m.str(6));
+    }
+    return 0;
+}
+
 int parser_assembler::process_state_no_line(const string &line, const string &pattern) {
     const regex r(pattern);
     smatch m;
@@ -509,10 +525,18 @@ int parser_assembler::line_process(const string &line, const string &name, const
         break;
 
     case 0b10010:  // NXTD
-    // intended fall through
-    case 0b10011:  // NXTP
         if (!m.str(1).empty()) {
             mcode.op_10010.shift_val = stoul(m.str(2));
+        } {
+            auto cur_state = states_seq.back();
+            state_line_sub_map.at(cur_state).rbegin()->second = END_STATE_NO;
+        }
+        break;
+
+    case 0b10011:  // NXTP
+        if (auto rc = compose_nxtp(m, mcode)) {
+            print_cmd_param_unmatch_message(name, line);
+            return rc;
         } {
             auto cur_state = states_seq.back();
             state_line_sub_map.at(cur_state).rbegin()->second = END_STATE_NO;
@@ -693,6 +717,6 @@ const u64_regex_map parser_assembler::opcode_regex_map = {
     {0b01101, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
     {0b10000, regex(string(g_normal_line_prefix_p) + P_10000 + g_normal_line_posfix_p)},
     {0b10001, regex(string(g_normal_line_prefix_p) + P_10001 + g_normal_line_posfix_p)},
-    {0b10011, regex(string(g_normal_line_prefix_p) + P_10010_10011 + g_normal_line_posfix_p)},
-    {0b10010, regex(string(g_normal_line_prefix_p) + P_10010_10011 + g_normal_line_posfix_p)}
+    {0b10011, regex(string(g_normal_line_prefix_p) + P_10011 + g_normal_line_posfix_p)},
+    {0b10010, regex(string(g_normal_line_prefix_p) + P_10010 + g_normal_line_posfix_p)}
 };

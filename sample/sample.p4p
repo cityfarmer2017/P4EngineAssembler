@@ -10,6 +10,7 @@ NXTHL ISR{0:32}, META{0:8}, >>32, ->0;
     COPY META[INTR2], TMP;
 
     //NXTHL ISR{0:40}, META{0:0}, >>32, ->1;
+    //NXTPL PHV{128:4}, >>32;
     NXTDL ;
 
 // Parser instructions
