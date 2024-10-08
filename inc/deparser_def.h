@@ -156,7 +156,7 @@ constexpr auto P_00101 =
     R"(PHV\s*\{\s*([1-9]?[0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-4])\}\s*,\s+TMP)";
 
 constexpr auto P_00110_00111 =
-    R"((TMP|COND|POFF|PLEN|POLY|INIT|CTRL\s*,\s+0b000([01]{5})|XOROT)\s*,\s+(\d{1,5}|0[xX][\dA-F]{1,4}))";
+    R"((TMP|COND|POFF|PLEN|POLY|INIT|CTRL\s*,\s+0b00([01]{6})|XOROT)\s*,\s+(\d{1,5}|0[xX][\dA-F]{1,4}))";
 
 constexpr auto P_01000_01001 =
     R"(TMP\s*,\s+(PHV\s*\{\s*([1-9]?[0-9]|[1-4][0-9]{2}|50[0-9]|51[01])\s*:\s*([1-8])\s*\}\s*,\s+)"
