@@ -1,0 +1,20 @@
+
+#013:
+    R32XCT ISR{16: 16}, PHV{6: 2};
+    SHFT 32;
+    COPY META[CALC_RSLT], PHV{10: 4};
+    NXTH ->11;
+    COPYL META[SM_DATA3], META{2: 8};
+
+#011:
+    SHFT 32, CSUM;
+    ADDU ISR{0:16}, 0x1010, PHV{8:2} ;
+    ADDU ISR{0:16}, 65535, PHV{8:2} ;
+    SUBU TMP { 0 : 16 } , TMP, TMP;
+    ADDU TMP{16: 16}, 0x0101, META{0: 4};
+    NXTH ->31;
+    SUBUL ISR{0: 32} , TMP, TMP;
+
+    SUBU TMP { 0 : 16 } , TMP, TMP;
+    ADDU TMP{16: 16}, 0x0101, META{0: 4};
+    NXTHL META{0 : 40}, ->31;

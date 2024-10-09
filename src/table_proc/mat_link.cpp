@@ -6,18 +6,22 @@
 #include "../../inc/mat_assembler.h"
 #include "../../inc/mat_def.h"
 #include "../../inc/table_proc/mat_link.h"
+#include "../../inc/global_def.h"
 
 constexpr auto tcam_table_entry_cnt = 512;
 constexpr auto hash_table_entry_cnt = 1024;
 
 int mat_link::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     auto in_path = input_path + "tables_mat/";
+    #if !NO_PRE_PROC
+    in_path = input_path + "../tables_mat/";
+    #endif
     if (!std::filesystem::exists(in_path)) {
         std::cout << in_path << " dose not exist." << std::endl;
         return -1;
     }
 
-    auto file_name = p_asm->src_file_name() + ".link";
+    auto file_name = p_asm->src_file_stem() + ".link";
     if (!std::filesystem::exists(in_path + file_name)) {
         std::cout << file_name << " does not exists in path: " << in_path << std::endl;
         return -1;
@@ -27,7 +31,7 @@ int mat_link::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
         return rc;
     }
 
-    file_name = p_asm->src_file_name() + ".ad";
+    file_name = p_asm->src_file_stem() + ".ad";
     if (std::filesystem::exists(in_path + file_name)) {
         if (auto rc = output_normal_action_ids(otput_path, in_path + file_name)) {
             return rc;
@@ -190,7 +194,7 @@ int mat_link::generate_action_id(const std::string &in_path, const std::shared_p
     auto r1 = std::regex(start_end_line_pattern);
     auto r2 = std::regex(cluster_table_entry_line_pattern);
     auto r3 = std::regex(nop_line_pattern);
-    auto r4 = std::regex(comment_empty_line_p);
+    auto r4 = std::regex(COMMENT_EMPTY_LINE_P);
 
     while (std::getline(in_fstrm, line)) {
         auto m = std::smatch();

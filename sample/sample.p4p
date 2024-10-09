@@ -1,3 +1,8 @@
+.include "headers/test.p4h"
+
+.assign dst_mac_off 0
+.assign src_mac_off 6
+
 // Parser entry action
 NXTHL ISR{0:32}, META{0:8}, >>32, ->0;
 
@@ -16,7 +21,7 @@ NXTHL ISR{0:32}, META{0:8}, >>32, ->0;
 // Parser instructions
 #000:
     SHFT 64;
-    XCT  ISR{0: 16}, PHV{0: 2};
+    XCT  ISR{0: 16}, PHV{dst_mac_off: 2};
     MOV  0x000A, PHV{2: 2};
     //MOV  4294967296, PHV{2: 2};
     MOV  0x9100, PHV{4 : 2};
@@ -40,49 +45,5 @@ NXTHL ISR{0:32}, META{0:8}, >>32, ->0;
     PCSUM ;
     NXTHL ISR{5:23}, ->11;
 
-#013:
-    R32XCT ISR{16: 16}, PHV{6: 2};
-    SHFT 32;
-    COPY META[CALC_RSLT], PHV{10: 4};
-    NXTH ->11;
-    COPYL META[SM_DATA3], META{2: 8};
-
-#011:
-    SHFT 32, CSUM;
-    ADDU ISR{0:16}, 0x1010, PHV{8:2} ;
-    ADDU ISR{0:16}, 65535, PHV{8:2} ;
-    SUBU TMP { 0 : 16 } , TMP, TMP;
-    ADDU TMP{16: 16}, 0x0101, META{0: 4};
-    NXTH ->31;
-    SUBUL ISR{0: 32} , TMP, TMP;
-
-    SUBU TMP { 0 : 16 } , TMP, TMP;
-    ADDU TMP{16: 16}, 0x0101, META{0: 4};
-    NXTHL META{0 : 40}, ->31;
-
-#010:
-    LOCK 0X101010;
-    ULCK ;
-    NOP ;
-    PCSUM ;
-    //PCRC16L ;
-    PCRC32 ;
-
-    //CSET POLY, 1234;
-    CSET INIT, 0x1234;
-    CSET CTRL, 0b00010101, 0x0;
-
-    SHFT 128, PHV[256];
-    NXTH ->8;
-    HCSUMM0L ISR{0:32}, 0X12345678;
-
-#008:
-    RSM16   0x100010001, 4, 1;
-    RSM32 0x100010001, 3;
-    NXTH ->13;
-    RSM32L 0x100010008, 7, 0;
-
-    SHFT 32;
-    COPY META[CALC_RSLT], PHV{10: 4};
-    NXTH ->11;
-    COPYL META[SM_DATA3], META{2: 8};
+.import "packages/sample_1.p4p"
+.import "packages/sample_2.p4p"

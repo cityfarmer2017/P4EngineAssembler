@@ -1,0 +1,5 @@
+// PHV offset definition
+.assign ip_header_off 16
+
+// META offset definition
+.assign test_off 2

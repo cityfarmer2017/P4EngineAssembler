@@ -30,10 +30,19 @@ class parser_assembler : public assembler {
     friend class match_actionid;
 
  public:
-    #if !WITHOUT_SUB_MODULES
-    explicit parser_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
+    #if !NO_TBL_PROC && !NO_PRE_PROC
+    parser_assembler(std::unique_ptr<table> tbl, const std::shared_ptr<preprocessor> &pre, const std::string &fname)
+        : assembler(std::move(tbl), pre, fname) {}
+    #elif !NO_TBL_PROC
+    explicit parser_assembler(std::unique_ptr<table> tbl, const std::string &fname)
+        : assembler(std::move(tbl), fname) {}
+    #elif !NO_PRE_PROC
+    explicit parser_assembler(const std::shared_ptr<preprocessor> &pre, const std::string &fname)
+        : assembler(pre, fname) {}
+    #else
+    explicit parser_assembler(const std::string &fname) : assembler(fname) {}
     #endif
-    parser_assembler() = default;
+    parser_assembler() = delete;
     virtual ~parser_assembler() = default;
 
     parser_assembler(const parser_assembler&) = delete;

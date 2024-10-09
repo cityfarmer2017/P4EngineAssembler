@@ -19,8 +19,9 @@ export SRC_DIR INC_DIR
 
 CC := g++
 CCFLAGS := ${DBG_FLAG}
-CCFLAGS += ${SUB_FLAG}
-CCFLAGS += -g -Wall# -DDEBUG
+CCFLAGS += ${TBL_FLAG}
+CCFLAGS += ${PRE_FLAG}
+CCFLAGS += -g -Wall
 export CC CCFLAGS
 
 .PHONY : all clean dist-clean

@@ -6,9 +6,9 @@
 #include <memory>
 #include <set>
 #include <stack>
-#include "parser_def.h"  // NOLINT [build/include_subdir]
-#include "parser_assembler.h"  // NOLINT [build/include_subdir]
-#if !WITHOUT_SUB_MODULES
+#include "../inc/parser_def.h"
+#include "../inc/parser_assembler.h"
+#if !NO_TBL_PROC
 #include "table_proc/match_actionid.h"
 #endif
 
@@ -372,7 +372,7 @@ int parser_assembler::process_state_no_line(const string &line, const string &pa
     const regex r(pattern);
     smatch m;
     if (!regex_match(line, m, r)) {
-        cout << "state no line #" << file_line_idx << " match error.\n\t" << line << endl;
+        cout << "state no line #" << src_file_line_idx() << " match error.\n\t" << line << endl;
         return -1;
     }
     auto state_no = stoul(m.str(1));
@@ -407,7 +407,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
     machine_code mcode;
     if (!cmd_opcode_map.count(name)) {
-        std::cout << "ERROR: line #" << file_line_idx << "\n\t";
+        std::cout << "ERROR: line #" << src_file_line_idx() << "\n\t";
         std::cout << "no opcode match this instruction name - " << name << std::endl;
         return -1;
     }
@@ -415,7 +415,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
     smatch m;
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val64))) {
-        cout << "regex match failed with line #" << file_line_idx << ":\n\t" << line << endl;
+        print_line_unmatch_message(line);
         return -1;
     }
 
@@ -432,7 +432,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         }
 
         if (stoull(m.str(1), nullptr, 0) > std::numeric_limits<std::uint32_t>::max()) {
-            cout << "imm32 value exceeds limit.\n\tline #" << file_line_idx << " : " << line << endl;
+            cout << "imm32 value exceeds limit.\n\tline #" << src_file_line_idx() << " : " << line << endl;
             return -1;
         }
 
@@ -448,7 +448,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
 
     case 0b10101:  // ADDU / SUBU
         if (auto rc = compose_addu_subu(name, m, mcode)) {
-            cout << "imm16 value exceeds limit.\n\tline #" << file_line_idx << " : " << line << endl;
+            cout << "imm16 value exceeds limit.\n\tline #" << src_file_line_idx() << " : " << line << endl;
             return rc;
         }
         break;
@@ -581,8 +581,11 @@ int parser_assembler::process_extra_data(const string &in_fname, const string &o
     if (auto rc = output_entry_code(ot_fname)) {
         return rc;
     }
-    #if !WITHOUT_SUB_MODULES
-    src_fname = std::filesystem::path(in_fname).stem();
+    #if !NO_TBL_PROC
+    if (p_tbl == nullptr) {
+        std::cout << "ERROR: table class instantiation failed." << std::endl;
+        return -1;
+    }
     if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
         return rc;
     }
@@ -698,25 +701,25 @@ const str_u64_map parser_assembler::cmd_opcode_map = {
 };
 
 const u64_regex_map parser_assembler::opcode_regex_map = {
-    {0b00001, regex(string(g_normal_line_prefix_p) + P_00001 + g_normal_line_posfix_p)},
-    {0b00011, regex(string(g_normal_line_prefix_p) + P_00010_00011 + g_normal_line_posfix_p)},
-    {0b00010, regex(string(g_normal_line_prefix_p) + P_00010_00011 + g_normal_line_posfix_p)},
-    {0b10101, regex(string(g_normal_line_prefix_p) + P_10101 + g_normal_line_posfix_p)},
-    {0b10100, regex(string(g_normal_line_prefix_p) + P_10100 + g_normal_line_posfix_p)},
-    {0b00111, regex(string(g_normal_line_prefix_p) + P_00111 + g_normal_line_posfix_p)},
-    {0b00101, regex(string(g_normal_line_prefix_p) + P_00101_00110 + g_normal_line_posfix_p)},
-    {0b00110, regex(string(g_normal_line_prefix_p) + P_00101_00110 + g_normal_line_posfix_p)},
-    {0b01000, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
-    {0b00100, regex(string(g_normal_line_prefix_p) + P_00100 + g_normal_line_posfix_p)},
-    {0b01001, regex(string(g_normal_line_prefix_p) + P_01001 + g_normal_line_posfix_p)},
-    {0b01100, regex(string(g_normal_line_prefix_p) + P_01100 + g_normal_line_posfix_p)},
-    {0b01011, regex(string(g_normal_line_prefix_p) + P_01010_01011 + g_normal_line_posfix_p)},
-    {0b01010, regex(string(g_normal_line_prefix_p) + P_01010_01011 + g_normal_line_posfix_p)},
-    {0b01111, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
-    {0b01110, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
-    {0b01101, regex(string(g_normal_line_prefix_p) + P_01000_01101_01110_01111 + g_normal_line_posfix_p)},
-    {0b10000, regex(string(g_normal_line_prefix_p) + P_10000 + g_normal_line_posfix_p)},
-    {0b10001, regex(string(g_normal_line_prefix_p) + P_10001 + g_normal_line_posfix_p)},
-    {0b10011, regex(string(g_normal_line_prefix_p) + P_10011 + g_normal_line_posfix_p)},
-    {0b10010, regex(string(g_normal_line_prefix_p) + P_10010 + g_normal_line_posfix_p)}
+    {0b00001, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00001 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00011, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00010_00011 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00010, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00010_00011 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10101 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10100 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00111, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00111 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00101_00110 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00110, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00101_00110 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b01000, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01000_01101_01110_01111 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00100 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b01001, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01001 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b01100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01100 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b01011, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01010_01011 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b01010, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01010_01011 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b01111, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01000_01101_01110_01111 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b01110, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01000_01101_01110_01111 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b01101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01000_01101_01110_01111 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10000, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10000 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10001, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10001 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10011, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10011 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10010, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10010 + INSTRUCTION_LINE_POSFIX_P)}
 };

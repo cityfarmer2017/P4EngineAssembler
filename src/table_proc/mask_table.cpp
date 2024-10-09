@@ -5,17 +5,21 @@
 #include <filesystem>
 #include "../../inc/deparser_assembler.h"
 #include "../../inc/table_proc/mask_table.h"
+#include "../../inc/global_def.h"
 
 constexpr auto MASK_LINE_LEN = 512UL;
 
 int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     auto in_path = input_path + "tables_deparser/";
+    #if !NO_PRE_PROC
+    in_path = input_path + "../tables_deparser/";
+    #endif
     if (!std::filesystem::exists(in_path)) {
         std::cout << "no 'tables_deparser' directory under current sourc code path: " << input_path << std::endl;
         return -1;
     }
 
-    auto file_name = p_asm->src_file_name() + ".msk";
+    auto file_name = p_asm->src_file_stem() + ".msk";
     if (!std::filesystem::exists(in_path + file_name)) {
         std::cout << file_name << " does not exists in path: " << in_path << std::endl;
         return -1;
@@ -24,7 +28,7 @@ int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     std::vector<std::string> mask_strings;
     auto in_file_strm = std::ifstream(in_path + file_name);
     auto line = std::string();
-    const auto r1 = std::regex(comment_empty_line_p);
+    const auto r1 = std::regex(COMMENT_EMPTY_LINE_P);
     const auto r2 = std::regex(mask_line_pattern);
     const auto r3 = std::regex(mask_off_len_pattern);
     while (std::getline(in_file_strm, line)) {

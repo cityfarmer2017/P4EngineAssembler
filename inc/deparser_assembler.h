@@ -18,10 +18,19 @@ class deparser_assembler : public assembler {
     friend class mask_table;
 
  public:
-    #if !WITHOUT_SUB_MODULES
-    explicit deparser_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
+    #if !NO_TBL_PROC && !NO_PRE_PROC
+    deparser_assembler(std::unique_ptr<table> tbl, const std::shared_ptr<preprocessor> &pre, const std::string &fname)
+        : assembler(std::move(tbl), pre, fname) {}
+    #elif !NO_TBL_PROC
+    explicit deparser_assembler(std::unique_ptr<table> tbl, const std::string &fname)
+        : assembler(std::move(tbl), fname) {}
+    #elif !NO_PRE_PROC
+    explicit deparser_assembler(const std::shared_ptr<preprocessor> &pre, const std::string &fname)
+        : assembler(pre, fname) {}
+    #else
+    explicit deparser_assembler(const std::string &fname) : assembler(fname) {}
     #endif
-    deparser_assembler() = default;
+    deparser_assembler() = delete;
     virtual ~deparser_assembler() = default;
 
     deparser_assembler(const deparser_assembler&) = delete;

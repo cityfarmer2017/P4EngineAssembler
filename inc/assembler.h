@@ -14,8 +14,13 @@
 #include <string>
 #include <memory>
 #include <utility>
-#if !WITHOUT_SUB_MODULES
+#include <filesystem>
+#include "../inc/global_def.h"
+#if !NO_TBL_PROC
 #include "table_proc/table.h"
+#endif
+#if !NO_PRE_PROC
+#include "pre_proc/preprocessor.h"
 #endif
 
 using std::string;
@@ -23,9 +28,8 @@ using std::vector;
 using std::regex;
 using std::smatch;
 
-constexpr auto comment_empty_line_p = R"(^\s*\/\/.*[\n\r]?$|^\s*$)";
-constexpr auto g_normal_line_prefix_p = R"(^\s*[A-Z\d+-]+\s+)";
-constexpr auto g_normal_line_posfix_p = R"(\s*;\s*(\/\/.*)?$)";
+constexpr auto INSTRUCTION_LINE_PREFIX_P = R"(^\s*[A-Z\d+-]+\s+)";
+constexpr auto INSTRUCTION_LINE_POSFIX_P = R"(\s*;\s*(\/\/.*)?$)";
 
 class assembler : public std::enable_shared_from_this<assembler> {
     friend class parser_assembler;
@@ -33,10 +37,19 @@ class assembler : public std::enable_shared_from_this<assembler> {
     friend class mat_assembler;
 
  public:
-    #if !WITHOUT_SUB_MODULES
-    explicit assembler(std::unique_ptr<table> tb) : p_tbl(std::move(tb)) {}
+    #if !NO_TBL_PROC && !NO_PRE_PROC
+    assembler(std::unique_ptr<table> tbl, const std::shared_ptr<preprocessor> &pre, const std::string &fname)
+        : p_tbl(std::move(tbl)), p_pre(pre), src_fname(fname) {}
+    #elif !NO_TBL_PROC
+    assembler(std::unique_ptr<table> tbl, const std::string &fname)
+        : p_tbl(std::move(tbl)), src_fname(fname) {}
+    #elif !NO_PRE_PROC
+    assembler(const std::shared_ptr<preprocessor> &pre, const std::string &fname)
+        : p_pre(pre), src_fname(fname) {}
+    #else
+    explicit assembler(const std::string &fname) : src_fname(fname) {}
     #endif
-    assembler() = default;
+    assembler() = delete;
     virtual ~assembler() = default;
 
     assembler(const assembler&) = delete;
@@ -44,14 +57,12 @@ class assembler : public std::enable_shared_from_this<assembler> {
     assembler& operator=(const assembler&) = delete;
     assembler& operator=(assembler&&) = delete;
 
+    static int handle(const std::filesystem::path&, std::string);
+
     int execute(const string&, const string&);
 
-    const string src_file_name() const {
-        #if !WITHOUT_SUB_MODULES
-        return src_fname;
-        #else
-        return "";
-        #endif
+    const string src_file_stem() const {
+        return std::filesystem::path(src_fname).stem().string();
     }
 
     static std::uint32_t xor_unit(const bool xor8_flg, const bool xor16_flg, const bool xor32_flg) {
@@ -83,10 +94,31 @@ class assembler : public std::enable_shared_from_this<assembler> {
         return false;
     }
 
-    #if !WITHOUT_SUB_MODULES
+    std::string src_file_name() const {
+        #if !NO_PRE_PROC
+        return p_pre->dst_cline_2_src_fline[src_fname + IR_STR + std::to_string(file_line_idx)].first;
+        #else
+        return src_fname;
+        #endif
+    }
+
+    std::uint16_t src_file_line_idx() const {
+        #if !NO_PRE_PROC
+        return p_pre->dst_cline_2_src_fline[src_fname + IR_STR + std::to_string(file_line_idx)].second;
+        #else
+        return file_line_idx;
+        #endif
+    }
+
+    #if !NO_TBL_PROC
     std::unique_ptr<table> p_tbl;
-    std::string src_fname;
     #endif
+
+    #if !NO_PRE_PROC
+    std::shared_ptr<preprocessor> p_pre;
+    #endif
+
+    std::string src_fname;
 
  private:
     static void print_mcode_line_by_line(std::ostream &os, const std::vector<std::uint64_t> &vec) {
@@ -103,9 +135,20 @@ class assembler : public std::enable_shared_from_this<assembler> {
         os << std::flush;
     }
 
+    void print_line_file_info(string line) {
+        line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+        std::cout << "line #" << src_file_line_idx() << " in file - " << src_file_name() << "\n\t";
+        std::cout << "\" " + line + " \""<< std::endl;
+    }
+
     void print_cmd_param_unmatch_message(const string &name, const string &line) {
-        std::cout << name + " doesn't match those parameters.\n\t";
-        std::cout << "line #" << file_line_idx << ": " << line << std::endl;
+        std::cout << name + " doesn't match those parameters, please check carefully.\n\t";
+        print_line_file_info(line);
+    }
+
+    void print_line_unmatch_message(string line) {
+        std::cout << "ERROR:\tline matching pattern.\n\t";
+        print_line_file_info(line);
     }
 
     std::ofstream dst_fstrm;

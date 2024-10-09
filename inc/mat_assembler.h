@@ -18,10 +18,19 @@ class mat_assembler : public assembler {
     friend class mat_link;
 
  public:
-    #if !WITHOUT_SUB_MODULES
-    explicit mat_assembler(std::unique_ptr<table> tb) : assembler(std::move(tb)) {}
+    #if !NO_TBL_PROC && !NO_PRE_PROC
+    mat_assembler(std::unique_ptr<table> tbl, const std::shared_ptr<preprocessor> &pre, const std::string &fname)
+        : assembler(std::move(tbl), pre, fname) {}
+    #elif !NO_TBL_PROC
+    explicit mat_assembler(std::unique_ptr<table> tbl, const std::string &fname)
+        : assembler(std::move(tbl), fname) {}
+    #elif !NO_PRE_PROC
+    explicit mat_assembler(const std::shared_ptr<preprocessor> &pre, const std::string &fname)
+        : assembler(pre, fname) {}
+    #else
+    explicit mat_assembler(const std::string &fname) : assembler(fname) {}
     #endif
-    mat_assembler() = default;
+    mat_assembler() = delete;
     virtual ~mat_assembler() = default;
 
     mat_assembler(const mat_assembler&) = delete;

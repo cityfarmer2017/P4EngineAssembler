@@ -3,8 +3,8 @@
  */
 #include <limits>
 #include <filesystem>
-#include "mat_assembler.h"  // NOLINT [build/include_subdir]
-#include "mat_def.h"  // NOLINT [build/include_subdir]
+#include "../inc/mat_assembler.h"
+#include "../inc/mat_def.h"
 
 using std::cout;
 using std::endl;
@@ -104,7 +104,7 @@ int mat_assembler::process_assist_line(const string &line) {
 
     if (m.str(1) == "start") {
         if (!start_end_stk.empty() && start_end_stk.back() != "end") {
-            std::cout << "line #" << file_line_idx << ": \n\t";
+            std::cout << "line #" << src_file_line_idx() << ": \n\t";
             std::cout << "a '.start' line shall be the initial line or succeeding a '.end' line." << std::endl;
             return -1;
         }
@@ -116,7 +116,7 @@ int mat_assembler::process_assist_line(const string &line) {
         }
     } else {
         if (start_end_stk.empty() || start_end_stk.back() != "start") {
-            std::cout << "line #" << file_line_idx << ": \n\t";
+            std::cout << "line #" << src_file_line_idx() << ": \n\t";
             std::cout << "a '.end' line shall be coupled with a '.start' line." << std::endl;
             return -1;
         }
@@ -142,20 +142,20 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
     }
 
     if (start_end_stk.size() / 2 < 6 && flags[LONG_FLG_IDX]) {
-        std::cout << "line #" << file_line_idx << ": " << line << "\n\t";
+        std::cout << "line #" << src_file_line_idx() << ": " << line << "\n\t";
         std::cout << "long instructions shall be located in ram_6-7 only." << std::endl;
         return -1;
     }
 
     if (start_end_stk.size() / 2 >= 6 && !flags[LONG_FLG_IDX]) {
-        std::cout << "line #" << file_line_idx << ": " << line << "\n\t";
+        std::cout << "line #" << src_file_line_idx() << ": " << line << "\n\t";
         std::cout << "normal instructions shall be located in ram_0-5 only." << std::endl;
         return -1;
     }
 
     machine_code mcode;
     if (!cmd_opcode_map.count(name)) {
-        std::cout << "ERROR: line #" << file_line_idx << "\n\t";
+        std::cout << "ERROR: line #" << src_file_line_idx() << "\n\t";
         std::cout << "no opcode match this instruction name - " << name << std::endl;
         return -1;
     }
@@ -170,7 +170,7 @@ int mat_assembler::line_process(const string &line, const string &name, const ve
 
     smatch m;
     if (!regex_match(line, m, opcode_regex_map.at(mcode.val64))) {
-        cout << "regex match failed with line: #" << file_line_idx << "\n\t" << line << endl;
+        print_line_unmatch_message(line);
         return -1;
     }
 
@@ -394,8 +394,11 @@ void mat_assembler::print_machine_code(void) {
 }
 
 int mat_assembler::process_extra_data(const string &in_fname, const string &ot_fname) {
-    #if !WITHOUT_SUB_MODULES
-    src_fname = std::filesystem::path(in_fname).stem();
+    #if !NO_TBL_PROC
+    if (p_tbl == nullptr) {
+        std::cout << "ERROR: table class instantiation failed." << std::endl;
+        return -1;
+    }
     if (auto rc = p_tbl->generate_table_data(shared_from_this())) {
         return rc;
     }
@@ -435,16 +438,16 @@ const str_u64_map mat_assembler::cmd_opcode_map = {
 };
 
 const u64_regex_map mat_assembler::opcode_regex_map = {
-    {0b00001, regex(string(g_normal_line_prefix_p) + P_00001 + g_normal_line_posfix_p)},
-    {0b00010, regex(string(g_normal_line_prefix_p) + P_00010 + g_normal_line_posfix_p)},
-    {0b00011, regex(string(g_normal_line_prefix_p) + P_00011 + g_normal_line_posfix_p)},
-    {0b00100, regex(string(g_normal_line_prefix_p) + P_00100 + g_normal_line_posfix_p)},
-    {0b00101, regex(string(g_normal_line_prefix_p) + P_00101 + g_normal_line_posfix_p)},
-    {0b00110, regex(string(g_normal_line_prefix_p) + P_00110_00111 + g_normal_line_posfix_p)},
-    {0b00111, regex(string(g_normal_line_prefix_p) + P_00110_00111 + g_normal_line_posfix_p)},
-    {0b10100, regex(string(g_normal_line_prefix_p) + P_10100 + g_normal_line_posfix_p)},
-    {0b10101, regex(string(g_normal_line_prefix_p) + P_10101 + g_normal_line_posfix_p)},
-    {0b10110, regex(string(g_normal_line_prefix_p) + P_10110 + g_normal_line_posfix_p)},
-    {0b10111, regex(string(g_normal_line_prefix_p) + P_10111_11000 + g_normal_line_posfix_p)},
-    {0b11000, regex(string(g_normal_line_prefix_p) + P_10111_11000 + g_normal_line_posfix_p)}
+    {0b00001, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00001 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00010, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00010 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00011, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00011 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00100 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00101 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00110, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00110_00111 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b00111, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00110_00111 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10100 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10101 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10110, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10110 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b10111, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10111_11000 + INSTRUCTION_LINE_POSFIX_P)},
+    {0b11000, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10111_11000 + INSTRUCTION_LINE_POSFIX_P)}
 };
