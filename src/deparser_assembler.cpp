@@ -123,7 +123,7 @@ static inline int compose_sndh_sndp_sndpc(const smatch &m, const machine_code &c
         mcode.op_00011.calc_mode = 1;
     } else if (m.str(6) == "CRC16") {
         mcode.op_00011.calc_mode = 2;
-    } else {  // m.str(6) == "CRC32"
+    } else if (m.str(6) == "CRC32") {
         mcode.op_00011.calc_mode = 3;
     }
     return 0;
