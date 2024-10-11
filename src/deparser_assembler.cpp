@@ -154,7 +154,7 @@ static inline int compose_seth_setl(const smatch &m, const machine_code &code) {
     return 0;
 }
 
-static inline int compose_add_addu(const smatch &m, const machine_code &code) {
+static inline int compose_add_addu(const std::string &name, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     if (m.str(1) == "COND") {
         mcode.op_01000.src_slct = 1;
@@ -165,8 +165,18 @@ static inline int compose_add_addu(const smatch &m, const machine_code &code) {
     } else {
         mcode.op_01000.src_off = stoul(m.str(2));
         mcode.op_01000.src_len = stoul(m.str(3));
-        mcode.op_01000.dst_off = stoul(m.str(4));
-        mcode.op_01000.dst_len = stoul(m.str(5));
+        if ((name == "ADDT" || name == "ADDTU") && !m.str(4).empty()) {
+            return -1;
+        }
+        if ((name == "ADD" || name == "ADDU") && m.str(4).empty()) {
+            return -1;
+        }
+        if (m.str(4).empty()) {
+            mcode.op_01000.dst_off = stoul(m.str(5));
+            mcode.op_01000.dst_len = stoul(m.str(6));
+        } else {
+            mcode.op_01000.dst_len = 0b1111;
+        }
         if (mcode.op_01000.dst_len <= mcode.op_01000.src_len) {
             return -1;
         }
@@ -430,9 +440,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         }
         break;
 
-    case 0b01000:  // ADDU
-    case 0b01001:  // ADD
-        if (auto rc = compose_add_addu(m, mcode)) {
+    case 0b01000:  // ADDU / ADDTU
+    case 0b01001:  // ADD / ADDT
+        if (auto rc = compose_add_addu(name, m, mcode)) {
             print_cmd_param_unmatch_message(name, line);
             return rc;
         }
@@ -584,7 +594,7 @@ inline void deparser_assembler::swap_previous(const std::uint32_t &mcode) {
 }
 
 const char* deparser_assembler::cmd_name_pattern =
-    R"((SNDM([PM])?|SND[HP]C?|MOVE|SET[HL]|ADDU?|CMPCTR?|ANDR?|ORR?|(CRC16|CRC32|CSUM)(M[AO])?|)"
+    R"((SNDM([PM])?|SND[HP]C?|MOVE|SET[HL]|ADDT?U?|CMPCTR?|ANDR?|ORR?|(CRC16|CRC32|CSUM)(M[AO])?|)"
     R"(XORR?(4|8|16|32)|HASHR?|[+-]{2}GET|GET[+-]{2}|LDC|COPY|MSKALL|MSKADDR|NOP|(J|BEZ)(R)?|RET|END))";
 
 const int deparser_assembler::sndm_flg_idx = 2;
@@ -601,7 +611,9 @@ const str_u32_map deparser_assembler::cmd_opcode_map = {
     {"SETH",     0b00110},
     {"SETL",     0b00111},
     {"ADDU",     0b01000},
+    {"ADDTU",    0b01000},
     {"ADD",      0b01001},
+    {"ADDT",     0b01001},
     {"CMPCT",    0b01010},
     {"CMPCTR",   0b01011},
     {"AND",      0b01100},
