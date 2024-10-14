@@ -8,8 +8,17 @@
 #include "../../inc/table_proc/mat_link.h"
 #include "../../inc/global_def.h"
 
-constexpr auto tcam_table_entry_cnt = 512;
-constexpr auto hash_table_entry_cnt = 1024;
+constexpr auto TCAM_ENTRY_CNT = 512;
+constexpr auto HASH_ENTRY_CNT = 1024;
+// constexpr auto LINE_ENTRY_CNT = 2048;
+
+inline std::uint16_t get_table_entry_cnt(char type) {
+    return type == 'T' ? TCAM_ENTRY_CNT :  HASH_ENTRY_CNT;
+}
+
+inline bool cluster_range_not_valid(std::uint8_t cluster1, std::uint8_t cluster2) {
+    return (cluster2 <= cluster1 || cluster2 - cluster1 >= 4);
+}
 
 int mat_link::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     auto in_path = input_path + "tables_mat/";
@@ -49,9 +58,17 @@ int mat_link::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
     return 0;
 }
 
-inline std::string get_cluter_table_string(std::uint32_t cluster, std::uint32_t table) {
+std::string mat_link::get_cluter_table_string(std::uint32_t cluster, std::uint32_t table, bool is_def) {
     auto strm = std::ostringstream();
-    strm << "cluster" << cluster << "_table" << table;
+    auto key = std::string();
+    if (linear_cluster_set.count(cluster) && !is_def) {
+        if (table % 2) {
+            table -= 1;
+        } else {
+            key = "_key_part";
+        }
+    }
+    strm << "cluster" << cluster << "_table" << table << key;
     return strm.str();
 }
 
@@ -109,7 +126,7 @@ int mat_link::output_normal_action_ids(const std::string &ot_path, const std::st
 
         auto cluster_id = std::get<0>(tp.first);
         auto table_id = std::get<1>(tp.first);
-        ot_path1 += get_cluter_table_string(cluster_id, table_id);
+        ot_path1 += get_cluter_table_string(cluster_id, table_id, false);
 
         std::uint16_t cluster_table = cluster_id;
         cluster_table <<= 8;
@@ -125,6 +142,9 @@ int mat_link::output_normal_action_ids(const std::string &ot_path, const std::st
             std::cout << "cannot open file: " << ot_path1 + ".txt" << std::endl;
             return -1;
         }
+        if (linear_cluster_set.count(cluster_id) && !(table_id % 2)) {
+            ot_fstrm << std::bitset<48>(0);
+        }
         for (auto it = ad_aid.crbegin(); it != ad_aid.crend(); ++it) {
             ot_fstrm << std::bitset<16>(*it);
         }
@@ -139,6 +159,9 @@ int mat_link::output_normal_action_ids(const std::string &ot_path, const std::st
         if (!ot_fstrm.is_open()) {
             std::cout << "cannot open file: " << ot_path1 + ".dat" << std::endl;
             return -1;
+        }
+        if (linear_cluster_set.count(cluster_id) && !(table_id % 2)) {
+            ad_aid.resize(ad_aid.size() + 3);
         }
         ot_fstrm.write(reinterpret_cast<const char*>(ad_aid.data()), sizeof(ad_aid[0]) * ad_aid.size());
         ot_fstrm.close();
@@ -226,7 +249,6 @@ int mat_link::generate_action_id(const std::string &in_path, const std::shared_p
                 std::cout << "any table linking line shall be located between a '.start' and a '.end'" << std::endl;
                 return -1;
             }
-
             auto line_strm = std::istringstream(line);
             auto sub_str = std::string();
             auto re = std::regex(cluster_table_entry_field_pattern);
@@ -236,7 +258,6 @@ int mat_link::generate_action_id(const std::string &in_path, const std::shared_p
                     std::cout << "does not match cluster_table_entry format." << std::endl;
                     return -1;
                 }
-
                 if (m.str(8).empty()) {
                     if (is_using_ad(p_asm)) {
                         std::cout << "line #" << file_line_idx << ": " << sub_str << "\n\t";
@@ -256,7 +277,6 @@ int mat_link::generate_action_id(const std::string &in_path, const std::shared_p
                     }
                 }
             }
-
             ++cur_line_idx;
         } else if (std::regex_match(line, r3)) {
             ++cur_line_idx;
@@ -265,14 +285,13 @@ int mat_link::generate_action_id(const std::string &in_path, const std::shared_p
             std::cout << "does not match." << std::endl;
             return -1;
         }
-
         ++file_line_idx;
     }
 
     return 0;
 }
 
-inline bool mat_link::is_using_ad(const std::shared_ptr<mat_assembler>& p_asm) {
+bool mat_link::is_using_ad(const std::shared_ptr<mat_assembler>& p_asm) {
     machine_code mcode;
     mcode.val64 = p_asm->ram_mcode_vec[cur_ram_idx][cur_line_idx];
     switch (mcode.op_00001.opcode) {
@@ -313,10 +332,12 @@ int mat_link::process_normal_action(const std::smatch &m) {
 
     if (!m.str(2).empty()) {
         auto cluster_idx2 = std::stoul(m.str(3));
-        if (auto rc = check_cluster_range(cluster_idx, cluster_idx2)) {
-            return rc;
+        if (cluster_range_not_valid(cluster_idx, cluster_idx2)) {
+            std::cout << "cluster range shall be ascending but not exceeding 4." << std::endl;
+            return -1;
         }
         for (auto x = cluster_idx; x <= cluster_idx2; ++x) {
+            insert_linear_cluster_set(table_type, x);
             if (!m.str(6).empty()) {
                 if (auto rc = assign_multi_table_action(x, table_type, table_idx, table_idx2, entries)) {
                     return rc;
@@ -328,6 +349,7 @@ int mat_link::process_normal_action(const std::smatch &m) {
             }
         }
     } else {
+        insert_linear_cluster_set(table_type, cluster_idx);
         if (!m.str(6).empty()) {
             return assign_multi_table_action(cluster_idx, table_type, table_idx, table_idx2, entries);
         } else {
@@ -368,7 +390,7 @@ std::vector<std::uint16_t> mat_link::get_table_entries(const std::smatch &m) {
 
 int mat_link::assign_single_table_action(std::uint8_t cluster, char type, std::uint8_t base, std::uint8_t table,
     const std::vector<std::uint16_t> &entries) {
-    auto cnt = type == 'T' ? tcam_table_entry_cnt : hash_table_entry_cnt;
+    auto cnt = get_table_entry_cnt(type);
     for (const auto &entry : entries) {
         auto idx = entry / cnt;
         if (table != base + idx) {
@@ -407,14 +429,6 @@ int mat_link::assign_multi_table_action(std::uint8_t cluster, char type, std::ui
     return 0;
 }
 
-inline int mat_link::check_cluster_range(std::uint8_t cluster1, std::uint8_t cluster2) {
-    if (cluster2 <= cluster1 || cluster2 - cluster1 >= 4) {
-        std::cout << "cluster range shall be ascending but not exceeding 4." << std::endl;
-        return -1;
-    }
-    return 0;
-}
-
 int mat_link::process_default_action(const std::smatch &m) {
     auto cluster_idx = std::stoul(m.str(1));
     auto table_idx = std::stoul(m.str(5));
@@ -426,8 +440,9 @@ int mat_link::process_default_action(const std::smatch &m) {
 
     if (!m.str(2).empty()) {
         auto cluster_idx2 = std::stoul(m.str(3));
-        if (auto rc = check_cluster_range(cluster_idx, cluster_idx2)) {
-            return rc;
+        if (cluster_range_not_valid(cluster_idx, cluster_idx2)) {
+            std::cout << "cluster range shall be ascending but not exceeding 4." << std::endl;
+            return -1;
         }
         for (auto x = cluster_idx; x <= cluster_idx2; ++x) {
             if (!m.str(6).empty()) {
@@ -470,7 +485,7 @@ int mat_link::assign_single_def_action(std::uint8_t cluster, std::uint8_t table)
     return 0;
 }
 
-inline int mat_link::assign_multi_def_action(std::uint8_t cluster, std::uint8_t table, std::uint8_t table2) {
+int mat_link::assign_multi_def_action(std::uint8_t cluster, std::uint8_t table, std::uint8_t table2) {
     if (table2 <= table) {
         std::cout << "table range shall be ascending." << std::endl;
         return -1;
@@ -486,7 +501,7 @@ inline int mat_link::assign_multi_def_action(std::uint8_t cluster, std::uint8_t 
 const char* mat_link::start_end_line_pattern = R"(^\.(start|end)(\s+\/\/.*)?[\n\r]?$)";
 const char* mat_link::nop_line_pattern = R"(^\s*nop\s*(\s+\/\/.*)?[\n\r]?$)";
 const char* mat_link::cluster_table_entry_line_pattern =
-    R"(^\s*\d+(-\d+)?_[TH]\d+(-\d+)?(_\d+((-\d+)|(,\d+)+)?)?)"
-    R"((\s*:\s*\d+(-\d+)?_[TH]\d+(-\d+)?(_\d+((-\d+)|(,\d+)+)?)?)*\s*$)";
+    R"(^\s*\d+(-\d+)?_[THL]\d+(-\d+)?(_\d+((-\d+)|(,\d+)+)?)?)"
+    R"((\s*:\s*\d+(-\d+)?_[THL]\d+(-\d+)?(_\d+((-\d+)|(,\d+)+)?)?)*\s*$)";
 const char* mat_link::cluster_table_entry_field_pattern =
-    R"(^\s*([0-9]|1[0-5])(-([0-9]|1[0-5]))?_([TH])([0-9])(-([0-9]))?(_(\d{1,5})((-(\d{1,5}))|(,\d{1,5})+)?)?\s*$)";
+    R"(^\s*([0-9]|1[0-5])(-([0-9]|1[0-5]))?_([THL])([0-9])(-([0-9]))?(_(\d{1,5})((-(\d{1,5}))|(,\d{1,5})+)?)?\s*$)";

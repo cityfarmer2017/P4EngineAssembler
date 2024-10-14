@@ -11,6 +11,7 @@
 #include <map>
 #include <cstdint>
 #include <vector>
+#include <unordered_set>
 #include "table.h"  // NOLINT
 
 using cluster_table_entry = std::tuple<std::uint8_t, std::uint8_t, std::uint16_t>;
@@ -42,14 +43,20 @@ class mat_link : public table {
     int assign_multi_table_action(std::uint8_t, char, std::uint8_t, std::uint8_t, const std::vector<std::uint16_t>&);
     int process_default_action(const std::smatch&);
     int assign_single_def_action(std::uint8_t, std::uint8_t);
-    inline int assign_multi_def_action(std::uint8_t, std::uint8_t, std::uint8_t);
-    inline int check_cluster_range(std::uint8_t, std::uint8_t);
-    inline bool is_using_ad(const std::shared_ptr<mat_assembler>&);
+    int assign_multi_def_action(std::uint8_t, std::uint8_t, std::uint8_t);
+    bool is_using_ad(const std::shared_ptr<mat_assembler>&);
+    std::string get_cluter_table_string(std::uint32_t, std::uint32_t, bool is_def = true);
+    void insert_linear_cluster_set(char type, std::uint8_t cluster_id) {
+        if (type == 'L') {
+            linear_cluster_set.emplace(cluster_id);
+        }
+    }
 
     std::uint16_t cur_line_idx{0};
     std::uint8_t cur_ram_idx{0};
     map_of_cluster_table_entry_2_action cluster_table_entry_2_ram_action;
     map_of_cluster_table_2_action cluster_table_2_ram_action;
+    std::unordered_set<std::uint8_t> linear_cluster_set;
 
     static const char* start_end_line_pattern;
     static const char* nop_line_pattern;

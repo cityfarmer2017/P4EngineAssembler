@@ -33,8 +33,8 @@ inline void print_help_information() {
     std::cout << BGREEN << "P4eAsm " << MAGENTA << "./\n\t";
     std::cout << BGREEN << "P4eAsm " << CYAN << "-h\n";
     std::cout << RESET << "Info:\n\t";
-    std::cout << BYELLOW << "source file extension - .p4p for parser, .p4d for deparser, .p4m for mat.\n\t";
-    std::cout << "destination file extension - .dat for binary format, .txt for plain text.\n\t";
+    std::cout << BYELLOW << "source file extensions - \".p4p\" for parser, .p4d for deparser, \".p4m\" for mat.\n\t";
+    std::cout << "destination file extensions - \".dat\" for binary format, \".txt\" for plain text.\n\t";
     std::cout << "if no \"path to destination\" provided, outcome will be in same place of source.\n\n";
     std::cout << std::flush;
 }
