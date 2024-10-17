@@ -7,6 +7,11 @@
 #include "../../inc/pre_proc/preprocessor.h"
 #include "../../inc/global_def.h"
 
+constexpr auto IMPORT_LINE_P = R"(^\.import\s+\"((\w+\/)?\w+(\.p4[pdm])?)\"\s*(\/\/.*)?[\n\r]?$)";
+constexpr auto INCLUDE_LINE_P = R"(^\.include\s+\"((\w+\/)?\w+\.p4h)\"\s*(\/\/.*)?[\n\r]?$)";
+constexpr auto ASSIGN_LINE_P = R"(^\.assign\s+(\w+)\s+(\d+|0[xX][0-9A-F]+)\s*(\/\/.*)?[\n\r]?$)";
+constexpr auto NORMAL_LINE_P = R"(^(.+[;:]|\.start|\.end)\s*(\/\/.*)?[\n\r]?$)";
+
 std::string replace_all(std::string str, const std::string &from, const std::string &to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {

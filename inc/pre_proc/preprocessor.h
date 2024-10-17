@@ -10,11 +10,6 @@
 #include <cstdint>
 #include <utility>
 
-constexpr auto IMPORT_LINE_P = R"(^\.import\s+\"((\w+\/)?\w+(\.p4[pdm])?)\"\s*(\/\/.*)?[\n\r]?$)";
-constexpr auto INCLUDE_LINE_P = R"(^\.include\s+\"((\w+\/)?\w+\.p4h)\"\s*(\/\/.*)?[\n\r]?$)";
-constexpr auto ASSIGN_LINE_P = R"(^\.assign\s+(\w+)\s+(\d+|0[xX][0-9A-F]+)\s*(\/\/.*)?[\n\r]?$)";
-constexpr auto NORMAL_LINE_P = R"(^(.+[;:]|\.start|\.end)\s*(\/\/.*)?[\n\r]?$)";
-
 using str_u16_pair = std::pair<std::string, std::uint16_t>;
 
 class preprocessor {

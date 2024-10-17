@@ -78,8 +78,7 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
         std::string line;
         std::size_t sz = 0;
         while (getline(in_file_strm, line)) {
-            line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
-            if (line.size() > 40) {
+            if (trim_all(line).size() > 40) {
                 std::cout << "ERROR: line is too long.\n\t" << line << std::endl;
                 return -1;
             }

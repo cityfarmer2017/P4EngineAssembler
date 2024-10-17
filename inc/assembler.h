@@ -137,9 +137,8 @@ class assembler : public std::enable_shared_from_this<assembler> {
     }
 
     void print_line_file_info(string line) {
-        line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
         std::cout << "line #" << src_file_line_idx() << " in file - " << src_file_name() << "\n\t";
-        std::cout << "\" " + line + " \""<< std::endl;
+        std::cout << "\" " + trim_ends(line) + " \""<< std::endl;
     }
 
     void print_cmd_param_unmatch_message(const string &name, const string &line) {

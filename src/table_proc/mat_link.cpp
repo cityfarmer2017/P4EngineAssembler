@@ -102,8 +102,7 @@ int mat_link::output_normal_action_ids(const std::string &ot_path, const std::st
                 std::cout << "ERROR: get line from " << ad_path << " !!!" << std::endl;
                 return -1;
             }
-            line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
-            if (line.size() > 20) {
+            if (trim_all(line).size() > 20) {
                 std::cout << "ERROR: line is too long.\n\t" << line << std::endl;
                 return -1;
             }
