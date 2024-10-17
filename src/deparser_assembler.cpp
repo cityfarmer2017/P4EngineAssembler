@@ -14,6 +14,13 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
+constexpr auto MAX_LINE_CNT = 1024UL;
+constexpr auto MAX_LINE_PER_FILE = 256UL;
+constexpr auto MAX_LINE_PER_BLOCK = 32UL;
+constexpr auto MAX_FILE_CNT = 4UL;
+constexpr auto MAX_BLOCK_CNT = 8UL;
+constexpr auto NOP_MCODE = 0b00000000000000000000000000011000UL;
+
 string deparser_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
     auto name = m.str(1);
 
@@ -171,7 +178,7 @@ static inline int compose_add_addu(const std::string &name, const smatch &m, con
         if ((name == "ADD" || name == "ADDU") && m.str(4).empty()) {
             return -1;
         }
-        if (m.str(4).empty()) {
+        if (!m.str(4).empty()) {
             mcode.op_01000.dst_off = stoul(m.str(5));
             mcode.op_01000.dst_len = stoul(m.str(6));
         } else {
@@ -385,6 +392,10 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         return -1;
     }
 
+    if (auto rc = align_mcode_per_file_block()) {
+        return rc;
+    }
+
     machine_code mcode;
     mcode.val64 = 0;
     if (!cmd_opcode_map.count(name)) {
@@ -530,7 +541,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             print_cmd_param_unmatch_message(name, line);
             return rc;
         }
+        #if !NO_TBL_PROC
         be_mask_table_necessary = name == "MSKADDR";
+        #endif
         break;
 
     case 0b11001:  // J / BEZ
@@ -547,6 +560,11 @@ int deparser_assembler::line_process(const string &line, const string &name, con
 
     default:
         break;
+    }
+
+    if (mcode_vec.size() >= MAX_LINE_CNT) {
+        std::cout << "ERROR: code lines exceed " << MAX_LINE_CNT << std::endl;
+        return -1;
     }
 
     mcode_vec.emplace_back(mcode.val32);
@@ -584,6 +602,106 @@ int deparser_assembler::process_extra_data(const string &in_fname, const string 
     }
     #endif
     (void)ot_fname;
+    return 0;
+}
+
+#if !NO_PRE_PROC
+inline void deparser_assembler::print_code_file_exceed_message() {
+    std::cout << "ERROR: one deparser source file shall contain " << MAX_LINE_PER_FILE;
+    std::cout << " lines of code at most.\n\t";
+    std::cout << cur_fname << std::endl;
+}
+
+inline void deparser_assembler::print_code_block_exceed_message() {
+    std::cout << "ERROR: one deparser source code block shall contain " << MAX_LINE_PER_BLOCK;
+    std::cout << " lines of code at most.\n\t";
+    std::cout << cur_fname << std::endl;
+}
+
+int deparser_assembler::inc_file_line_idx() {
+    if (cur_fname_2_line_idx[cur_fname] >= MAX_LINE_PER_FILE) {
+        print_code_file_exceed_message();
+        return -1;
+    }
+    ++cur_fname_2_line_idx[cur_fname];
+    if (cmd_opcode_map.at(prev_line_name) == 0b10101 || cmd_opcode_map.at(prev_line_name) == 0b11001) {
+        if (cur_fname_2_line_idx[cur_fname] >= MAX_LINE_PER_FILE) {
+            print_code_file_exceed_message();
+            return -1;
+        }
+        ++cur_fname_2_line_idx[cur_fname];
+    }
+    return 0;
+}
+
+int deparser_assembler::inc_block_line_idx() {
+    if (block_line_vec.back() >= MAX_LINE_PER_BLOCK) {
+        print_code_block_exceed_message();
+        return -1;
+    }
+    ++block_line_vec.back();
+    if (cmd_opcode_map.at(prev_line_name) == 0b10101 || cmd_opcode_map.at(prev_line_name) == 0b11001) {
+        if (block_line_vec.back() >= MAX_LINE_PER_BLOCK) {
+            print_code_block_exceed_message();
+            return -1;
+        }
+        ++block_line_vec.back();
+    }
+    return 0;
+}
+
+int deparser_assembler::switch_file() {
+    if (cur_fname_2_line_idx.size() >= MAX_FILE_CNT) {
+        std::cout << "ERROR: deparser source code could be splitted into " << MAX_FILE_CNT;
+        std::cout << " files at most." << std::endl;
+        return -1;
+    }
+    auto cur_fline = cur_fname_2_line_idx[cur_fname];
+    for (auto i = 0UL; i < MAX_LINE_PER_FILE - cur_fline; ++i) {
+        mcode_vec.emplace_back(NOP_MCODE);
+        cur_fname_2_line_idx[cur_fname];
+    }
+    cur_fname = src_file_name();
+    cur_fname_2_line_idx.emplace(cur_fname, 1);
+    block_line_vec.clear();
+    block_line_vec.emplace_back(1);
+    return 0;
+}
+
+int deparser_assembler::switch_block() {
+    if (block_line_vec.size() >= MAX_BLOCK_CNT) {
+        std::cout << "ERROR: deparser source file could be splitted into " << MAX_BLOCK_CNT;
+        std::cout << " blocks at most." << std::endl;
+        return -1;
+    }
+    for (auto i = 0UL; i < MAX_LINE_PER_BLOCK - block_line_vec.back(); ++i) {
+        mcode_vec.emplace_back(NOP_MCODE);
+        ++cur_fname_2_line_idx[cur_fname];
+    }
+    block_line_vec.emplace_back(1);
+    return 0;
+}
+#endif
+
+int deparser_assembler::align_mcode_per_file_block() {
+    #if !NO_PRE_PROC
+    if (cur_fname.empty()) {
+        cur_fname = src_file_name();
+        cur_fname_2_line_idx.emplace(cur_fname, 1);
+        block_line_vec.emplace_back(1);
+    } else if (cur_fname != src_file_name()) {
+        return switch_file();
+    } else {
+        if (auto rc = inc_file_line_idx()) {
+            return rc;
+        }
+        if (prev_line_name == "END") {
+            return switch_block();
+        } else {
+            return inc_block_line_idx();
+        }
+    }
+    #endif
     return 0;
 }
 

@@ -96,7 +96,7 @@ class assembler : public std::enable_shared_from_this<assembler> {
 
     std::string src_file_name() const {
         #if !NO_PRE_PROC
-        return p_pre->dst_cline_2_src_fline[src_fname + IR_STR + std::to_string(file_line_idx)].first;
+        return p_pre->dst_cline_2_src_fline[ir_fname_line_idx_str()].first;
         #else
         return src_fname;
         #endif
@@ -104,7 +104,7 @@ class assembler : public std::enable_shared_from_this<assembler> {
 
     std::uint16_t src_file_line_idx() const {
         #if !NO_PRE_PROC
-        return p_pre->dst_cline_2_src_fline[src_fname + IR_STR + std::to_string(file_line_idx)].second;
+        return p_pre->dst_cline_2_src_fline[ir_fname_line_idx_str()].second;
         #else
         return file_line_idx;
         #endif
@@ -115,10 +115,11 @@ class assembler : public std::enable_shared_from_this<assembler> {
     #endif
 
     #if !NO_PRE_PROC
+    std::string ir_fname_line_idx_str() const {
+        return src_fname + IR_STR + std::to_string(file_line_idx);
+    }
     std::shared_ptr<preprocessor> p_pre;
     #endif
-
-    std::string src_fname;
 
  private:
     static void print_mcode_line_by_line(std::ostream &os, const std::vector<std::uint64_t> &vec) {
@@ -152,6 +153,7 @@ class assembler : public std::enable_shared_from_this<assembler> {
     }
 
     std::ofstream dst_fstrm;
+    std::string src_fname;
     std::uint16_t file_line_idx{0};
 };
 

@@ -9,6 +9,7 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <map>
 #include "assembler.h"  // NOLINT [build/include_subdir]
 
 using str_u32_map = std::unordered_map<string, std::uint32_t>;
@@ -48,13 +49,30 @@ class deparser_assembler : public assembler {
     void print_machine_code(void) override;
     int process_extra_data(const string &, const string &) override;
 
+    int align_mcode_per_file_block();
+
     inline bool previous_not_mask(const string &) const;
     inline void swap_previous(const std::uint32_t &);
 
  private:
     std::vector<std::uint32_t> mcode_vec;
     std::string prev_line_name;
+
+    #if !NO_TBL_PROC
     bool be_mask_table_necessary{false};
+    #endif
+
+    #if !NO_PRE_PROC
+    std::string cur_fname;
+    std::map<std::string, std::uint16_t> cur_fname_2_line_idx;
+    std::vector<std::uint16_t> block_line_vec;
+    int inc_file_line_idx();
+    int inc_block_line_idx();
+    int switch_file();
+    int switch_block();
+    inline void print_code_file_exceed_message();
+    inline void print_code_block_exceed_message();
+    #endif
 
     static const char* cmd_name_pattern;
     static const int sndm_flg_idx;

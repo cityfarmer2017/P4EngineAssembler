@@ -73,8 +73,8 @@ HASHR META[128];
 END ;
 
 GET++ CNTR[0], 255, PHV{0:32}, LCK;
-++GET CNTR[0], 127, PHV{32:64};
-GET-- CNTR[0], PHV{0:32};
+++GET CNTR[0], 127, PHV{32:64}, ULK;
+GET-- CNTR[0], PHV{0:32}, LCK;
 --GET CNTR[0], PHV{32:64}, ULK;
 GET-- 64, PHV{0:32}, LCK;
 --GET PHV{32:64}, ULK;
@@ -109,7 +109,3 @@ RET ;
 SNDPC CRC32;
 
 END ;
-
-.import "packages/sample_1.p4d"
-.import "packages/sample_2.p4d"
-.import "packages/sample_3.p4d"

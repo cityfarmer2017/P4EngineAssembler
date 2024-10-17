@@ -19,6 +19,7 @@ using str_u16_pair = std::pair<std::string, std::uint16_t>;
 
 class preprocessor {
     friend class assembler;
+    friend class deparser_assembler;
 
  public:
     preprocessor() = default;
