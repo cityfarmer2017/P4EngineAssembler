@@ -299,9 +299,12 @@ static inline int compose_hcsum_hcrc(const vector<bool> &flags, const smatch &m,
     }
 }
 
-static inline void compose_alu_set(
+static inline int compose_alu_set(
     const string &name, const vector<bool> &flags, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
+    if (flags[LAST_FLG_IDX]) {
+        return -1;
+    }
     if (!flags[UNSIGNED_FLG_IDX]) {
         mcode.op_10000.sign_flg = 1;
     }
@@ -319,6 +322,7 @@ static inline void compose_alu_set(
     mcode.op_10000.imm40 = stoull(m.str(3), nullptr, 0);
     mcode.op_10000.offset = stoul(m.str(1));
     mcode.op_10000.length = stoul(m.str(2));
+    return 0;
 }
 
 static inline int compose_nxth(const smatch &m, const machine_code &code) {
@@ -352,8 +356,11 @@ static inline int compose_nxth(const smatch &m, const machine_code &code) {
     return 0;
 }
 
-static inline int compose_nxtp(const smatch &m, const machine_code &code) {
+static inline int compose_nxtp(const smatch &m, const vector<bool> &flags, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
+    if (!flags[LAST_FLG_IDX]) {
+        return -1;
+    }
     if (!m.str(4).empty() && m.str(5).empty()) {
         return -1;
     }
@@ -506,7 +513,10 @@ int parser_assembler::line_process(const string &line, const string &name, const
         break;
 
     case 0b10000:  // SNE(U) / SGT(U) / SLT(U) / SGE(U) / SLE(U)
-        compose_alu_set(name, flags, m, mcode);
+        if (auto rc = compose_alu_set(name, flags, m, mcode)) {
+            print_cmd_param_unmatch_message(name, line);
+            return rc;
+        }
         break;
 
     case 0b10001:  // NXTH
@@ -525,6 +535,10 @@ int parser_assembler::line_process(const string &line, const string &name, const
         break;
 
     case 0b10010:  // NXTD
+        if (!flags[LAST_FLG_IDX]) {
+            print_cmd_param_unmatch_message(name, line);
+            return -1;
+        }
         if (!m.str(1).empty()) {
             mcode.op_10010.shift_val = stoul(m.str(2));
         } {
@@ -534,7 +548,7 @@ int parser_assembler::line_process(const string &line, const string &name, const
         break;
 
     case 0b10011:  // NXTP
-        if (auto rc = compose_nxtp(m, mcode)) {
+        if (auto rc = compose_nxtp(m, flags, mcode)) {
             print_cmd_param_unmatch_message(name, line);
             return rc;
         } {
