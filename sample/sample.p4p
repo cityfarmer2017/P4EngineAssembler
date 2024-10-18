@@ -2,6 +2,7 @@
 
 .assign dst_mac_off 0
 .assign src_mac_off 6
+.assign init_state  000
 
 // Parser entry action
 NXTHL ISR{0:32}, META{0:8}, >>32, ->0;
@@ -19,7 +20,7 @@ NXTHL ISR{0:32}, META{0:8}, >>32, ->0;
     NXTDL ;
 
 // Parser instructions
-#000:
+#init_state:
     SHFT 64;
     XCT  ISR{0: 16}, PHV{dst_mac_off: 2};
     MOV  0x000A, PHV{2: 2};

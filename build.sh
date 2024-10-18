@@ -30,7 +30,7 @@ mv $bin_file $release_without_sub_dir;
 make clean
 make TBL_FLAG=-DNO_TBL_PROC;
 
-release_with_preproc_dir="$bin_dir/release_with_preproc";
+release_with_preproc_dir="$bin_dir/release_with_preproc_no_tblproc";
 release_with_preproc_file="$release_with_preproc_dir/$app_name";
 if [ ! -d $release_with_preproc_dir ]; then
     mkdir $release_with_preproc_dir
@@ -43,7 +43,7 @@ mv $bin_file $release_with_preproc_dir;
 make clean
 make PRE_FLAG=-DNO_PRE_PROC;
 
-release_with_tblproc_dir="$bin_dir/release_with_tblproc";
+release_with_tblproc_dir="$bin_dir/release_with_tblproc_no_preproc";
 release_with_tblproc_file="$release_with_tblproc_dir/$app_name";
 if [ ! -d $release_with_tblproc_dir ]; then
     mkdir $release_with_tblproc_dir
