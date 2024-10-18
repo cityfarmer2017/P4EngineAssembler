@@ -274,10 +274,10 @@ static inline void compose_hashr(const smatch &m, const machine_code &code) {
 
 static inline int compose_counter_ops(const string &name, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    if (!m.str(11).empty()) {
-        if (m.str(10) == "LCK") {
+    if (!m.str(10).empty()) {
+        if (m.str(11) == "LCK") {
             mcode.op_10101.lck_flg = 1;
-        } else {  // if (m.str(10) == "ULK")
+        } else {  // if (m.str(11) == "ULK")
             mcode.op_10101.ulk_flg = 1;
         }
     }

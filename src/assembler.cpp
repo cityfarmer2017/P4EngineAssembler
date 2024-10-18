@@ -202,9 +202,13 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
     while (getline(src_fstrm, line)) {
         ++file_line_idx;
 
-        const regex r2(R"(^)" + assist_line_pattern() + R"((\s+\/\/.*)?[\n\r]?$)");
+        if (line.back() == '\n' || line.back() == '\r') {
+            rtrim(line);
+        }
+
+        const regex r2(R"(^)" + assist_line_pattern() + R"((\s+\/\/.*)?$)");
         auto match_assist_line = regex_match(line, r2);
-        const regex r1(R"(^\s*)" + name_pattern() + R"(\s+.*;\s*(\/\/.*)?[\n\r]?$)");
+        const regex r1(R"(^\s*)" + name_pattern() + R"(\s+.*;\s*(\/\/.*)?$)");
         smatch m;
         if (!regex_match(line, m, r1) && !match_assist_line) {
             #if NO_PRE_PROC
@@ -214,17 +218,9 @@ int assembler::execute(const string &in_fname, const string &out_fname) {
             }
             #endif
 
-            while (line.back() == '\n' || line.back() == '\r') {
-                line.pop_back();
-            }
-
             print_line_unmatch_message(line);
 
             return -1;
-        }
-
-        while (line.back() == '\n' || line.back() == '\r') {
-            line.pop_back();
         }
 
         vector<bool> flags;
