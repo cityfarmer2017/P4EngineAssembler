@@ -633,12 +633,17 @@ int parser_assembler::output_entry_code(const string &ot_path) {
     return 0;
 }
 
-bool parser_assembler::state_chart_has_loop() {
+int parser_assembler::check_state_chart_valid() {
     auto state_line_sub_set = std::set<std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>>();
     auto state_line_sub_stk = std::stack<std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>>();
     auto reach_end = false;
 
     for (auto state = init_state; ;) {
+        if (!state_line_sub_map.count(state)) {
+            std::cout << "ERROR: sub state #" << std::setw(3) << std::setfill('0') << state;
+            std::cout << " does not exist!!!" << std::endl;
+            return -1;
+        }
         for (const auto &line_sub : state_line_sub_map.at(state)) {
             if (line_sub.second == END_STATE_NO) {
                 reach_end = true;
@@ -646,7 +651,8 @@ bool parser_assembler::state_chart_has_loop() {
             }
             auto state_line_sub = std::make_tuple(state, line_sub.first, line_sub.second);
             if (state_line_sub_set.count(state_line_sub)) {
-                return true;
+                std::cout << "ERROR: state chart has loop, please check!!!" << std::endl;
+                return -1;
             }
             state_line_sub_set.emplace(state_line_sub);
             state_line_sub_stk.emplace(state_line_sub);
@@ -668,7 +674,7 @@ bool parser_assembler::state_chart_has_loop() {
         state = std::get<2>(state_line_sub_stk.top());
     }
 
-    return false;
+    return 0;
 }
 
 const char* parser_assembler::cmd_name_pattern =

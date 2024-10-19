@@ -90,8 +90,8 @@ class assembler : public std::enable_shared_from_this<assembler> {
     virtual void close_output_file(void) {
         dst_fstrm.close();
     }
-    virtual bool state_chart_has_loop() {
-        return false;
+    virtual int check_state_chart_valid() {
+        return 0;
     }
 
     std::string src_file_name() const {

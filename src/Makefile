@@ -28,7 +28,7 @@ $(TEMP_DIRS) :
 ifneq (,$(and $(findstring $(NO_TBL_PROC),$(TBL_FLAG)),$(findstring $(NO_PRE_PROC),$(PRE_FLAG))))
 
 $(BIN_DIR)/$(APP_NAME) : $(OBJECTS)
-	@echo "\e[32m""Linking executable: $(BIN_DIR)/$(APP_NAME) without sub modules included.""\e[0m"
+	@echo "\e[32m""Linking executable: $(BIN_DIR)/$(APP_NAME) without sub module included.""\e[0m"
 	$(CC) $(CCFLAGS) -o $@ $(OBJECTS)
 
 else # ifneq (,$(and $(findstring $(NO_TBL_PROC),$(TBL_FLAG)),$(findstring $(NO_PRE_PROC),$(PRE_FLAG))))
@@ -46,7 +46,7 @@ SUB_OBJECTS += $(SUB2_SRC_FILES:$(SRC_DIR)/$(SUB2_MODULE)/%.cpp=$(OBJ_DIR)/$(SUB
 endif
 
 $(BIN_DIR)/$(APP_NAME) : $(OBJECTS) $(SUB_OBJECTS)
-	@echo "\e[32m""Linking executable: $(BIN_DIR)/$(APP_NAME) with sub modules included.""\e[0m"
+	@echo "\e[32m""Linking executable: $(BIN_DIR)/$(APP_NAME) with $(SUB_MODULES) included.""\e[0m"
 	$(CC) $(CCFLAGS) -o $@ $(OBJECTS) $(SUB_OBJECTS)
 
 endif # ifneq (,$(and $(findstring $(NO_TBL_PROC),$(TBL_FLAG)),$(findstring $(NO_PRE_PROC),$(PRE_FLAG))))
