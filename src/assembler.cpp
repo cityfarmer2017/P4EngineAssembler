@@ -147,14 +147,7 @@ std::string pre_processed_path(const std::filesystem::path &in_path) {
 int assembler::handle(const std::filesystem::path &in_path, std::string dst_path) {
     auto src_path = in_path.string();
     #if !NO_PRE_PROC
-    auto p_preproc = std::make_shared<preprocessor>();
-    if (p_preproc == nullptr) {
-        std::cout << "ERROR: preprocessor instantiation failed." << std::endl;
-        return -1;
-    }
-    if (auto rc = p_preproc->handle(in_path)) {
-        return rc;
-    }
+    auto p_preproc = execute_pre_process(in_path);
     src_path = pre_processed_path(in_path);
     #endif
 

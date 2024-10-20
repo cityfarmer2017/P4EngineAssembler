@@ -59,6 +59,21 @@ class assembler : public std::enable_shared_from_this<assembler> {
 
     static int handle(const std::filesystem::path&, std::string);
 
+    #if !NO_PRE_PROC
+    static std::shared_ptr<preprocessor> execute_pre_process(const std::filesystem::path &in_path) {
+        auto p_preproc = std::make_unique<preprocessor>();
+        if (p_preproc == nullptr) {
+            std::cout << "ERROR: preprocessor instantiation failed." << std::endl;
+            return nullptr;
+        }
+        if (p_preproc->handle(in_path)) {
+            std::cout << "ERROR: preprocessor execution failed." << std::endl;
+            return nullptr;
+        }
+        return std::move(p_preproc);
+    }
+    #endif
+
     int execute(const string&, const string&);
 
     const string src_file_stem() const {

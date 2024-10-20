@@ -24,18 +24,26 @@ constexpr auto BCYAN =      "\033[1m\033[36m";
 constexpr auto BWHITE =     "\033[1m\033[37m";
 
 inline void print_help_information() {
-    std::cout << "Usage:\n\t";
-    std::cout << BGREEN << "P4eAsm " << MAGENTA << "<path-to-source>" << RED << " <path-to-destination>\n\t";
-    std::cout << BGREEN << "P4eAsm " << MAGENTA << "<path-to-source>\n\t";
-    std::cout << BGREEN << "P4eAsm " << CYAN << "<-h/--help>\n";
-    std::cout << RESET << "Examples:\n\t";
-    std::cout << BGREEN << "P4eAsm " << MAGENTA << "./sample.p4p" << RED << " ./dst\n\t";
-    std::cout << BGREEN << "P4eAsm " << MAGENTA << "./\n\t";
-    std::cout << BGREEN << "P4eAsm " << CYAN << "-h\n";
-    std::cout << RESET << "Info:\n\t";
-    std::cout << BYELLOW << "source file extensions - \".p4p\" for parser, .p4d for deparser, \".p4m\" for mat.\n\t";
-    std::cout << "destination file extensions - \".dat\" for binary format, \".txt\" for plain text.\n\t";
-    std::cout << "if no \"path to destination\" provided, outcome will be in same place of source.\n\n";
+    std::cout << "Usage:\n";
+    std::cout << BGREEN << "\tP4eAsm " << CYAN << "<-h/--help>\n";
+    std::cout << BGREEN << "\tP4eAsm " << MAGENTA << "<path-to-source>" << BLUE << " <path-to-destination>\n";
+    std::cout << BGREEN << "\tP4eAsm " << MAGENTA << "<path-to-source>\n";
+    #if !NO_PRE_PROC
+    std::cout << BGREEN << "\tP4eAsm " << BWHITE << "<-i>" << MAGENTA << " <path-to-source>\n";
+    #endif
+    std::cout << RESET << "Examples:\n";
+    std::cout << BGREEN << "\tP4eAsm " << CYAN << "-h\n";
+    std::cout << BGREEN << "\tP4eAsm " << MAGENTA << "./sample.p4p" << BLUE << " ./dst\n";
+    std::cout << BGREEN << "\tP4eAsm " << MAGENTA << "./\n";
+    #if !NO_PRE_PROC
+    std::cout << BGREEN << "\tP4eAsm " << BWHITE << "-i" << MAGENTA << " ./\n";
+    #endif
+    std::cout << RESET << "Info:\n";
+    std::cout << BYELLOW << "\t\"path-to-source\" is always required, \"path-to-destination\" is optional.\n";
+    std::cout << "\tif no \"path to destination\" provided, outcome will be in same place of source.\n";
+    #if !NO_PRE_PROC
+    std::cout << "\twith \"-i\" option, generate only intermediate files in same place of source.\n";
+    #endif
     std::cout << std::flush;
 }
 
@@ -46,18 +54,33 @@ int main(int argc, char* argv[]) {
             return 0;
         }
     } else if (argc != 3) {
+        std::cout << BRED << "ERROR: argument count!\n" << RESET;
         print_help_information();
         return -1;
     }
 
+    #if !NO_PRE_PROC
+    if (string(argv[1]) == "-i") {
+        if (!std::filesystem::exists(argv[2])) {
+            std::cout << BRED << "ERROR: the path to source file(s) dose not exist.\n" << RESET;
+            print_help_information();
+            return -1;
+        }
+        if (nullptr == assembler::execute_pre_process(argv[2])) {
+            return -1;
+        }
+        return 0;
+    }
+    #endif
+
     if (!std::filesystem::exists(argv[1])) {
-        std::cout << "the path to source file(s) dose not exists." << std::endl;
+        std::cout << BRED << "ERROR: the path to source file(s) dose not exist.\n" << RESET;
         print_help_information();
         return -1;
     }
 
     if (argc == 3 && std::filesystem::exists(argv[2]) && !std::filesystem::is_directory(argv[2])) {
-        std::cout << "the 2nd argument must be a directory path to destination files, otherwise empty." << std::endl;
+        std::cout << BRED << "ERROR: the path to destination must be a directory, otherwise empty.\n" << RESET;
         print_help_information();
         return -1;
     }
