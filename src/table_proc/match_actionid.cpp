@@ -41,7 +41,7 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
     auto p_parser_asm = std::dynamic_pointer_cast<parser_assembler>(p_asm);
 
     for (const auto &entry : std::filesystem::recursive_directory_iterator(src_dir)) {
-        const std::regex r(R"(^(\w+)_\d{3}.tcam$)");
+        const std::regex r(R"(^(\w+)_(\d{3}).tcam$)");
         std::smatch m;
         auto str = entry.path().filename().string();
         if (!regex_match(str, m, r)) {
@@ -49,6 +49,9 @@ int match_actionid::generate_sram_data(const std::string &src_dir, const std::sh
             return -1;
         } else if (m.str(1) != p_parser_asm->src_file_stem()) {
             continue;
+        } else if (!p_parser_asm->state_line_sub_map.count(std::stoul(m.str(2)))) {
+            std::cout << "tcam file does not match state no." << std::endl;
+            return -1;
         } else {
             tcam_file_paths.emplace(entry.path());
         }
