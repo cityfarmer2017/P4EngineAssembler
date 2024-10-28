@@ -138,11 +138,11 @@ static inline int compose_sndh_sndp_sndpc(const smatch &m, const machine_code &c
 
 static inline int compose_seth_setl(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    if (m.str(1) == "COND") {
+    if (m.str(1) == "CNDR") {
         mcode.op_00110.dst_slct = 1;
-    } else if (m.str(1) == "POFF") {
+    } else if (m.str(1) == "OFFR") {
         mcode.op_00110.dst_slct = 2;
-    } else if (m.str(1) == "PLEN") {
+    } else if (m.str(1) == "LENR") {
         mcode.op_00110.dst_slct = 3;
     } else if (m.str(1) == "POLY") {
         mcode.op_00110.dst_slct = 4;
@@ -163,15 +163,15 @@ static inline int compose_seth_setl(const smatch &m, const machine_code &code) {
 
 static inline int compose_add_addu(const std::string &name, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    if (m.str(1) == "COND") {
+    if (m.str(1) == "CNDR") {
         mcode.op_01000.src_slct = 1;
-    } else if (m.str(1) == "POFF") {
+    } else if (m.str(1) == "OFFR") {
         mcode.op_01000.src_slct = 2;
-    } else if (m.str(1) == "PLEN") {
+    } else if (m.str(1) == "LENR") {
         mcode.op_01000.src_slct = 3;
     } else {
         mcode.op_01000.src_off = stoul(m.str(2));
-        mcode.op_01000.src_len = stoul(m.str(3));
+        mcode.op_01000.src_len = stoul(m.str(3)) - 1;
         if ((name == "ADDT" || name == "ADDTU") && !m.str(4).empty()) {
             return -1;
         }
@@ -180,11 +180,11 @@ static inline int compose_add_addu(const std::string &name, const smatch &m, con
         }
         if (!m.str(4).empty()) {
             mcode.op_01000.dst_off = stoul(m.str(5));
-            mcode.op_01000.dst_len = stoul(m.str(6));
+            mcode.op_01000.dst_len = stoul(m.str(6)) - 1;
         } else {
             mcode.op_01000.dst_len = 0b1111;
         }
-        if (mcode.op_01000.dst_len <= mcode.op_01000.src_len) {
+        if (mcode.op_01000.dst_len < mcode.op_01000.src_len) {
             return -1;
         }
     }
@@ -194,7 +194,7 @@ static inline int compose_add_addu(const std::string &name, const smatch &m, con
 static inline void compose_cmpct_and_or(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     mcode.op_01010.src_off = stoul(m.str(1));
-    mcode.op_01010.src_len = stoul(m.str(2));
+    mcode.op_01010.src_len = stoul(m.str(2)) - 1;
     mcode.op_01010.dst_off = stoul(m.str(3));
 }
 
@@ -230,7 +230,7 @@ static inline int compose_crc16_crc32_csum(
         if (m.str(4).empty()) {
             mcode.op_01110.len_ctrl = 1;
         } else {
-            mcode.op_01110.length = stoul(m.str(4));
+            mcode.op_01110.length = stoul(m.str(4)) - 1;
         }
     }
     if (flags[CALC_MASK_AND_FLG_IDX] || flags[CALC_MASK_OR_FLG_IDX]) {
@@ -245,7 +245,7 @@ static inline int compose_crc16_crc32_csum(
 static inline void compose_xor(const vector<bool> &flags, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     mcode.op_10001.src_off = stoul(m.str(1));
-    mcode.op_10001.src_len = stoul(m.str(2));
+    mcode.op_10001.src_len = stoul(m.str(2)) - 1;
     mcode.op_10001.calc_unit = assembler::xor_unit(flags[XOR8_FLG_IDX], flags[XOR16_FLG_IDX], flags[XOR32_FLG_IDX]);
     mcode.op_10001.dst_slct = m.str(3) == "PHV";
     mcode.op_10001.dst_off = stoul(m.str(4));
@@ -261,7 +261,7 @@ static inline void compose_xorr(const vector<bool> &flags, const smatch &m, cons
 static inline void compose_hash(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     mcode.op_10011.src_off = stoul(m.str(1));
-    mcode.op_10011.src_len = stoul(m.str(2));
+    mcode.op_10011.src_len = stoul(m.str(2)) - 1;
     mcode.op_10011.dst_slct = m.str(3) == "PHV";
     mcode.op_10011.dst_off = stoul(m.str(4));
 }
