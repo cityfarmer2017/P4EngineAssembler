@@ -344,7 +344,7 @@ static inline int compose_j_bez(
         mcode.op_11001.target_2 =
             flags[JUMP_RELATIVE_FLG_IDX] ? std::stol(m.str(4), nullptr, 0) : stoul(m.str(4), nullptr, 0);
     }
-    if (!m.str(6).empty() && m.str(6) != "CONDR") {
+    if (!m.str(6).empty() && m.str(6) != "CNDR") {
         mcode.op_11001.src_slct = 1;
         auto src_off = stoul(m.str(8));
         if (m.str(7) == "8") {
