@@ -9,7 +9,7 @@
 
 constexpr auto IMPORT_LINE_P = R"(^\.import\s+\"((\w+\/)*\w+(\.p4[pdm])?)\"\s*(\/\/.*)?[\n\r]?$)";
 constexpr auto INCLUDE_LINE_P = R"(^\.include\s+\"((\w+\/)*\w+\.p4h)\"\s*(\/\/.*)?[\n\r]?$)";
-constexpr auto ASSIGN_LINE_P = R"(^\.assign\s+(\w+)\s+(\d+|0[xX][0-9A-F]+)\s*(\/\/.*)?[\n\r]?$)";
+constexpr auto ASSIGN_LINE_P = R"(^\.assign\s+(([a-z][a-z\d]*(_[a-z\d]+)*)+)\s+(\d+|0[xX][0-9A-Fa-f]+)\s*(\/\/.*)?[\n\r]?$)";
 constexpr auto NORMAL_LINE_P = R"(^(.+[;:]|\.start|\.end)\s*(\/\/.*)?[\n\r]?$)";
 
 std::string replace_all(std::string str, const std::string &from, const std::string &to) {
@@ -54,7 +54,7 @@ int preprocessor::process_imported_file(const std::filesystem::path &path,
 
         const auto re4 = std::regex(ASSIGN_LINE_P);
         if (std::regex_match(line, m, re4)) {
-            token_to_val[m.str(1)] = m.str(2);
+            token_to_val[m.str(1)] = m.str(4);
             continue;
         }
 
@@ -103,7 +103,7 @@ int preprocessor::process_included_file(const std::filesystem::path &path) {
             return -1;
         }
 
-        token_to_val[m.str(1)] = m.str(2);
+        token_to_val[m.str(1)] = m.str(4);
     }
 
     return 0;
@@ -172,7 +172,7 @@ int preprocessor::process_single_entry(const std::filesystem::path &path) {
 
         const auto re4 = std::regex(ASSIGN_LINE_P);
         if (std::regex_match(line, m, re4)) {
-            token_to_val[m.str(1)] = m.str(2);
+            token_to_val[m.str(1)] = m.str(4);
             continue;
         }
 

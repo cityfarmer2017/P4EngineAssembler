@@ -542,7 +542,9 @@ int deparser_assembler::line_process(const string &line, const string &name, con
             return rc;
         }
         #if !NO_TBL_PROC
-        be_mask_table_necessary = name == "MSKADDR";
+        if (!be_mask_table_necessary && name == "MSKADDR") {
+            be_mask_table_necessary = true;
+        }
         #endif
         break;
 

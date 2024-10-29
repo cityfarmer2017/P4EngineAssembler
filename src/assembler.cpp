@@ -148,6 +148,9 @@ int assembler::handle(const std::filesystem::path &in_path, std::string dst_path
     auto src_path = in_path.string();
     #if !NO_PRE_PROC
     auto p_preproc = execute_pre_process(in_path);
+    if (p_preproc == nullptr) {
+        return -1;
+    }
     src_path = pre_processed_path(in_path);
     #endif
 
