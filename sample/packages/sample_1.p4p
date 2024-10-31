@@ -1,7 +1,7 @@
 
 #013:
     R32XCT ISR{16: 16}, PHV{6: 2};
-    SHFT 32;
+    SHFT ; delay[1];
     COPY META[CALC_RSLT], PHV{10: 4};
     NXTH ->11;
     COPYL META[SM_DATA3], META{2: 8};
@@ -12,7 +12,7 @@
     ADDU ISR{0:16}, 65535, PHV{8:2} ;
     SUBU TMP { 0 : 16 } , TMP, TMP;
     ADDU TMP{16: 16}, 0x0101, META{0: 4};
-    NXTH ->31;
+    NXTH ->31; delay[1] ;
     SUBUL ISR{0: 32} , TMP, TMP;
 
     SUBU TMP { 0 : 16 } , TMP, TMP;

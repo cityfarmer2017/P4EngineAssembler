@@ -28,8 +28,8 @@ using std::vector;
 using std::regex;
 using std::smatch;
 
-constexpr auto INSTRUCTION_LINE_PREFIX_P = R"(^\s*[A-Z\d+-]+\s+)";
-constexpr auto INSTRUCTION_LINE_POSFIX_P = R"(\s*;\s*(\/\/.*)?$)";
+constexpr auto CODE_LINE_PREFIX_P = R"(^\s*[A-Z\d+-]+\s+)";
+constexpr auto CODE_LINE_POSFIX_P = R"(\s*;\s*(\/\/.*)?$)";
 
 class assembler : public std::enable_shared_from_this<assembler> {
     friend class parser_assembler;

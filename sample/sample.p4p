@@ -3,13 +3,14 @@
 .assign dst_mac_off 0
 .assign src_mac_off 6
 .assign init_state  000
+.assign all_1_mask  0xffffffff
 
 // Parser entry action
 NXTHL ISR{0:32}, META{0:8}, >>32, ->0;
 
 #031:
     HCRC16 TMP{8:8}, 0x88888888;
-    HCRC32 TMP{16:16}, 0xFFFFFFFF;
+    HCRC32 TMP{16:16}, all_1_mask; delay[1], defer[1]; // test
     HCSUM PHV{510:16}, 0xAAAAAAAA;
 
     SNE TCAM_KEY{0: 10}, 0x1234567890;

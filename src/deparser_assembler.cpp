@@ -14,6 +14,15 @@ using std::endl;
 using std::stoul;
 using std::stoull;
 
+constexpr auto OPTIONAL_DELAY1_P = R"((\s*;\s+delay\[\s*1\s*])?)";
+constexpr auto OPTIONAL_DEFER1_P = R"((\s*;\s+defer\[\s*1\s*])?)";
+constexpr auto OPTIONAL_DELAY4_P = R"((\s*;\s+delay\[\s*4\s*])?)";
+constexpr auto OPTIONAL_DEFER4_P = R"((\s*;\s+defer\[\s*4\s*])?)";
+constexpr auto OPTIONAL_BOTH1_OR_DFR1_P = R"((\s*;\s+(delay\[\s*1\s*]\s*,\s+)?defer\[\s*1\s*])?)";
+
+constexpr auto META_STARTOFFSET_R_POS = 672 / 4;
+constexpr auto META_LENGTH_R_POS = 688 / 4;
+
 constexpr auto MAX_LINE_CNT = 1024UL;
 constexpr auto MAX_LINE_PER_FILE = 256UL;
 constexpr auto MAX_LINE_PER_BLOCK = 32UL;
@@ -157,6 +166,9 @@ static inline int compose_seth_setl(const smatch &m, const machine_code &code) {
     if (stoul(m.str(3), nullptr, 0) > std::numeric_limits<std::uint16_t>::max()) {
         return -1;
     }
+    if (m.str(1) != "OFFR" && m.str(1) != "LENR" && !m.str(4).empty()) {
+        return -1;
+    }
     mcode.op_00110.value = stoul(m.str(3), nullptr, 0);  // heximal or decimal
     return 0;
 }
@@ -188,6 +200,9 @@ static inline int compose_add_addu(const std::string &name, const smatch &m, con
             return -1;
         }
     }
+    if (name != "ADDT" && name != "ADDTU" && m.str(1) != "OFFR" && m.str(1) != "LENR" && !m.str(7).empty()) {
+        return -1;
+    }
     return 0;
 }
 
@@ -209,6 +224,15 @@ static inline void compose_cmpctr_andr_orr(const smatch &m, const machine_code &
 
 static inline int compose_crc16_crc32_csum(
     const vector<bool> &flags, const smatch &m, const machine_code &code) {
+    if (m.str(1) == "PHV") {
+        if (!m.str(5).empty() && m.str(6).empty()) {
+            return -1;
+        }
+    } else {
+        if (!m.str(5).empty() && !m.str(6).empty()) {
+            return -1;
+        }
+    }
     auto &mcode = const_cast<machine_code&>(code);
     if (m.str(1) == "PLD") {
         mcode.op_01110.src_slct = 2;
@@ -332,7 +356,7 @@ static inline int compose_mskall_mskaddr(const string &name, const smatch &m, co
 static inline int compose_j_bez(
     const string &name, const vector<bool> &flags, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
-    if ((name == "J" && !m.str(3).empty())) {
+    if ((name == "J" && (!m.str(3).empty() || !m.str(9).empty()))) {
         return -1;
     }
     if (!flags[JUMP_RELATIVE_FLG_IDX] && (m.str(2) == "-" || m.str(5) == "-")) {
@@ -373,7 +397,7 @@ static inline int compose_j_bez(
     return 0;
 }
 
-static inline void compose_copy(const smatch &m, const machine_code &code) {
+static inline int compose_copy(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     if (m.str(1) == "META" && m.str(4) == "META") {
         mcode.op_10110.direction = 3;
@@ -382,9 +406,15 @@ static inline void compose_copy(const smatch &m, const machine_code &code) {
     } else if (m.str(1) == "PHV" && m.str(4) == "META") {
         mcode.op_10110.direction = 1;
     }
+    auto dst_off = stoul(m.str(5));
+    if ((m.str(4) != "META" || (dst_off != META_LENGTH_R_POS && dst_off != META_STARTOFFSET_R_POS))
+        && !m.str(6).empty()) {
+        return -1;
+    }
     mcode.op_10110.src_off = stoul(m.str(2));
     mcode.op_10110.length = stoul(m.str(3)) - 1;
-    mcode.op_10110.dst_off = stoul(m.str(5));
+    mcode.op_10110.dst_off = dst_off;
+    return 0;
 }
 
 int deparser_assembler::line_process(const string &line, const string &name, const vector<bool> &flags) {
@@ -533,7 +563,10 @@ int deparser_assembler::line_process(const string &line, const string &name, con
         break;
 
     case 0b10110:  // COPY
-        compose_copy(m , mcode);
+        if (auto rc = compose_copy(m , mcode)) {
+            print_cmd_param_unmatch_message(name, line);
+            return rc;
+        }
         break;
 
     case 0b10111:  // MSKALL / MSKADDR
@@ -768,33 +801,33 @@ const str_u32_map deparser_assembler::cmd_opcode_map = {
 };
 
 const u32_regex_map deparser_assembler::opcode_regex_map = {
-    {0b00001, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00001 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b00010, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00010_00011_00100 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b00011, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00010_00011_00100 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b00100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00010_00011_00100 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b00101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00101 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b00110, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00110_00111 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b00111, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_00110_00111 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b01000, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01000_01001 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b01001, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01000_01001 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b01010, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01010_01100_11100 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b01011, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01011_01101_11101 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b01100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01010_01100_11100 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b01101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01011_01101_11101 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b01110, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01110_01111_10000 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b01111, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01110_01111_10000 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b10000, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01110_01111_10000 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b10001, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10001_10011 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b10010, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10010_10100 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b10011, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10001_10011 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b10100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10010_10100 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b10101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10101 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b10110, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10110 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b10111, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_10111 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b11000, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_11000_11010_11011 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b11001, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_11001 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b11010, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_11000_11010_11011 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b11011, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_11000_11010_11011 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b11100, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01010_01100_11100 + INSTRUCTION_LINE_POSFIX_P)},
-    {0b11101, regex(string(INSTRUCTION_LINE_PREFIX_P) + P_01011_01101_11101 + INSTRUCTION_LINE_POSFIX_P)}
+    {0b00001, regex(string(CODE_LINE_PREFIX_P) + P_00001 + CODE_LINE_POSFIX_P)},
+    {0b00010, regex(string(CODE_LINE_PREFIX_P) + P_00010_00011_00100 + CODE_LINE_POSFIX_P)},
+    {0b00011, regex(string(CODE_LINE_PREFIX_P) + P_00010_00011_00100 + CODE_LINE_POSFIX_P)},
+    {0b00100, regex(string(CODE_LINE_PREFIX_P) + P_00010_00011_00100 + CODE_LINE_POSFIX_P)},
+    {0b00101, regex(string(CODE_LINE_PREFIX_P) + P_00101 + CODE_LINE_POSFIX_P)},
+    {0b00110, regex(string(CODE_LINE_PREFIX_P) + P_00110_00111 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
+    {0b00111, regex(string(CODE_LINE_PREFIX_P) + P_00110_00111 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
+    {0b01000, regex(string(CODE_LINE_PREFIX_P) + P_01000_01001 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
+    {0b01001, regex(string(CODE_LINE_PREFIX_P) + P_01000_01001 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
+    {0b01010, regex(string(CODE_LINE_PREFIX_P) + P_01010_01100_11100 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
+    {0b01011, regex(string(CODE_LINE_PREFIX_P) + P_01011_01101_11101 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
+    {0b01100, regex(string(CODE_LINE_PREFIX_P) + P_01010_01100_11100 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
+    {0b01101, regex(string(CODE_LINE_PREFIX_P) + P_01011_01101_11101 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
+    {0b01110, regex(string(CODE_LINE_PREFIX_P) + P_01110_01111_10000 + OPTIONAL_BOTH1_OR_DFR1_P + CODE_LINE_POSFIX_P)},
+    {0b01111, regex(string(CODE_LINE_PREFIX_P) + P_01110_01111_10000 + OPTIONAL_BOTH1_OR_DFR1_P + CODE_LINE_POSFIX_P)},
+    {0b10000, regex(string(CODE_LINE_PREFIX_P) + P_01110_01111_10000 + OPTIONAL_BOTH1_OR_DFR1_P + CODE_LINE_POSFIX_P)},
+    {0b10001, regex(string(CODE_LINE_PREFIX_P) + P_10001_10011 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
+    {0b10010, regex(string(CODE_LINE_PREFIX_P) + P_10010_10100 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
+    {0b10011, regex(string(CODE_LINE_PREFIX_P) + P_10001_10011 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
+    {0b10100, regex(string(CODE_LINE_PREFIX_P) + P_10010_10100 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
+    {0b10101, regex(string(CODE_LINE_PREFIX_P) + P_10101 + CODE_LINE_POSFIX_P)},
+    {0b10110, regex(string(CODE_LINE_PREFIX_P) + P_10110 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
+    {0b10111, regex(string(CODE_LINE_PREFIX_P) + P_10111 + CODE_LINE_POSFIX_P)},
+    {0b11000, regex(string(CODE_LINE_PREFIX_P) + P_11000_11010_11011 + CODE_LINE_POSFIX_P)},
+    {0b11001, regex(string(CODE_LINE_PREFIX_P) + P_11001 + OPTIONAL_DELAY4_P + CODE_LINE_POSFIX_P)},
+    {0b11010, regex(string(CODE_LINE_PREFIX_P) + P_11000_11010_11011 + CODE_LINE_POSFIX_P)},
+    {0b11011, regex(string(CODE_LINE_PREFIX_P) + P_11000_11010_11011 + CODE_LINE_POSFIX_P)},
+    {0b11100, regex(string(CODE_LINE_PREFIX_P) + P_01010_01100_11100 + CODE_LINE_POSFIX_P)},
+    {0b11101, regex(string(CODE_LINE_PREFIX_P) + P_01011_01101_11101 + CODE_LINE_POSFIX_P)}
 };
