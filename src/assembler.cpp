@@ -34,6 +34,9 @@ int process_single_file(const std::filesystem::path &in_path, std::string dst_di
 
     if (dst_dir.empty()) {
         dst_dir = src_dir;
+        #if !NO_PRE_PROC
+        dst_dir += "../";
+        #endif
     }
 
     if (dst_dir.back() != '/') {
