@@ -373,7 +373,7 @@ static inline int compose_nxtp(const smatch &m, const vector<bool> &flags, const
     if (!m.str(1).empty()) {
         mcode.op_10011.dest_phv_off = stoul(m.str(2));
         mcode.op_10011.ignored_byte_cnt = stoul(m.str(3));
-        mcode.op_10011.not_final_flg = 1;
+        // mcode.op_10011.not_final_flg = 1;
     }
     if (!m.str(5).empty()) {
         mcode.op_10010.shift_val = stoul(m.str(6));
