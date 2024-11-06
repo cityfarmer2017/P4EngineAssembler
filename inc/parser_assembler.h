@@ -92,6 +92,7 @@ class parser_assembler : public assembler {
     static const char* cmd_name_pattern;
     static const char* stateno_pattern;
     static const int l_idx;   // index of L sub-pattern for Last flag
+    static const int nf_idx;  // index of NF sub-pattern for not_final flag
     static const int u_idx;   // index of U sub-pattern for Unsigned flag
     static const int m0_idx;  // index of M0 sub-pattern for Mask to 0 flag
     static const int rvs_idx;

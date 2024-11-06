@@ -25,6 +25,7 @@ constexpr auto MAX_META_LEN = 1040;
 
 string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) const {
     auto l_flg = !m.str(l_idx).empty();
+    auto nf_flg = !m.str(nf_idx).empty();
     auto u_flg = !m.str(u_idx).empty();
     auto m0_flg = !m.str(m0_idx).empty();
     auto name = m.str(1);
@@ -42,6 +43,8 @@ string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) cons
         name = m.str(u_idx - 1);
     } else if (m0_flg) {
         name = m.str(m0_idx - 1);
+    } else if (nf_flg) {
+        name = m.str(1).substr(0, 4);
     }
 
     flags.emplace_back(l_flg);
@@ -49,6 +52,7 @@ string parser_assembler::name_matched(const smatch &m, vector<bool> &flags) cons
     flags.emplace_back(m0_flg);
     flags.emplace_back(rvs16_flg);
     flags.emplace_back(rvs32_flg);
+    flags.emplace_back(nf_flg);
 
     return name;
 }
@@ -58,8 +62,9 @@ constexpr auto UNSIGNED_FLG_IDX = 1;
 constexpr auto MASK0_FLG_IDX = 2;
 constexpr auto RVS16_FLG_IDX = 3;
 constexpr auto RVS32_FLG_IDX = 4;
-constexpr auto MATCH_STATE_NO_LINE_FLG_IDX = 5;  // this flag must always be the last one in flags vector
-constexpr auto FLAGS_SZ = 6;
+constexpr auto NOT_FINAL_FLG_IDX = 5;
+constexpr auto MATCH_STATE_NO_LINE_FLG_IDX = 6;  // this flag must always be the last one in flags vector
+constexpr auto FLAGS_SZ = 7;
 
 static inline void compose_mov_mdf(const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
@@ -373,11 +378,11 @@ static inline int compose_nxtp(const smatch &m, const vector<bool> &flags, const
     if (!m.str(1).empty()) {
         mcode.op_10011.dest_phv_off = stoul(m.str(2));
         mcode.op_10011.ignored_byte_cnt = stoul(m.str(3));
-        // mcode.op_10011.not_final_flg = 1;
     }
     if (!m.str(5).empty()) {
         mcode.op_10010.shift_val = stoul(m.str(6));
     }
+    mcode.op_10011.not_final_flg = flags[NOT_FINAL_FLG_IDX];
     return 0;
 }
 
@@ -685,11 +690,12 @@ int parser_assembler::check_state_chart_valid() {
 
 const char* parser_assembler::cmd_name_pattern =
     R"((MOV|MDF|(R32|R16)?(XCT|RMV)|ADDU|SUBU|COPY|RSM16|RSM32|LOCK|ULCK|NOP|SHFT|CSET|)"
-    R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP|NXTD)(L)?)";
+    R"((HCSUM|HCRC16|HCRC32)(M0)?|PCSUM|PCRC16|PCRC32|(SNE|SGT|SLT|SEQ|SGE|SLE)(U)?|NXTH|NXTP(NF)?|NXTD)(L)?)";
 
 const char* parser_assembler::stateno_pattern = R"(#([\d]{3}):)";
 
-const int parser_assembler::l_idx = 8;
+const int parser_assembler::l_idx = 9;
+const int parser_assembler::nf_idx = 8;
 const int parser_assembler::u_idx = 7;
 const int parser_assembler::m0_idx = 5;
 const int parser_assembler::rvs_idx = 2;

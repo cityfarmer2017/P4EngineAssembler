@@ -6,7 +6,6 @@
 #include "../../inc/parser_assembler.h"
 #include "../../inc/table_proc/match_actionid.h"
 
-constexpr auto STATE_NO_LEN = 3;
 constexpr auto ALL_X_STR40 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
 int match_actionid::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
