@@ -15,10 +15,11 @@ using std::stoul;
 using std::stoull;
 
 constexpr auto OPTIONAL_DELAY1_P = R"((\s*;\s+delay\[\s*1\s*])?)";
-constexpr auto OPTIONAL_DEFER1_P = R"((\s*;\s+defer\[\s*1\s*])?)";
+// constexpr auto OPTIONAL_DEFER1_P = R"((\s*;\s+defer\[\s*1\s*])?)";
 constexpr auto OPTIONAL_DELAY4_P = R"((\s*;\s+delay\[\s*4\s*])?)";
 constexpr auto OPTIONAL_DEFER4_P = R"((\s*;\s+defer\[\s*4\s*])?)";
 constexpr auto OPTIONAL_BOTH1_OR_DFR1_P = R"((\s*;\s+(delay\[\s*1\s*]\s*,\s+)?defer\[\s*1\s*])?)";
+constexpr auto OPTIONAL_DLY1_OR_DFR4_P = R"((\s*;\s+((delay\[\s*1\s*])|(defer\[\s*4\s*])))?)";
 
 constexpr auto META_STARTOFFSET_R_POS = 672 / 4;
 constexpr auto META_LENGTH_R_POS = 688 / 4;
@@ -176,12 +177,30 @@ static inline int compose_seth_setl(const smatch &m, const machine_code &code) {
 static inline int compose_add_addu(const std::string &name, const smatch &m, const machine_code &code) {
     auto &mcode = const_cast<machine_code&>(code);
     if (m.str(1) == "CNDR") {
+        if (!m.str(7).empty()) {
+            return -1;
+        }
         mcode.op_01000.src_slct = 1;
     } else if (m.str(1) == "OFFR") {
+        if ((name == "ADDT" || name == "ADDTU") && !m.str(7).empty()) {
+            return -1;
+        }
+        if ((name == "ADD" || name == "ADDU") && !m.str(9).empty()) {
+            return -1;
+        }
         mcode.op_01000.src_slct = 2;
     } else if (m.str(1) == "LENR") {
+        if ((name == "ADDT" || name == "ADDTU") && !m.str(7).empty()) {
+            return -1;
+        }
+        if ((name == "ADD" || name == "ADDU") && !m.str(9).empty()) {
+            return -1;
+        }
         mcode.op_01000.src_slct = 3;
     } else {
+        if (!m.str(10).empty()) {
+            return -1;
+        }
         mcode.op_01000.src_off = stoul(m.str(2));
         mcode.op_01000.src_len = stoul(m.str(3)) - 1;
         if ((name == "ADDT" || name == "ADDTU") && !m.str(4).empty()) {
@@ -199,9 +218,6 @@ static inline int compose_add_addu(const std::string &name, const smatch &m, con
         if (mcode.op_01000.dst_len < mcode.op_01000.src_len) {
             return -1;
         }
-    }
-    if (name != "ADDT" && name != "ADDTU" && m.str(1) != "OFFR" && m.str(1) != "LENR" && !m.str(7).empty()) {
-        return -1;
     }
     return 0;
 }
@@ -808,8 +824,8 @@ const u32_regex_map deparser_assembler::opcode_regex_map = {
     {0b00101, regex(string(CODE_LINE_PREFIX_P) + P_00101 + CODE_LINE_POSFIX_P)},
     {0b00110, regex(string(CODE_LINE_PREFIX_P) + P_00110_00111 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
     {0b00111, regex(string(CODE_LINE_PREFIX_P) + P_00110_00111 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
-    {0b01000, regex(string(CODE_LINE_PREFIX_P) + P_01000_01001 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
-    {0b01001, regex(string(CODE_LINE_PREFIX_P) + P_01000_01001 + OPTIONAL_DEFER4_P + CODE_LINE_POSFIX_P)},
+    {0b01000, regex(string(CODE_LINE_PREFIX_P) + P_01000_01001 + OPTIONAL_DLY1_OR_DFR4_P + CODE_LINE_POSFIX_P)},
+    {0b01001, regex(string(CODE_LINE_PREFIX_P) + P_01000_01001 + OPTIONAL_DLY1_OR_DFR4_P + CODE_LINE_POSFIX_P)},
     {0b01010, regex(string(CODE_LINE_PREFIX_P) + P_01010_01100_11100 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
     {0b01011, regex(string(CODE_LINE_PREFIX_P) + P_01011_01101_11101 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
     {0b01100, regex(string(CODE_LINE_PREFIX_P) + P_01010_01100_11100 + OPTIONAL_DELAY1_P + CODE_LINE_POSFIX_P)},
