@@ -63,7 +63,7 @@ int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
             prev_off = off;
             total_len += len;
 
-            if (total_len >= MASK_LINE_LEN || off + len >= MASK_LINE_LEN) {
+            if (total_len > MASK_LINE_LEN || off + len > MASK_LINE_LEN) {
                 std::cout << "total length or 'offset+length' exceed rational value." << std::endl;
                 return -1;
             }
@@ -113,4 +113,4 @@ int mask_table::generate_table_data(const std::shared_ptr<assembler> &p_asm) {
 
 const char* mask_table::mask_line_pattern = R"(^\d+:\d+(_\d+:\d+)*[\n\r]?$)";
 const char* mask_table::mask_off_len_pattern =
-    R"(^([0-9]|[1-9][0-9]|[1-4][0-9]{2}|50[0-9]|51[01]):([1-9][0-9]?|[1-4][0-9]{2}|50[0-9]|51[01])$)";
+    R"(^([1-9]?[0-9]|[1-4][0-9]{2}|50[0-9]|51[01]):([1-9][0-9]?|[1-4][0-9]{2}|50[0-9]|51[012])$)";
