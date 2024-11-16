@@ -55,7 +55,7 @@ for column in reversed(range(TCAM_ENTRY_CNT)):
         ot_path += "/" + str(state_id // BIT_CNT_PER_STATE_PER_RAM).rjust(3, '0') + ".tcam"
         file = open(ot_path, 'w') if column == MAX_ENTRY_NO else open(ot_path, 'a')
         entry = []
-        for ram_id in range(20):
+        for ram_id in range(TOTAL_RAM_CHIP_CNT):
             start = ram_id * TOTAL_BIT_CNT_PER_RAM + state_id
             substr = trans_data[start : start + BIT_CNT_PER_STATE_PER_RAM]
             entry.append(c4_c2_map[substr])
