@@ -1,5 +1,5 @@
 /**
- * Copyright [2024] <wangdianchao@ehtcn.com>
+ * Copyright [2024] <wangdc1111@gmail.com>
  */
 #include "../inc/global_def.h"
 #include "../inc/parser_assembler.h"

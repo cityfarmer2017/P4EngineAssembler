@@ -1,5 +1,5 @@
 /**
- * Copyright [2024] <wangdianchao@ehtcn.com>
+ * Copyright [2024] <wangdc1111@gmail.com>
  */
 #ifndef INC_GLOBAL_DEF_H_
 #define INC_GLOBAL_DEF_H_

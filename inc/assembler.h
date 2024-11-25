@@ -1,5 +1,5 @@
 /**
- * Copyright [2024] <wangdianchao@ehtcn.com>
+ * Copyright [2024] <wangdc1111@gmail.com>
  */
 #ifndef INC_ASSEMBLER_H_
 #define INC_ASSEMBLER_H_
